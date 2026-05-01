@@ -176,18 +176,14 @@ Monte a mensagem condensada (máx ~1500 chars):
 3. ...
 ```
 
-Envie via curl:
+Salve a mensagem em `$WORKDIR/whatsapp_msg.txt` e envie via Cloudflare Worker relay
+(o sandbox bloqueia api.z-api.io diretamente — use sempre `$ZAPI_RELAY_URL`):
 
 ```bash
-curl -s -X POST "$ZAPI_ENDPOINT" \
+curl -s -X POST "$ZAPI_RELAY_URL" \
   -H "Content-Type: application/json" \
-  -d "{\"phone\":\"$WHATSAPP_DESTINO\",\"message\":\"$(echo "$MENSAGEM" | sed 's/"/\\"/g')\"}"
-```
-
-Ou via script (lê env vars automático):
-
-```bash
-python3 scripts/send_zapi.py "$WHATSAPP_DESTINO" "$MENSAGEM"
+  -H "X-Relay-Secret: $ZAPI_RELAY_SECRET" \
+  -d "{\"instance\":\"$ZAPI_INSTANCE_ID\",\"token\":\"$ZAPI_TOKEN\",\"phone\":\"$WHATSAPP_DESTINO\",\"message\":\"$(cat $WORKDIR/whatsapp_msg.txt | sed 's/\"/\\"/g' | tr -d '\n' | head -c 1500)\"}"
 ```
 
 ### Etapa 7 — Relatório final
