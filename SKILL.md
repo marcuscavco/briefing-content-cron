@@ -139,24 +139,11 @@ python3 scripts/html_to_pdf.py "$WORKDIR/briefing-${DATA}.html" "$WORKDIR/briefi
 
 (Esses scripts ficam no diretório raiz do repo clonado pela routine.)
 
-### Etapa 6 — Distribuição (em paralelo)
+### Etapa 6 — Distribuição (em paralelo, continue se algum canal falhar)
 
-#### 6.1 Upload pro Google Drive (Gmail/Drive connector)
+#### 6.1 Email (Gmail connector)
 
-Use a tool do Google Drive connector para:
-
-1. Localizar/criar pasta-mãe `Briefings` no Meu Drive
-2. Localizar/criar subpasta `Briefings/${DATA}/`
-3. Upload de:
-   - `briefing-${DATA}.pdf`
-   - `briefing-${DATA}.html`
-4. Capturar URL da pasta para incluir no email/WhatsApp
-
-Se o connector tiver tools como `create_file` ou `upload_file`, use direto. Se não, faça upload via API do Drive autenticada pelo connector.
-
-#### 6.2 Email (Gmail connector)
-
-Use a tool do Gmail connector (típico: `create_draft` + `send`, ou `send_email` se existir):
+Use a tool do Gmail connector para criar e enviar o email:
 
 ```
 to: {EMAIL_DESTINO}
@@ -165,9 +152,10 @@ body_html: assets/email_template.html com placeholders preenchidos
 attachments: [briefing-${DATA}.pdf]
 ```
 
-Se a tool não suportar attachments, mande email sem anexo e referencie o link do Drive no corpo.
+Se a tool só tiver `create_draft` (sem send), crie o draft e reporte no final.
+Se não suportar attachments, mande sem anexo com o HTML inline no corpo.
 
-#### 6.3 WhatsApp (Z-API via WebFetch ou Bash curl)
+#### 6.2 WhatsApp (Z-API via Bash curl)
 
 Monte a mensagem condensada (máx ~1500 chars):
 
@@ -185,47 +173,36 @@ Monte a mensagem condensada (máx ~1500 chars):
 ✍️ *3 IDEIAS DE POST*
 1. [{Formato}] {Gancho} (Viral: {X}/10)
 2. ...
-
-📄 PDF e HTML completos no Drive: {link da pasta}
+3. ...
 ```
 
-Envie via:
+Envie via curl:
 
 ```bash
-python3 scripts/send_zapi.py "{WHATSAPP_DESTINO}" "$(cat $WORKDIR/whatsapp-message.txt)"
-```
-
-Ou diretamente via `curl` (substitua `{ZAPI_INSTANCE}`, `{ZAPI_TOKEN}`, `{WHATSAPP_DESTINO}` pelos valores que vierem no prompt):
-
-```bash
-curl -X POST "https://api.z-api.io/instances/{ZAPI_INSTANCE}/token/{ZAPI_TOKEN}/send-text" \
+curl -s -X POST "$ZAPI_ENDPOINT" \
   -H "Content-Type: application/json" \
-  -d "{\"phone\":\"{WHATSAPP_DESTINO}\",\"message\":\"...\"}"
+  -d "{\"phone\":\"$WHATSAPP_DESTINO\",\"message\":\"$(echo "$MENSAGEM" | sed 's/"/\\"/g')\"}"
+```
+
+Ou via script (lê env vars automático):
+
+```bash
+python3 scripts/send_zapi.py "$WHATSAPP_DESTINO" "$MENSAGEM"
 ```
 
 ### Etapa 7 — Relatório final
 
 Retorne um resumo:
-- Quantas notícias selecionadas
-- Quantos posts gerados
-- Status de cada canal (✅ ou ❌ + erro)
-- Links: pasta no Drive, email enviado, WhatsApp enviado
+- Notícias selecionadas (título + nota)
+- Status de cada canal: ✅ ou ❌ + motivo do erro
+- Email: enviado ou draft criado
+- WhatsApp: response do Z-API
 
 ## Tratamento de Erros
 
 - **Sem notícias relevantes (todas < 6,5)**: enviar mensagem informando "dia fraco em notícias relevantes" listando o que apareceu
 - **Falha em uma das etapas de distribuição**: continuar com as outras, reportar erro no final
 - **Falha total na pesquisa**: enviar email/WhatsApp de erro avisando
-
-## Estrutura Drive
-
-```
-Meu Drive/
-└── Briefings/
-    └── AAAA-MM-DD/
-        ├── briefing-AAAA-MM-DD.pdf
-        └── briefing-AAAA-MM-DD.html
-```
 
 ## Restrições importantes
 
