@@ -155,7 +155,7 @@ attachments: [briefing-${DATA}.pdf]
 Se a tool só tiver `create_draft` (sem send), crie o draft e reporte no final.
 Se não suportar attachments, mande sem anexo com o HTML inline no corpo.
 
-#### 6.2 WhatsApp (Z-API via Bash curl)
+#### 6.2 WhatsApp (Z-API MCP connector)
 
 Monte a mensagem condensada (máx ~1500 chars):
 
@@ -176,15 +176,14 @@ Monte a mensagem condensada (máx ~1500 chars):
 3. ...
 ```
 
-Salve a mensagem em `$WORKDIR/whatsapp_msg.txt` e envie via Cloudflare Worker relay
-(o sandbox bloqueia api.z-api.io diretamente — use sempre `$ZAPI_RELAY_URL`):
+Envie usando a tool `send_whatsapp_text` do Z-API MCP connector:
 
-```bash
-curl -s -X POST "$ZAPI_RELAY_URL" \
-  -H "Content-Type: application/json" \
-  -H "X-Relay-Secret: $ZAPI_RELAY_SECRET" \
-  -d "{\"instance\":\"$ZAPI_INSTANCE_ID\",\"token\":\"$ZAPI_TOKEN\",\"phone\":\"$WHATSAPP_DESTINO\",\"message\":\"$(cat $WORKDIR/whatsapp_msg.txt | sed 's/\"/\\"/g' | tr -d '\n' | head -c 1500)\"}"
 ```
+phone:   5585997993333
+message: <mensagem condensada acima>
+```
+
+Suporta emoji e quebras de linha nativamente.
 
 ### Etapa 7 — Relatório final
 
