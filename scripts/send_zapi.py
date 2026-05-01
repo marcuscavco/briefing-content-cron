@@ -7,13 +7,9 @@ import urllib.request
 import urllib.error
 
 
-DEFAULT_INSTANCE = "3F272FF03BFA2384B54026F49989160C"
-DEFAULT_TOKEN = "CDD22DA467E7E692E770349D"
-
-
 def send(phone: str, message: str) -> dict:
-    instance = os.environ.get("ZAPI_INSTANCE_ID", DEFAULT_INSTANCE)
-    token = os.environ.get("ZAPI_TOKEN", DEFAULT_TOKEN)
+    instance = os.environ["ZAPI_INSTANCE_ID"]
+    token = os.environ["ZAPI_TOKEN"]
     client_token = os.environ.get("ZAPI_CLIENT_TOKEN", "")
 
     url = f"https://api.z-api.io/instances/{instance}/token/{token}/send-text"

@@ -9,18 +9,20 @@ description: Gera briefing diário de notícias de tecnologia/IA filtradas por r
 
 ## Configuração — destinos e credenciais
 
-Estes valores estão embutidos pra esta instalação (ajuste se mudar):
+**Os valores sensíveis (Z-API instance/token, email destino, WhatsApp destino) chegam pelo prompt da Remote Routine que invoca essa skill.** Não há credenciais hardcoded neste repo.
+
+Espere encontrar no prompt da routine algo como:
 
 ```
-EMAIL_DESTINO   = marcus@tavcoholding.com
-WHATSAPP_DESTINO = 5585997993333
-ZAPI_INSTANCE   = 3F272FF03BFA2384B54026F49989160C
-ZAPI_TOKEN      = CDD22DA467E7E692E770349D
-ZAPI_ENDPOINT   = https://api.z-api.io/instances/3F272FF03BFA2384B54026F49989160C/token/CDD22DA467E7E692E770349D/send-text
-DRIVE_PARENT    = "Briefings"   # pasta-mãe no Meu Drive (criar se não existir)
+EMAIL_DESTINO    = marcus@tavcoholding.com
+WHATSAPP_DESTINO = 558599XXXXXXX
+ZAPI_INSTANCE    = ...
+ZAPI_TOKEN       = ...
+ZAPI_ENDPOINT    = https://api.z-api.io/instances/{instance}/token/{token}/send-text
+DRIVE_PARENT     = "Briefings"
 ```
 
-Se rodando via Remote Routine com env vars no prompt, prefira ler `os.environ` quando disponível; caso contrário use os valores acima.
+Quando rodando via Remote Routine, esses valores vêm do prompt OU de env vars (`$ZAPI_INSTANCE_ID`, `$ZAPI_TOKEN`, etc.). Se for testar localmente, exporte como env vars antes de rodar.
 
 ## Objetivo
 
@@ -157,7 +159,7 @@ Se o connector tiver tools como `create_file` ou `upload_file`, use direto. Se n
 Use a tool do Gmail connector (típico: `create_draft` + `send`, ou `send_email` se existir):
 
 ```
-to: marcus@tavcoholding.com
+to: {EMAIL_DESTINO}
 subject: 🌅 Briefing — {DATA por extenso, ex: 'Sexta, 1 de Maio'}
 body_html: assets/email_template.html com placeholders preenchidos
 attachments: [briefing-${DATA}.pdf]
@@ -190,15 +192,15 @@ Monte a mensagem condensada (máx ~1500 chars):
 Envie via:
 
 ```bash
-python3 scripts/send_zapi.py "5585997993333" "$(cat $WORKDIR/whatsapp-message.txt)"
+python3 scripts/send_zapi.py "{WHATSAPP_DESTINO}" "$(cat $WORKDIR/whatsapp-message.txt)"
 ```
 
-Ou diretamente via `curl`:
+Ou diretamente via `curl` (substitua `{ZAPI_INSTANCE}`, `{ZAPI_TOKEN}`, `{WHATSAPP_DESTINO}` pelos valores que vierem no prompt):
 
 ```bash
-curl -X POST "https://api.z-api.io/instances/3F272FF03BFA2384B54026F49989160C/token/CDD22DA467E7E692E770349D/send-text" \
+curl -X POST "https://api.z-api.io/instances/{ZAPI_INSTANCE}/token/{ZAPI_TOKEN}/send-text" \
   -H "Content-Type: application/json" \
-  -d "{\"phone\":\"5585997993333\",\"message\":\"...\"}"
+  -d "{\"phone\":\"{WHATSAPP_DESTINO}\",\"message\":\"...\"}"
 ```
 
 ### Etapa 7 — Relatório final
