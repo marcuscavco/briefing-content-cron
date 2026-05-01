@@ -187,35 +187,41 @@ Suporta emoji e quebras de linha nativamente.
 
 ### Etapa 7 — Persistência no Supabase
 
-Salve os dados da execução via REST API do Supabase (curl, sem connector):
+Use a tool `execute_sql` do Supabase MCP connector (project_id: `ckjvbzynskuqmdanmxgs`). Continue se falhar.
 
-```bash
-# 1. Inserir briefing e capturar o ID gerado
-BRIEFING_JSON=$(curl -s -X POST "$SUPABASE_URL/rest/v1/briefings" \
-  -H "apikey: $SUPABASE_ANON_KEY" \
-  -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
-  -H "Content-Type: application/json" \
-  -H "Prefer: return=representation" \
-  -d "{
-    \"data\": \"$DATA\",
-    \"n_noticias\": $N_NOTICIAS,
-    \"n_posts\": 3,
-    \"email_status\": \"$EMAIL_STATUS\",
-    \"whatsapp_status\": \"$WHATSAPP_STATUS\",
-    \"whatsapp_msg\": $(cat $WORKDIR/whatsapp_msg.txt | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))'),
-    \"notas\": $NOTAS_JSON
-  }")
-BRIEFING_ID=$(echo $BRIEFING_JSON | python3 -c 'import json,sys; print(json.loads(sys.stdin.read())[0]["id"])')
+**a. Inserir briefing e capturar UUID:**
 
-# 2. Inserir notícias (uma por vez ou em batch)
-# Para cada notícia selecionada, gere um objeto e faça POST em /rest/v1/noticias
-# com briefing_id=$BRIEFING_ID, ordem=N, titulo, fonte, url, data_publicacao, nota, resumo, por_que_importa
-
-# 3. Inserir posts (idem para /rest/v1/posts)
-# com briefing_id=$BRIEFING_ID, ordem=N, formato, gancho, estrutura (array JSON), nota_viralizacao etc.
+```sql
+INSERT INTO briefings (data, n_noticias, n_posts, email_status, whatsapp_status, whatsapp_msg, notas)
+VALUES (
+  '<DATA>',
+  <N_NOTICIAS>,
+  3,
+  '<email_status>',       -- 'sent' | 'draft' | 'failed'
+  '<whatsapp_status>',    -- 'sent' | 'failed'
+  $$<whatsapp_msg>$$,
+  '<notas_json>'::jsonb   -- {"email": "...", "whatsapp": "..."}
+)
+RETURNING id;
 ```
 
-Se o Supabase falhar, logar o erro mas não travar o relatório final.
+Capture o `id` retornado como `BRIEFING_ID`.
+
+**b. Inserir cada notícia selecionada:**
+
+```sql
+INSERT INTO noticias (briefing_id, ordem, titulo, fonte, url, data_publicacao, nota, resumo, por_que_importa)
+VALUES ('<BRIEFING_ID>', <N>, $$<titulo>$$, $$<fonte>$$, $$<url>$$, '<AAAA-MM-DD>', <nota>, $$<resumo>$$, $$<por_que_importa>$$);
+```
+
+**c. Inserir cada post:**
+
+```sql
+INSERT INTO posts (briefing_id, ordem, noticia_base_ordem, formato, justificativa_formato, gancho, estrutura, cta, hashtags, nota_viralizacao, justificativa_nota)
+VALUES ('<BRIEFING_ID>', <N>, <N_NOTICIA>, $$<formato>$$, $$<justificativa>$$, $$<gancho>$$, '<estrutura>'::jsonb, $$<cta>$$, ARRAY[<hashtags>], <nota>, $$<justificativa_nota>$$);
+```
+
+> Dica: use `$$...$$` (dollar-quoting) para strings com aspas ou caracteres especiais.
 
 ### Etapa 8 — Relatório final
 
