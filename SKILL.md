@@ -185,13 +185,46 @@ message: <mensagem condensada acima>
 
 Suporta emoji e quebras de linha nativamente.
 
-### Etapa 7 — Relatório final
+### Etapa 7 — Persistência no Supabase
+
+Salve os dados da execução via REST API do Supabase (curl, sem connector):
+
+```bash
+# 1. Inserir briefing e capturar o ID gerado
+BRIEFING_JSON=$(curl -s -X POST "$SUPABASE_URL/rest/v1/briefings" \
+  -H "apikey: $SUPABASE_ANON_KEY" \
+  -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Prefer: return=representation" \
+  -d "{
+    \"data\": \"$DATA\",
+    \"n_noticias\": $N_NOTICIAS,
+    \"n_posts\": 3,
+    \"email_status\": \"$EMAIL_STATUS\",
+    \"whatsapp_status\": \"$WHATSAPP_STATUS\",
+    \"whatsapp_msg\": $(cat $WORKDIR/whatsapp_msg.txt | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))'),
+    \"notas\": $NOTAS_JSON
+  }")
+BRIEFING_ID=$(echo $BRIEFING_JSON | python3 -c 'import json,sys; print(json.loads(sys.stdin.read())[0]["id"])')
+
+# 2. Inserir notícias (uma por vez ou em batch)
+# Para cada notícia selecionada, gere um objeto e faça POST em /rest/v1/noticias
+# com briefing_id=$BRIEFING_ID, ordem=N, titulo, fonte, url, data_publicacao, nota, resumo, por_que_importa
+
+# 3. Inserir posts (idem para /rest/v1/posts)
+# com briefing_id=$BRIEFING_ID, ordem=N, formato, gancho, estrutura (array JSON), nota_viralizacao etc.
+```
+
+Se o Supabase falhar, logar o erro mas não travar o relatório final.
+
+### Etapa 8 — Relatório final
 
 Retorne um resumo:
 - Notícias selecionadas (título + nota)
 - Status de cada canal: ✅ ou ❌ + motivo do erro
 - Email: enviado ou draft criado
-- WhatsApp: response do Z-API
+- WhatsApp: response da tool `send_whatsapp_text`
+- Supabase: ID do briefing salvo ou ❌ + erro
 
 ## Tratamento de Erros
 
