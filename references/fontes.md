@@ -1,41 +1,74 @@
-# Fontes Priorizadas
+# Universo Fechado de Fontes
 
-## Tier 1 — primárias (preferidas)
+## Tier 1 — Portais com assinatura (fonte canônica de leitura)
 
-- anthropic.com/news
-- openai.com/blog
-- deepmind.google/discover/blog
-- ai.meta.com/blog
-- Blogs oficiais de empresas (Microsoft, AWS, Google Cloud)
-- arXiv (releases acadêmicos relevantes)
+**Única origem permitida** para extração de texto completo e recomendação de leitura. Ordem de preferência quando mais de um cobre o mesmo assunto:
 
-## Tier 2 — jornalismo tech sério
+| Prioridade | Portal | URL | Especialidade |
+|---|---|---|---|
+| 1 | The Information | https://www.theinformation.com | Scoops de big tech, IA, VC |
+| 2 | Stratechery | https://stratechery.com | Análise estratégica de plataformas |
+| 3 | The Economist | https://www.economist.com | Contexto macro/global |
+| 4 | Valor Econômico (inclui Pipeline) | https://valor.globo.com | Mercado BR, M&A, regulação |
+| 5 | Exame | https://exame.com | Negócios/tech BR ampliado |
 
-- techcrunch.com
-- theverge.com
-- arstechnica.com
-- wired.com
-- ft.com (FT) — gateway pra paywall, ler abstract
-- bloomberg.com — paywall, idem
+## Tier 2 — Portais de sinal (apenas para pontuação)
 
-## Tier 3 — Brasil
+Use **APENAS** para detectar e pontuar relevância. **Nunca extraia conteúdo completo, nunca recomende como leitura, nunca cite o artigo individualmente.** Eles existem só para responder: *"este assunto está sendo coberto?"*
 
-- brazil journal
-- neofeed.com.br
-- tecmundo.com.br
-- mobiletime.com.br
-- olhardigital.com.br
+### Internacionais
 
-## Tier 4 — newsletters/análise (citar com parcimônia)
+| Portal | URL |
+|---|---|
+| Ars Technica | https://arstechnica.com |
+| MIT Technology Review | https://www.technologyreview.com |
+| Wired | https://www.wired.com |
+| Bloomberg Technology | https://www.bloomberg.com/technology |
+| Financial Times | https://www.ft.com/technology |
+| Rest of World | https://restofworld.org |
+| Platformer | https://www.platformer.news |
+| Garbage Day | https://www.garbageday.email |
+| 404 Media | https://www.404media.co |
+| The Verge | https://www.theverge.com |
+| Engadget | https://www.engadget.com |
+| CNET | https://www.cnet.com |
+| TechCrunch | https://techcrunch.com |
+| Hacker News | https://news.ycombinator.com |
 
-- Stratechery (Ben Thompson)
-- Lenny's Newsletter
-- Latent.Space (Swyx)
-- Not Boring (Packy McCormick)
+### Brasil
 
-## Evitar
+| Portal | URL |
+|---|---|
+| Folha de S.Paulo (Tec) | https://www1.folha.uol.com.br/tec/ |
+| Estadão Link | https://www.estadao.com.br/link/ |
+| InfoMoney | https://www.infomoney.com.br |
+| Brazil Journal | https://braziljournal.com |
+| NeoFeed | https://neofeed.com.br |
+| The News (Waffle) | https://thenews.waffle.com.br |
+| The Shift | https://www.theshift.info |
+| Núcleo Jornalismo | https://nucleo.jor.br |
+| Mobile Time | https://www.mobiletime.com.br |
+| Convergência Digital | https://www.convergenciadigital.com.br |
+| Tecnoblog | https://tecnoblog.net |
 
-- Reddit, X/Twitter como fonte primária (só confirmação)
-- Medium personal blogs (a menos que autor seja referência)
-- Sites de "summary" tipo TLDR sem ir na fonte
-- LinkedIn posts (só sinal, não fonte)
+## Prioridade de Fallback Tier 2 (apenas em Must-read sem Tier 1)
+
+Quando precisar oferecer um Tier 2 como fallback, escolha pela ordem:
+
+1. **Brasileiros editoriais:** Brazil Journal → NeoFeed → Folha (Tec) → Estadão Link → Núcleo Jornalismo → Tecnoblog
+2. **Internacionais editoriais sem paywall:** Ars Technica → 404 Media → Wired → MIT Technology Review → Platformer → Rest of World
+3. **Restantes:** The Verge → TechCrunch → Engadget → CNET → Mobile Time → Convergência Digital → InfoMoney → Garbage Day
+
+**Excluídos como fallback** (continuam contando para heat, mas nunca aparecem como link de leitura):
+- **Hacker News** — agregador, não publicação original
+- **Bloomberg / Financial Times** — paywall externo sem assinatura ativa
+- **The News (Waffle)** — newsletter de curadoria, não fonte primária
+
+**Critério de desempate dentro do mesmo nível:** prefira a publicação que combina melhor com o eixo do assunto (BR + business → Brazil Journal/NeoFeed; tech profundo → Ars Technica/404 Media; cultura/sociedade tech → Wired/Rest of World).
+
+## Notas operacionais
+
+- **Pipeline (Valor)** → subconjunto de Valor Econômico (uma única fonte Tier 1, não duas)
+- **Hacker News** → conta como 1 fonte Tier 2 independente da quantidade de comentários. Bônus 200+ pontos é separado e único
+- **Paywall Tier 1 inacessível mesmo com assinatura** → indique falha no digest mas mantenha como canônico; não promova Tier 2
+- **Cobertura exclusiva Tier 1 sem ressonância em Tier 2** → tag `🔍 Furo: exclusivo em <portal>`
