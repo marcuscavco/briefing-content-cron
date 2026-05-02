@@ -28,7 +28,7 @@ export THE_ECONOMIST_RSS_URL=''      # opcional — URL RSS do assinante The Eco
 
 Leia `SKILL.md` e os 4 references (`fontes.md`, `pontuacao.md`, `posts.md`, `voz.md`) e execute o fluxo completo (Etapas 1–9 do SKILL.md):
 
-1. **Coleta via RSS** (últimas 24h): para cada portal em `references/fontes.md`, use o RSS feed listado se disponível (WebFetch direto, sem Jina). Filtre entradas pelo `<pubDate>` das últimas 24h. Se RSS falhar ou não existir, use Jina no homepage. Hacker News usa API direta. The Information usa Jina no homepage (subscriber_feed restrito a IPs de leitores RSS homologados). Stratechery usa `$STRATECHERY_RSS_URL`. Para artigos Tier 1 selecionados como canônicos, buscar conteúdo completo via Jina para escrever TL;DR.
+1. **Coleta via RSS** (últimas 24h): para cada portal em `references/fontes.md`, use o RSS feed listado (WebFetch direto, sem Jina). Filtre pelo campo de data das últimas 24h. Se RSS falhar, use Jina no homepage. Hacker News usa API direta. The Information usa o Worker proxy (`https://theinformation-feed.marcusccoelho.workers.dev`) que retorna Atom feed — parse `<entry>` com `<updated>`/`<published>`. Stratechery usa `$STRATECHERY_RSS_URL`. Para artigos Tier 1 selecionados como canônicos, buscar conteúdo completo via Jina para escrever TL;DR.
 
 2. **Clusterização**: agrupe artigos sobre o mesmo evento.
 

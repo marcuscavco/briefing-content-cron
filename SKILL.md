@@ -70,11 +70,18 @@ WebFetch("https://r.jina.ai/https://valor.globo.com")   → markdown limpo
 
 #### Tier 1 — RSS de assinante
 
-**The Information** — o `/subscriber_feed` restringe acesso por IP (apenas leitores RSS homologados como Feedly/Inoreader). Use Jina no homepage:
+**The Information** — acesso via Cloudflare Worker proxy (bypassa o IP allowlist do subscriber_feed):
 
 ```
-WebFetch("https://r.jina.ai/https://www.theinformation.com")
+WebFetch("https://theinformation-feed.marcusccoelho.workers.dev")
 ```
+
+Retorna Atom feed (não RSS). Diferenças de parsing:
+- Artigos em `<entry>` (não `<item>`)
+- Data em `<updated>` ou `<published>` (não `<pubDate>`)
+- URL em `<link href="...">` (não `<link>texto</link>`)
+
+Se o Worker retornar não-200, cair para Jina no homepage `https://www.theinformation.com`.
 
 **Stratechery** usa URL de RSS com token embutido:
 
