@@ -1,0 +1,6 @@
+name = "rss-proxy"
+main = "index.js"
+compatibility_date = "2025-01-01"
+
+[vars]
+# Não colocar valores aqui — usar: wrangler secret put PROXY_TOKEN
