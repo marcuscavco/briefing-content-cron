@@ -1,0 +1,6 @@
+name = "theinformation-feed"
+main = "index.js"
+compatibility_date = "2025-01-01"
+
+[vars]
+# Não colocar valores aqui — usar wrangler secret put (ver README abaixo)
