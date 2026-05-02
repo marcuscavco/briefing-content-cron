@@ -29,7 +29,7 @@ export THE_ECONOMIST_RSS_URL=''      # opcional — URL RSS do assinante The Eco
 
 Leia `SKILL.md` e os 4 references (`fontes.md`, `pontuacao.md`, `posts.md`, `voz.md`) e execute o fluxo completo (Etapas 1–9 do SKILL.md):
 
-1. **Coleta via RSS** (últimas 24h): para cada portal em `references/fontes.md`, use o RSS feed listado (WebFetch direto, sem Jina). Filtre pelo campo de data das últimas 24h. Se RSS falhar, use Jina no homepage. Hacker News usa API direta. The Information usa o Worker proxy (`https://theinformation-feed.marcusccoelho.workers.dev`) que retorna Atom feed — parse `<entry>` com `<updated>`/`<published>`. Stratechery usa `$STRATECHERY_RSS_URL`. Para artigos Tier 1 selecionados como canônicos, buscar conteúdo completo via Jina para escrever TL;DR.
+1. **Coleta via RSS** (últimas 24h): toda chamada externa usa exclusivamente o rss-proxy (`https://rss-proxy.marcusccoelho.workers.dev/?token=$PROXY_TOKEN&url=<url_encoded>`). Se retornar não-200, marque como inacessível e prossiga — sem fallback. The Information passa pelo rss-proxy apontado para `https://theinformation-feed.marcusccoelho.workers.dev` (Atom feed — parse `<entry>` com `<updated>`/`<published>`). Stratechery usa `$STRATECHERY_RSS_URL` via proxy; se vazia, skip. Para artigos Tier 1 canônicos, buscar conteúdo via rss-proxy para TL;DR.
 
 2. **Clusterização**: agrupe artigos sobre o mesmo evento.
 
@@ -51,7 +51,7 @@ Leia `SKILL.md` e os 4 references (`fontes.md`, `pontuacao.md`, `posts.md`, `voz
    - Monte Mensagem 1 (Digest) e Mensagem 2 (Posts) seguindo template em `SKILL.md` Etapa 8.
    - Cada mensagem **≤ 1500 chars** (validar com `wc -c` antes de enviar).
    - Salve em `$WORKDIR/whatsapp_msg_1.txt` e `$WORKDIR/whatsapp_msg_2.txt` antes.
-   - URLs entregues SEM prefixo Jina.
+   - URLs entregues limpas (sem parâmetros de proxy).
    - Envie msg1 primeiro, espere ~1s, envie msg2.
    - Formatação WhatsApp: `*negrito*`, `_itálico_`, `~tachado~`, quebras de linha. Sem markdown headers ou tabelas.
 

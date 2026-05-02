@@ -108,7 +108,7 @@ briefings (1 linha por execução)
 ├── whatsapp_status_2 text
 ├── whatsapp_msg_2 text             -- Mensagem 2 (Posts)
 ├── email_status text               -- DEPRECATED (era usado quando havia Gmail)
-└── notas jsonb                     -- {"jina_falhas": [...], "tier1_inacessivel": [...]}
+└── notas jsonb                     -- {"inacessiveis": [...], "tier1_inacessivel": [...]}
 
 clusters (3-N linhas por briefing)
 ├── id uuid PK
@@ -116,7 +116,7 @@ clusters (3-N linhas por briefing)
 ├── ordem int                       -- ordem no digest (1=primeiro Must-read)
 ├── titulo text
 ├── fonte text                      -- portal canônico (Tier 1) ou fallback (Tier 2)
-├── url text                        -- URL canônica, SEM prefixo Jina
+├── url text                        -- URL canônica, SEM parâmetros de proxy
 ├── data_publicacao date
 ├── resumo text                     -- TL;DR do cluster
 ├── categoria text                  -- 'must_read' | 'relevante' | 'no_radar' | 'sinal_sem_fonte'
@@ -197,7 +197,7 @@ Adicione/remova nomes em `allowed_tools` da config da routine via API/UI. Tools 
 
 1. **Nunca commite tokens/credenciais no repo.** Z-API tokens estão no Worker (mcp server). Supabase usa o connector OAuth-based. Email não é usado mais.
 2. **Universo fechado de fontes.** Não adicione portais a `fontes.md` sem motivo claro. O agente NÃO deve buscar fora dessa lista.
-3. **URLs entregues ao usuário são limpas** (sem prefixo `r.jina.ai/`). Jina é uso interno do agente para fetching.
+3. **URLs entregues ao usuário são limpas** (sem parâmetros de proxy, sem `/rss/`, sem `/feed/`).
 4. **Cada mensagem WhatsApp ≤ 1500 chars.** Validar com `wc -c` antes de enviar. Sem exceções.
 5. **PT-BR sempre** na entrega final, independente da língua das fontes.
 6. **Skip por padrão em posts.** Postar precisa ser justificado por ângulo + 💼 ≥ 2.

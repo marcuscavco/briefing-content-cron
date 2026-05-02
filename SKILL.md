@@ -46,35 +46,30 @@ mkdir -p $WORKDIR
 
 ## Workflow
 
-### Etapa 1 — Coleta via RSS (com Jina como fallback)
+### Etapa 1 — Coleta via RSS
 
 Faça varredura nos portais do universo (Tier 1 + Tier 2) buscando notícias das últimas 24h.
 
-#### Regra geral de fetching
+#### Regra única de fetching
 
-| Situação | Método |
-|---|---|
-| Portal tem RSS na tabela de `fontes.md` | WebFetch direto na URL do RSS (sem Jina) |
-| RSS falha (404/403/timeout) | WebFetch via Jina no homepage do portal |
-| Portal marcado como "Jina" em `fontes.md` | WebFetch via Jina diretamente |
-| Hacker News | API direta `https://hacker-news.firebaseio.com/` |
-| Artigo Tier 1 selecionado como canônico | Sempre buscar conteúdo completo via Jina para escrever TL;DR |
+**Toda chamada externa — sem exceção — usa o rss-proxy:**
 
-RSS é XML estruturado com `<pubDate>` — filtre as entradas das **últimas 24h** pelo campo de data, sem precisar parsear HTML.
-
-**Jina (quando necessário):** prefixe a URL do homepage com `https://r.jina.ai/`:
 ```
-WebFetch("https://r.jina.ai/https://valor.globo.com")   → markdown limpo
+WebFetch("https://rss-proxy.marcusccoelho.workers.dev/?token=$PROXY_TOKEN&url=<url_encoded>")
 ```
 
-**URLs entregues ao usuário** no digest final são sempre limpas (sem prefixo Jina, sem `/rss/`, sem `/feed/`).
+Encode a URL-alvo antes de passar como parâmetro `url`. Se o proxy retornar não-200, marque o portal como inacessível e prossiga — **sem retry, sem fallback**.
+
+RSS é XML estruturado com `<pubDate>` — filtre as entradas das **últimas 24h** pelo campo de data.
+
+**URLs entregues ao usuário** no digest final são sempre limpas (sem parâmetros de proxy, sem `/rss/`, sem `/feed/`).
 
 #### Tier 1 — RSS de assinante
 
-**The Information** — acesso via Cloudflare Worker proxy (bypassa o IP allowlist do subscriber_feed):
+**The Information** — rss-proxy apontado para o Worker de autenticação dedicado:
 
 ```
-WebFetch("https://theinformation-feed.marcusccoelho.workers.dev")
+WebFetch("https://rss-proxy.marcusccoelho.workers.dev/?token=$PROXY_TOKEN&url=https%3A%2F%2Ftheinformation-feed.marcusccoelho.workers.dev")
 ```
 
 Retorna Atom feed (não RSS). Diferenças de parsing:
@@ -82,35 +77,30 @@ Retorna Atom feed (não RSS). Diferenças de parsing:
 - Data em `<updated>` ou `<published>` (não `<pubDate>`)
 - URL em `<link href="...">` (não `<link>texto</link>`)
 
-Se o Worker retornar não-200, cair para Jina no homepage `https://www.theinformation.com`.
+Se retornar não-200, registre como inacessível e prossiga.
 
-**rss-proxy** — Worker genérico para feeds que necessitam proxy (bloqueio de IP, restrições de acesso):
+**Stratechery** — rss-proxy com a URL de assinante:
 
 ```
-WebFetch("https://rss-proxy.marcusccoelho.workers.dev/?token=$PROXY_TOKEN&url=<target_url_encoded>")
+WebFetch("https://rss-proxy.marcusccoelho.workers.dev/?token=$PROXY_TOKEN&url=<STRATECHERY_RSS_URL_encoded>")
 ```
 
-Use este worker sempre que um feed RSS retornar 403/blockeado ao ser acessado diretamente. Substitua `<target_url_encoded>` pela URL do feed com encode de URL.
+Se `$STRATECHERY_RSS_URL` estiver vazia, registre como inacessível e prossiga. Nota meta: `⚠️ RSS de assinante não configurado — Stratechery`.
 
-**Stratechery** usa URL de RSS com token embutido:
+**The Economist** — rss-proxy com a URL de assinante:
 
-```bash
-STRATECHERY_RSS_URL   # ex: https://stratechery.com/feed/?token=<token>
+```
+WebFetch("https://rss-proxy.marcusccoelho.workers.dev/?token=$PROXY_TOKEN&url=<THE_ECONOMIST_RSS_URL_encoded>")
 ```
 
-**The Economist** (opcional):
+Se `$THE_ECONOMIST_RSS_URL` estiver vazia, registre como inacessível e prossiga. Nota meta: `⚠️ RSS de assinante não configurado — The Economist`.
 
-```bash
-THE_ECONOMIST_RSS_URL  # URL RSS do assinante; se vazio, usa Jina
-```
-
-Se qualquer variável estiver vazia ou ausente, use Jina no homepage e marque na nota meta: `⚠️ Credenciais ausentes — usando Jina para <portal>`.
+**Artigos Tier 1 canônicos (TL;DR):** busque o conteúdo do artigo via rss-proxy na URL do artigo.
 
 #### Quando falha
 
-- **RSS não retorna entradas das últimas 24h:** portal pode não ter publicado hoje — registre como "sem publicação no período" (não é falha técnica).
-- **RSS e Jina falham:** marque "fonte temporariamente inacessível" e prossiga. Não substitua por outro portal.
-- **FT, Bloomberg (Tier 2, paywall):** use Jina no homepage para capturar apenas manchetes/títulos visíveis — servem só como sinal.
+- **Portal não publica nas últimas 24h:** registre como "sem publicação no período" — não é falha técnica.
+- **rss-proxy retorna não-200:** marque "fonte temporariamente inacessível" e prossiga. Não substitua por outro portal.
 
 ### Etapa 2 — Clusterização
 
@@ -213,7 +203,7 @@ INSERT INTO briefings (
   '<DATA>', <n_must_read+n_relevante+n_no_radar>, <n_posts_publicaveis>, <n_posts_skipped>,
   <total>, <must_read>, <relevante>, <no_radar>, <sinal_sem_fonte>,
   '<sent|failed>', $$<msg1>$$, '<sent|failed>', $$<msg2>$$,
-  '{"jina_falhas": [...], "tier1_inacessivel": [...]}'::jsonb
+  '{"inacessiveis": [...], "tier1_inacessivel": [...]}'::jsonb
 ) RETURNING id;
 ```
 
@@ -332,7 +322,7 @@ Nenhum cluster passou o filtro empresarial hoje. Ver digest para leitura pessoal
 4. ✅ Toda sugestão de post tem 💼 ≥ 2 (ou justificativa explícita)
 5. ✅ Cada post tem ângulo articulado, não genérico
 6. ✅ Sem markdown não suportado por WhatsApp
-7. ✅ **URLs entregues são limpas** (sem prefixo `r.jina.ai/`)
+7. ✅ **URLs entregues são limpas** (sem parâmetros de proxy, sem `/rss/`, sem `/feed/`)
 
 #### Envio
 
@@ -377,8 +367,7 @@ Retorne resumo:
 - **Pipeline (Valor)** → subconjunto de Valor (uma única fonte Tier 1)
 - **Conflito entre fontes** → segue Tier 1, registra divergência no TL;DR
 - **Múltiplos Must-read sem Tier 1** → cada um recebe fallback. Se mais de 2 no mesmo dia, nota meta no fim: "⚠️ N Must-reads sem cobertura Tier 1 hoje — possível ângulo subexplorado"
-- **Jina retorna truncado** → tente direto uma vez. Se falhar, marca como inacessível
-- **URL entregue com prefixo Jina por engano** → falha de validação. Limpar e revalidar antes de enviar
-- **RSS de assinante ausente (The Information / Stratechery)** → use Jina no homepage, registre nota meta "⚠️ RSS de assinante ausente para <portal>"
+- **rss-proxy retorna não-200 para qualquer portal** → marque como inacessível e prossiga. Sem retry, sem fallback.
+- **RSS de assinante não configurado (Stratechery / The Economist)** → variável de ambiente vazia: registre como inacessível e prossiga. Nota meta: `⚠️ RSS de assinante não configurado para <portal>`
 - **RSS sem entradas nas últimas 24h** → portal não publicou no período; não é erro técnico. Registre como "sem cobertura no período"
-- **URL de RSS retorna HTML em vez de XML** → feed moveu ou foi descontinuado; trate como falha de RSS e caia para Jina
+- **URL de RSS retorna HTML em vez de XML** → feed moveu ou foi descontinuado; trate como falha e prossiga

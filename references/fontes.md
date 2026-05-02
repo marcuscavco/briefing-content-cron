@@ -4,21 +4,21 @@
 
 **Única origem permitida** para extração de texto completo e recomendação de leitura. Ordem de preferência quando mais de um cobre o mesmo assunto:
 
-**Método de coleta:** RSS privado de assinante (URL via variável de ambiente). Se RSS falhar, use Jina no homepage. Para artigos selecionados como canônicos, sempre buscar conteúdo completo via Jina para escrever TL;DR.
+**Método de coleta:** RSS privado de assinante (URL via variável de ambiente), via rss-proxy. Se rss-proxy retornar não-200, registre como inacessível e prossiga. Para artigos selecionados como canônicos, buscar conteúdo via rss-proxy para escrever TL;DR.
 
 | Prioridade | Portal | URL base | RSS | Especialidade |
 |---|---|---|---|---|
 | 1 | The Information | https://www.theinformation.com | https://theinformation-feed.marcusccoelho.workers.dev (Atom feed via Worker proxy com Basic Auth) | Scoops de big tech, IA, VC |
 | 2 | Stratechery | https://stratechery.com | `$STRATECHERY_RSS_URL` (assinante) | Análise estratégica de plataformas |
-| 3 | The Economist | https://www.economist.com | `$THE_ECONOMIST_RSS_URL` (assinante, opcional) ou Jina | Contexto macro/global |
-| 4 | Valor Econômico (inclui Pipeline) | https://valor.globo.com | Jina no homepage (sem RSS público confiável) | Mercado BR, M&A, regulação |
+| 3 | The Economist | https://www.economist.com | `$THE_ECONOMIST_RSS_URL` (assinante, opcional) | Contexto macro/global |
+| 4 | Valor Econômico (inclui Pipeline) | https://valor.globo.com | rss-proxy no homepage (sem RSS público confiável) | Mercado BR, M&A, regulação |
 | 5 | Exame | https://exame.com | https://exame.com/feed/ | Negócios/tech BR ampliado |
 
 ## Tier 2 — Portais de sinal (apenas para pontuação)
 
 Use **APENAS** para detectar e pontuar relevância. **Nunca extraia conteúdo completo, nunca recomende como leitura, nunca cite o artigo individualmente.** Eles existem só para responder: *"este assunto está sendo coberto?"*
 
-**Método de coleta:** RSS direto (sem Jina — RSS é XML público). Se RSS falhar, Jina no homepage. Para portais sem RSS listado, use Jina direto.
+**Método de coleta:** rss-proxy para todos os fetches. Se rss-proxy retornar não-200, registre como inacessível e prossiga.
 
 ### Internacionais
 
@@ -27,8 +27,8 @@ Use **APENAS** para detectar e pontuar relevância. **Nunca extraia conteúdo co
 | Ars Technica | https://arstechnica.com | https://feeds.arstechnica.com/arstechnica/index |
 | MIT Technology Review | https://www.technologyreview.com | https://www.technologyreview.com/feed/ |
 | Wired | https://www.wired.com | https://www.wired.com/feed/rss |
-| Bloomberg Technology | https://www.bloomberg.com/technology | Jina (paywall, sem RSS público) |
-| Financial Times | https://www.ft.com/technology | Jina (paywall, sem RSS público) |
+| Bloomberg Technology | https://www.bloomberg.com/technology | rss-proxy no homepage (paywall, sem RSS público) |
+| Financial Times | https://www.ft.com/technology | rss-proxy no homepage (paywall, sem RSS público) |
 | Rest of World | https://restofworld.org | https://restofworld.org/feed/ |
 | Platformer | https://www.platformer.news | https://www.platformer.news/feed |
 | Garbage Day | https://www.garbageday.email | https://www.garbageday.email/feed |
@@ -46,9 +46,9 @@ Use **APENAS** para detectar e pontuar relevância. **Nunca extraia conteúdo co
 | Folha de S.Paulo (Tec) | https://www1.folha.uol.com.br/tec/ | https://feeds.folha.uol.com.br/tec/rss091.xml |
 | Estadão Link | https://www.estadao.com.br/link/ | https://www.estadao.com.br/link/feed/ |
 | InfoMoney | https://www.infomoney.com.br | https://www.infomoney.com.br/feed/ |
-| Brazil Journal | https://braziljournal.com | Jina (sem RSS público confirmado) |
+| Brazil Journal | https://braziljournal.com | rss-proxy no homepage (sem RSS público confirmado) |
 | NeoFeed | https://neofeed.com.br | https://neofeed.com.br/feed/ |
-| The News (Waffle) | https://thenews.waffle.com.br | Jina (newsletter, sem RSS público) |
+| The News (Waffle) | https://thenews.waffle.com.br | rss-proxy no homepage (newsletter, sem RSS público) |
 | The Shift | https://www.theshift.info | https://www.theshift.info/feed/ |
 | Núcleo Jornalismo | https://nucleo.jor.br | https://nucleo.jor.br/feed/ |
 | Mobile Time | https://www.mobiletime.com.br | https://www.mobiletime.com.br/feed/ |
