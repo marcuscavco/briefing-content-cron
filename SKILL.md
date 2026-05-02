@@ -70,15 +70,11 @@ WebFetch("https://r.jina.ai/https://valor.globo.com")   → markdown limpo
 
 #### Tier 1 — RSS de assinante
 
-**The Information** usa HTTP Basic Auth, mas o endpoint tem proteção Cloudflare que bloqueia requests automatizados puros. Use Jina como proxy (roda browser real, bypassa Cloudflare) com as credenciais embutidas na URL:
+**The Information** — o `/subscriber_feed` restringe acesso por IP (apenas leitores RSS homologados como Feedly/Inoreader). Use Jina no homepage:
 
 ```
-WebFetch("https://r.jina.ai/https://<THE_INFORMATION_EMAIL>:<THE_INFORMATION_PASSWORD>@www.theinformation.com/subscriber_feed")
+WebFetch("https://r.jina.ai/https://www.theinformation.com")
 ```
-
-Substitua os placeholders pelos valores das variáveis de ambiente antes de chamar. Não logue a URL montada nem as credenciais em nenhuma saída.
-
-Se Jina também falhar: tente direto (sem Jina) uma vez. Se ainda falhar, use Jina no homepage `https://www.theinformation.com` e marque nota meta `⚠️ subscriber_feed inacessível — usando homepage`.
 
 **Stratechery** usa URL de RSS com token embutido:
 

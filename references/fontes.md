@@ -8,7 +8,7 @@
 
 | Prioridade | Portal | URL base | RSS | Especialidade |
 |---|---|---|---|---|
-| 1 | The Information | https://www.theinformation.com | `https://r.jina.ai/https://$THE_INFORMATION_EMAIL:$THE_INFORMATION_PASSWORD@www.theinformation.com/subscriber_feed` (Basic Auth via Jina — Cloudflare) | Scoops de big tech, IA, VC |
+| 1 | The Information | https://www.theinformation.com | Jina no homepage (subscriber_feed restrito a IPs de leitores RSS homologados) | Scoops de big tech, IA, VC |
 | 2 | Stratechery | https://stratechery.com | `$STRATECHERY_RSS_URL` (assinante) | Análise estratégica de plataformas |
 | 3 | The Economist | https://www.economist.com | `$THE_ECONOMIST_RSS_URL` (assinante, opcional) ou Jina | Contexto macro/global |
 | 4 | Valor Econômico (inclui Pipeline) | https://valor.globo.com | Jina no homepage (sem RSS público confiável) | Mercado BR, M&A, regulação |
