@@ -45,26 +45,63 @@ mkdir -p $WORKDIR
 
 ## Workflow
 
-### Etapa 1 — Coleta com Jina Reader
+### Etapa 1 — Coleta via RSS (com Jina como fallback)
 
 Faça varredura nos portais do universo (Tier 1 + Tier 2) buscando notícias das últimas 24h.
 
-**Regra de fetching:** prefixe TODAS as URLs com `https://r.jina.ai/` antes de chamar WebFetch. Isso evita 403 e detecção de bot.
+#### Regra geral de fetching
+
+| Situação | Método |
+|---|---|
+| Portal tem RSS na tabela de `fontes.md` | WebFetch direto na URL do RSS (sem Jina) |
+| RSS falha (404/403/timeout) | WebFetch via Jina no homepage do portal |
+| Portal marcado como "Jina" em `fontes.md` | WebFetch via Jina diretamente |
+| Hacker News | API direta `https://hacker-news.firebaseio.com/` |
+| Artigo Tier 1 selecionado como canônico | Sempre buscar conteúdo completo via Jina para escrever TL;DR |
+
+RSS é XML estruturado com `<pubDate>` — filtre as entradas das **últimas 24h** pelo campo de data, sem precisar parsear HTML.
+
+**Jina (quando necessário):** prefixe a URL do homepage com `https://r.jina.ai/`:
+```
+WebFetch("https://r.jina.ai/https://valor.globo.com")   → markdown limpo
+```
+
+**URLs entregues ao usuário** no digest final são sempre limpas (sem prefixo Jina, sem `/rss/`, sem `/feed/`).
+
+#### Tier 1 — RSS de assinante
+
+**The Information** — acesso via Cloudflare Worker proxy (bypassa o IP allowlist do subscriber_feed):
 
 ```
-❌ Direto:    WebFetch("https://arstechnica.com/ai/2026/05/x")        → frequente 403
-✅ Com Jina:  WebFetch("https://r.jina.ai/https://arstechnica.com/ai/2026/05/x")  → markdown limpo
+WebFetch("https://theinformation-feed.marcusccoelho.workers.dev")
 ```
 
-Aplica-se a Tier 1 e Tier 2. Use Jina como **default**, não como fallback.
+Retorna Atom feed (não RSS). Diferenças de parsing:
+- Artigos em `<entry>` (não `<item>`)
+- Data em `<updated>` ou `<published>` (não `<pubDate>`)
+- URL em `<link href="...">` (não `<link>texto</link>`)
 
-**Não aplica-se a:**
-- URLs entregues ao usuário no digest final (sempre limpas, sem prefixo Jina)
-- Hacker News (use API oficial `https://hacker-news.firebaseio.com/` ou scrape direto)
+Se o Worker retornar não-200, cair para Jina no homepage `https://www.theinformation.com`.
 
-**Quando Jina também falha:** tente uma vez direto. Se falhar de novo, marque "fonte temporariamente inacessível" e prossiga sem ela. Não substitua por outro portal só por conveniência.
+**Stratechery** usa URL de RSS com token embutido:
 
-**Para portais com paywall externo (FT, Bloomberg dentro de Tier 2):** use apenas títulos/manchetes públicas — eles servem só como sinal.
+```bash
+STRATECHERY_RSS_URL   # ex: https://stratechery.com/feed/?token=<token>
+```
+
+**The Economist** (opcional):
+
+```bash
+THE_ECONOMIST_RSS_URL  # URL RSS do assinante; se vazio, usa Jina
+```
+
+Se qualquer variável estiver vazia ou ausente, use Jina no homepage e marque na nota meta: `⚠️ Credenciais ausentes — usando Jina para <portal>`.
+
+#### Quando falha
+
+- **RSS não retorna entradas das últimas 24h:** portal pode não ter publicado hoje — registre como "sem publicação no período" (não é falha técnica).
+- **RSS e Jina falham:** marque "fonte temporariamente inacessível" e prossiga. Não substitua por outro portal.
+- **FT, Bloomberg (Tier 2, paywall):** use Jina no homepage para capturar apenas manchetes/títulos visíveis — servem só como sinal.
 
 ### Etapa 2 — Clusterização
 
@@ -333,3 +370,6 @@ Retorne resumo:
 - **Múltiplos Must-read sem Tier 1** → cada um recebe fallback. Se mais de 2 no mesmo dia, nota meta no fim: "⚠️ N Must-reads sem cobertura Tier 1 hoje — possível ângulo subexplorado"
 - **Jina retorna truncado** → tente direto uma vez. Se falhar, marca como inacessível
 - **URL entregue com prefixo Jina por engano** → falha de validação. Limpar e revalidar antes de enviar
+- **RSS de assinante ausente (The Information / Stratechery)** → use Jina no homepage, registre nota meta "⚠️ RSS de assinante ausente para <portal>"
+- **RSS sem entradas nas últimas 24h** → portal não publicou no período; não é erro técnico. Registre como "sem cobertura no período"
+- **URL de RSS retorna HTML em vez de XML** → feed moveu ou foi descontinuado; trate como falha de RSS e caia para Jina
