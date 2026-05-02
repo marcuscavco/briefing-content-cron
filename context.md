@@ -80,6 +80,15 @@ UI da routine: https://claude.ai/code/routines/trig_01Hu3YnGHhGr9Ly8WCvtvunV
 - **Z-API**: tokens vivem no MCP server `zapi-mcp` (Cloudflare Worker em `noisy-thunder-5892.marcusccoelho.workers.dev`, OAuth via `mcp.supabase.com/mcp` style). Não há credencial Z-API no repo.
 - **Supabase project:** `ckjvbzynskuqmdanmxgs` (nome: MCIA, region: us-east-2)
 
+### Cloudflare Workers (RSS infrastructure)
+
+| Worker | URL | Função |
+|---|---|---|
+| `theinformation-feed` | `https://theinformation-feed.marcusccoelho.workers.dev` | Proxy para o subscriber Atom feed do The Information (bypassa IP allowlist). Auth via Basic Auth (secrets: `THE_INFORMATION_EMAIL`, `THE_INFORMATION_PASSWORD`). |
+| `rss-proxy` | `https://rss-proxy.marcusccoelho.workers.dev` | Proxy genérico para qualquer feed RSS bloqueado. Autenticado por `?token=$PROXY_TOKEN`. Secret `PROXY_TOKEN` configurado no Worker via `wrangler secret put`. |
+
+O `PROXY_TOKEN` também é declarado como env var em `PROMPT.md` (`export PROXY_TOKEN='...'`) para que a routine o injete no ambiente ao executar as chamadas ao worker.
+
 ## 4. Schema Supabase
 
 Projeto `ckjvbzynskuqmdanmxgs`. Migrações via `apply_migration` ou `execute_sql`.
@@ -171,6 +180,14 @@ Use UI da routine (https://claude.ai/code/routines/trig_01Hu3YnGHhGr9Ly8WCvtvunV
 ### Schema do banco
 
 Use `apply_migration` (DDL) ou `execute_sql` (DML/análises). Sempre via Supabase MCP. Nunca commite credenciais Supabase no repo — o `project_id` é a única referência usada e é público (ele é o subdomínio público da API).
+
+### Feed RSS retornando 403/bloqueado
+
+Use o worker `rss-proxy` como proxy:
+```
+WebFetch("https://rss-proxy.marcusccoelho.workers.dev/?token=$PROXY_TOKEN&url=<url_do_feed_encoded>")
+```
+Se precisar adicionar um novo feed via proxy de forma permanente, documente-o em `references/fontes.md` já com a URL do proxy.
 
 ### Mudar tools disponíveis pra routine
 

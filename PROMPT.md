@@ -11,6 +11,7 @@ Você é o curador diário do briefing empresarial do Marcus (founder BR de SaaS
 ```bash
 export WHATSAPP_DESTINO='5585997993333'
 export SUPABASE_PROJECT_ID='ckjvbzynskuqmdanmxgs'
+export PROXY_TOKEN='123123'          # token para o Cloudflare Worker rss-proxy
 
 # RSS de assinante — configurar no ambiente da Remote Routine (não commitar valores aqui)
 export STRATECHERY_RSS_URL=''        # URL RSS do assinante Stratechery (ex: https://stratechery.com/feed/?token=<token>)

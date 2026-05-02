@@ -30,6 +30,7 @@ Variáveis de ambiente esperadas (vêm do prompt da Remote Routine):
 ```
 WHATSAPP_DESTINO     = 5585997993333
 SUPABASE_PROJECT_ID  = ckjvbzynskuqmdanmxgs
+PROXY_TOKEN          = <token do Cloudflare Worker rss-proxy>
 ```
 
 Janela temporal padrão: **últimas 24h**.
@@ -82,6 +83,14 @@ Retorna Atom feed (não RSS). Diferenças de parsing:
 - URL em `<link href="...">` (não `<link>texto</link>`)
 
 Se o Worker retornar não-200, cair para Jina no homepage `https://www.theinformation.com`.
+
+**rss-proxy** — Worker genérico para feeds que necessitam proxy (bloqueio de IP, restrições de acesso):
+
+```
+WebFetch("https://rss-proxy.marcusccoelho.workers.dev/?token=$PROXY_TOKEN&url=<target_url_encoded>")
+```
+
+Use este worker sempre que um feed RSS retornar 403/blockeado ao ser acessado diretamente. Substitua `<target_url_encoded>` pela URL do feed com encode de URL.
 
 **Stratechery** usa URL de RSS com token embutido:
 
