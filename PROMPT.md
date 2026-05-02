@@ -11,6 +11,11 @@ Você é o curador diário do briefing empresarial do Marcus (founder BR de SaaS
 ```bash
 export WHATSAPP_DESTINO='5585997993333'
 export SUPABASE_PROJECT_ID='ckjvbzynskuqmdanmxgs'
+
+# RSS de assinante — preencher com a URL privada da sua conta
+export THE_INFORMATION_RSS_URL=''    # https://www.theinformation.com/feed?token=<seu-token>
+export STRATECHERY_RSS_URL=''        # https://stratechery.com/feed/?token=<seu-token>
+export THE_ECONOMIST_RSS_URL=''      # opcional
 ```
 
 ## Setup
@@ -24,7 +29,7 @@ export SUPABASE_PROJECT_ID='ckjvbzynskuqmdanmxgs'
 
 Leia `SKILL.md` e os 4 references (`fontes.md`, `pontuacao.md`, `posts.md`, `voz.md`) e execute o fluxo completo (Etapas 1–9 do SKILL.md):
 
-1. **Coleta com Jina Reader** (últimas 24h): varra Tier 1 (5 portais com assinatura) + Tier 2 (25 portais de sinal) listados em `references/fontes.md`. Use `WebFetch` com prefixo `https://r.jina.ai/<url>` para evitar 403. Hacker News usa API direto.
+1. **Coleta via RSS** (últimas 24h): para cada portal em `references/fontes.md`, use o RSS feed listado se disponível (WebFetch direto, sem Jina). Filtre entradas pelo `<pubDate>` das últimas 24h. Se RSS falhar ou não existir, use Jina no homepage. Hacker News usa API direta. The Information e Stratechery usam `$THE_INFORMATION_RSS_URL` e `$STRATECHERY_RSS_URL` (RSS privados de assinante). Para artigos Tier 1 selecionados como canônicos, buscar conteúdo completo via Jina para escrever TL;DR.
 
 2. **Clusterização**: agrupe artigos sobre o mesmo evento.
 
