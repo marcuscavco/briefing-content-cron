@@ -70,15 +70,27 @@ WebFetch("https://r.jina.ai/https://valor.globo.com")   → markdown limpo
 
 #### Tier 1 — RSS de assinante
 
-The Information e Stratechery requerem URL de RSS privada de assinante (vem via variável de ambiente):
+**The Information** usa HTTP Basic Auth. Monte a URL com as credenciais do ambiente:
 
-```bash
-THE_INFORMATION_RSS_URL   # URL RSS do assinante (ex: https://www.theinformation.com/feed?token=<token>)
-STRATECHERY_RSS_URL       # URL RSS do assinante (ex: https://stratechery.com/feed/?token=<token>)
-THE_ECONOMIST_RSS_URL     # Opcional — URL RSS do assinante The Economist
+```
+https://<THE_INFORMATION_EMAIL>:<THE_INFORMATION_PASSWORD>@www.theinformation.com/subscriber_feed
 ```
 
-Se a variável estiver vazia ou ausente, use Jina no homepage e marque na nota meta: "⚠️ RSS de assinante ausente — usando Jina para <portal>".
+Substitua os placeholders pelos valores das variáveis de ambiente antes de chamar WebFetch. Não logue a URL montada nem as credenciais em nenhuma saída.
+
+**Stratechery** usa URL de RSS com token embutido:
+
+```bash
+STRATECHERY_RSS_URL   # ex: https://stratechery.com/feed/?token=<token>
+```
+
+**The Economist** (opcional):
+
+```bash
+THE_ECONOMIST_RSS_URL  # URL RSS do assinante; se vazio, usa Jina
+```
+
+Se qualquer variável estiver vazia ou ausente, use Jina no homepage e marque na nota meta: `⚠️ Credenciais ausentes — usando Jina para <portal>`.
 
 #### Quando falha
 

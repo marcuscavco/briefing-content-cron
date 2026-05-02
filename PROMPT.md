@@ -12,10 +12,11 @@ Você é o curador diário do briefing empresarial do Marcus (founder BR de SaaS
 export WHATSAPP_DESTINO='5585997993333'
 export SUPABASE_PROJECT_ID='ckjvbzynskuqmdanmxgs'
 
-# RSS de assinante — preencher com a URL privada da sua conta
-export THE_INFORMATION_RSS_URL=''    # https://www.theinformation.com/feed?token=<seu-token>
-export STRATECHERY_RSS_URL=''        # https://stratechery.com/feed/?token=<seu-token>
-export THE_ECONOMIST_RSS_URL=''      # opcional
+# Credenciais de assinante — NÃO commitar valores aqui; configurar no ambiente da Remote Routine
+export THE_INFORMATION_EMAIL=''      # e-mail de login no theinformation.com
+export THE_INFORMATION_PASSWORD=''   # senha de login no theinformation.com
+export STRATECHERY_RSS_URL=''        # URL RSS do assinante Stratechery (ex: https://stratechery.com/feed/?token=<token>)
+export THE_ECONOMIST_RSS_URL=''      # opcional — URL RSS do assinante The Economist
 ```
 
 ## Setup
@@ -29,7 +30,7 @@ export THE_ECONOMIST_RSS_URL=''      # opcional
 
 Leia `SKILL.md` e os 4 references (`fontes.md`, `pontuacao.md`, `posts.md`, `voz.md`) e execute o fluxo completo (Etapas 1–9 do SKILL.md):
 
-1. **Coleta via RSS** (últimas 24h): para cada portal em `references/fontes.md`, use o RSS feed listado se disponível (WebFetch direto, sem Jina). Filtre entradas pelo `<pubDate>` das últimas 24h. Se RSS falhar ou não existir, use Jina no homepage. Hacker News usa API direta. The Information e Stratechery usam `$THE_INFORMATION_RSS_URL` e `$STRATECHERY_RSS_URL` (RSS privados de assinante). Para artigos Tier 1 selecionados como canônicos, buscar conteúdo completo via Jina para escrever TL;DR.
+1. **Coleta via RSS** (últimas 24h): para cada portal em `references/fontes.md`, use o RSS feed listado se disponível (WebFetch direto, sem Jina). Filtre entradas pelo `<pubDate>` das últimas 24h. Se RSS falhar ou não existir, use Jina no homepage. Hacker News usa API direta. The Information usa autenticação Basic Auth (`$THE_INFORMATION_EMAIL`/`$THE_INFORMATION_PASSWORD`). Stratechery usa `$STRATECHERY_RSS_URL`. Para artigos Tier 1 selecionados como canônicos, buscar conteúdo completo via Jina para escrever TL;DR.
 
 2. **Clusterização**: agrupe artigos sobre o mesmo evento.
 
