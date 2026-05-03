@@ -104,7 +104,7 @@ Se a tool retornar com `isError: true` ou texto de erro, marque o portal como in
 
 #### Quando falha
 
-- **Portal não publica nas últimas 24h:** registre como "sem publicação no período" — não é falha técnica.
+- **Portal não publica nas últimas 48h:** registre como "sem publicação no período" — não é falha técnica.
 - **Tool MCP retorna erro:** marque "fonte temporariamente inacessível" e prossiga. Não substitua por outro portal.
 
 ### Etapa 2 — Clusterização
@@ -145,7 +145,7 @@ Para cada cluster Must-read ou Relevante:
 2. **Sem Tier 1 (Must-read OU Relevante)** → ofereça **um único** link Tier 2 como fallback, marcado `🟡 Fallback Tier 2 — sem fonte canônica`. Use prioridade de fallback em `references/fontes.md`. Antes só Must-read tinha esse direito; agora Relevante também recebe link Tier 2 pra evitar "sinal sem fonte" estéril.
 3. **Sem Tier 1 e sem Tier 2 elegível** (todos os Tier 2 que cobrem estão na lista de exclusão): aí sim, marque como `⚠️ Sinal sem fonte canônica`, mencione título e heat, sem link.
 
-**Excluídos como link de fallback** (continuam contando para heat, mas nunca aparecem como leitura): Hacker News (agregador), Bloomberg, FT (paywall sem assinatura), The News/Waffle (newsletter de curadoria).
+**Excluídos como link de fallback** (continuam contando para heat, mas nunca aparecem como leitura): Hacker News (agregador), The News/Waffle (newsletter de curadoria). Bloomberg e FT são fallback elegível.
 
 #### Promoção via Curator's Pick
 

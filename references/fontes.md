@@ -55,17 +55,16 @@ Use **APENAS** para detectar e pontuar relevância. **Nunca extraia conteúdo co
 | Convergência Digital | https://www.convergenciadigital.com.br | https://www.convergenciadigital.com.br/feed/ |
 | Tecnoblog | https://tecnoblog.net | https://tecnoblog.net/feed/ |
 
-## Prioridade de Fallback Tier 2 (apenas em Must-read sem Tier 1)
+## Prioridade de Fallback Tier 2 (Must-read OU Relevante sem Tier 1)
 
 Quando precisar oferecer um Tier 2 como fallback, escolha pela ordem:
 
 1. **Brasileiros editoriais:** Brazil Journal → NeoFeed → Folha (Tec) → Estadão Link → Núcleo Jornalismo → Tecnoblog
-2. **Internacionais editoriais sem paywall:** Ars Technica → 404 Media → Wired → MIT Technology Review → Platformer → Rest of World
+2. **Internacionais editoriais (RSS funcional, conteúdo acessível):** Bloomberg → Financial Times → Ars Technica → 404 Media → Wired → MIT Technology Review → Platformer → Rest of World
 3. **Restantes:** The Verge → TechCrunch → Engadget → CNET → Mobile Time → Convergência Digital → InfoMoney → Garbage Day
 
 **Excluídos como fallback** (continuam contando para heat, mas nunca aparecem como link de leitura):
 - **Hacker News** — agregador, não publicação original
-- **Bloomberg / Financial Times** — paywall externo sem assinatura ativa
 - **The News (Waffle)** — newsletter de curadoria, não fonte primária
 
 **Critério de desempate dentro do mesmo nível:** prefira a publicação que combina melhor com o eixo do assunto (BR + business → Brazil Journal/NeoFeed; tech profundo → Ars Technica/404 Media; cultura/sociedade tech → Wired/Rest of World).

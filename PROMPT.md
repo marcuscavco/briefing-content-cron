@@ -34,7 +34,7 @@ Leia `SKILL.md` e os 4 references (`fontes.md`, `pontuacao.md`, `posts.md`, `voz
 
 3. **Heat Score**: +2 por cada Tier 1, +1 por cada Tier 2, +1 bônus se 3+ portais BR, +1 bônus se HN 200+ pts. Categorias: **≥6 Must-read, 3-5 Relevante, 2 No radar, <2 descartar** (thresholds afrouxados em relação à versão antiga 7/4-6/2-3).
 
-4. **Seleção de fonte**: Tier 1 canônico por padrão. **Must-read OU Relevante sem Tier 1** → 1 link fallback Tier 2 marcado 🟡 (antes só Must-read tinha esse direito). Sem Tier 2 elegível → marcar como sinal sem fonte. Excluir HN, Bloomberg, FT, The News como fallback (paywall/agregador). **Curator's Pick**: até 2 clusters por digest podem ser promovidos uma categoria acima quando 💼≥3, ou são scoop exclusivo Tier 1 com 💼≥2, ou têm 💻≥3 com ângulo prático claro (e 💼≥2). Marcar com ✨ no WhatsApp e `is_curator_pick=true` no Supabase.
+4. **Seleção de fonte**: Tier 1 canônico por padrão. **Must-read OU Relevante sem Tier 1** → 1 link fallback Tier 2 marcado 🟡 (antes só Must-read tinha esse direito). Sem Tier 2 elegível → marcar como sinal sem fonte. Excluir HN e The News/Waffle como fallback (agregador/newsletter de curadoria) — Bloomberg e FT são elegíveis. **Curator's Pick**: até 2 clusters por digest podem ser promovidos uma categoria acima quando 💼≥3, ou são scoop exclusivo Tier 1 com 💼≥2, ou têm 💻≥3 com ângulo prático claro (e 💼≥2). Marcar com ✨ no WhatsApp e `is_curator_pick=true` no Supabase.
 
 5. **Notas dimensionais 0-3** (independentes do Heat): 💻 Técnica e 💼 Empresarial. Ver `references/pontuacao.md`.
 

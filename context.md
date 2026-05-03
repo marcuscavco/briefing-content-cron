@@ -125,7 +125,7 @@ clusters (3-N linhas por briefing)
 ├── relevancia_tecnica smallint     -- 0..3
 ├── relevancia_empresarial smallint -- 0..3
 ├── tier_fonte smallint             -- 1 | 2 (fallback) | NULL
-├── is_fallback bool                -- true se cluster Must-read sem Tier 1 que recebeu fallback Tier 2
+├── is_fallback bool                -- true se cluster (Must-read OU Relevante) sem Tier 1 que recebeu fallback Tier 2
 ├── portais_cobrindo jsonb          -- ["The Information","Bloomberg",...]
 ├── nota numeric(3,1)               -- DEPRECATED (legado — use heat/relevancias)
 └── por_que_importa text            -- DEPRECATED (legado)

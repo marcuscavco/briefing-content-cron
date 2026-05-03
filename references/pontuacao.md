@@ -13,10 +13,12 @@ Para cada cluster:
 
 | Faixa | Categoria | Tratamento |
 |---|---|---|
-| ≥ 7 | 🔥 Must-read | Leitura obrigatória, destaque no topo |
-| 4-6 | 📌 Relevante | Leitura sugerida |
-| 2-3 | 📎 No radar | Apenas registrar título |
+| ≥ 6 | 🔥 Must-read | Leitura obrigatória, destaque no topo |
+| 3-5 | 📌 Relevante | Leitura sugerida |
+| 2 | 📎 No radar | Apenas registrar título |
 | < 2 | — | Descartar do digest (mas salvar no Supabase pra análise de tendências) |
+
+> Thresholds afrouxados em relação à versão antiga (7/4-6/2-3) pra abrir mais espaço de leitura. Combina com fallback Tier 2 também em Relevante e com Curator's Pick (ver `SKILL.md` Etapa 4).
 
 ## Notas Dimensionais (independentes do Heat)
 
