@@ -52,13 +52,15 @@ Faça varredura nos portais do universo (Tier 1 + Tier 2) buscando notícias das
 
 #### Regra única de fetching
 
-**Toda chamada externa — sem exceção — usa o rss-proxy:**
+**Toda chamada externa usa o rss-proxy, passando sempre a URL do feed RSS** (nunca a homepage):
 
 ```
-WebFetch("https://rss-proxy.marcusccoelho.workers.dev/?token=$PROXY_TOKEN&url=<url_encoded>")
+WebFetch("https://rss-proxy.marcusccoelho.workers.dev?token=$PROXY_TOKEN&url=<rss_feed_url>")
 ```
 
-Encode a URL-alvo antes de passar como parâmetro `url`. Se o proxy retornar não-200, marque o portal como inacessível e prossiga — **sem retry, sem fallback**.
+A URL do feed não precisa de encode — passe diretamente como valor do parâmetro `url`. Se o proxy retornar não-200, marque o portal como inacessível e prossiga — **sem retry, sem fallback**.
+
+Exceção: **The Information** tem Worker dedicado e é chamado diretamente (ver abaixo).
 
 RSS é XML estruturado com `<pubDate>` — filtre as entradas das **últimas 24h** pelo campo de data.
 
@@ -66,10 +68,10 @@ RSS é XML estruturado com `<pubDate>` — filtre as entradas das **últimas 24h
 
 #### Tier 1 — RSS de assinante
 
-**The Information** — rss-proxy apontado para o Worker de autenticação dedicado:
+**The Information** — chamada direta ao Worker de autenticação dedicado (não usa rss-proxy):
 
 ```
-WebFetch("https://rss-proxy.marcusccoelho.workers.dev/?token=$PROXY_TOKEN&url=https%3A%2F%2Ftheinformation-feed.marcusccoelho.workers.dev")
+WebFetch("https://theinformation-feed.marcusccoelho.workers.dev/theinformation-feed")
 ```
 
 Retorna Atom feed (não RSS). Diferenças de parsing:

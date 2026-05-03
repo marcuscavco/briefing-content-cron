@@ -8,10 +8,10 @@
 
 | Prioridade | Portal | URL base | RSS | Especialidade |
 |---|---|---|---|---|
-| 1 | The Information | https://www.theinformation.com | https://theinformation-feed.marcusccoelho.workers.dev (Atom feed via Worker proxy com Basic Auth) | Scoops de big tech, IA, VC |
+| 1 | The Information | https://www.theinformation.com | `https://theinformation-feed.marcusccoelho.workers.dev/theinformation-feed` (Worker dedicado, chamada direta) | Scoops de big tech, IA, VC |
 | 2 | Stratechery | https://stratechery.com | `$STRATECHERY_RSS_URL` (assinante) | Análise estratégica de plataformas |
 | 3 | The Economist | https://www.economist.com | `$THE_ECONOMIST_RSS_URL` (assinante, opcional) | Contexto macro/global |
-| 4 | Valor Econômico (inclui Pipeline) | https://valor.globo.com | rss-proxy no homepage (sem RSS público confiável) | Mercado BR, M&A, regulação |
+| 4 | Valor Econômico (inclui Pipeline) | https://valor.globo.com | `https://pox.globo.com/rss/valor` | Mercado BR, M&A, regulação |
 | 5 | Exame | https://exame.com | https://exame.com/feed/ | Negócios/tech BR ampliado |
 
 ## Tier 2 — Portais de sinal (apenas para pontuação)
@@ -27,8 +27,8 @@ Use **APENAS** para detectar e pontuar relevância. **Nunca extraia conteúdo co
 | Ars Technica | https://arstechnica.com | https://feeds.arstechnica.com/arstechnica/index |
 | MIT Technology Review | https://www.technologyreview.com | https://www.technologyreview.com/feed/ |
 | Wired | https://www.wired.com | https://www.wired.com/feed/rss |
-| Bloomberg Technology | https://www.bloomberg.com/technology | rss-proxy no homepage (paywall, sem RSS público) |
-| Financial Times | https://www.ft.com/technology | rss-proxy no homepage (paywall, sem RSS público) |
+| Bloomberg Technology | https://www.bloomberg.com/technology | *(sem RSS público — URL de feed a confirmar)* |
+| Financial Times | https://www.ft.com/technology | *(sem RSS público — URL de feed a confirmar)* |
 | Rest of World | https://restofworld.org | https://restofworld.org/feed/ |
 | Platformer | https://www.platformer.news | https://www.platformer.news/feed |
 | Garbage Day | https://www.garbageday.email | https://www.garbageday.email/feed |
@@ -46,9 +46,9 @@ Use **APENAS** para detectar e pontuar relevância. **Nunca extraia conteúdo co
 | Folha de S.Paulo (Tec) | https://www1.folha.uol.com.br/tec/ | https://feeds.folha.uol.com.br/tec/rss091.xml |
 | Estadão Link | https://www.estadao.com.br/link/ | https://www.estadao.com.br/link/feed/ |
 | InfoMoney | https://www.infomoney.com.br | https://www.infomoney.com.br/feed/ |
-| Brazil Journal | https://braziljournal.com | rss-proxy no homepage (sem RSS público confirmado) |
+| Brazil Journal | https://braziljournal.com | *(sem RSS público confirmado — URL de feed a confirmar)* |
 | NeoFeed | https://neofeed.com.br | https://neofeed.com.br/feed/ |
-| The News (Waffle) | https://thenews.waffle.com.br | rss-proxy no homepage (newsletter, sem RSS público) |
+| The News (Waffle) | https://thenews.waffle.com.br | *(newsletter, sem RSS público — URL de feed a confirmar)* |
 | The Shift | https://www.theshift.info | https://www.theshift.info/feed/ |
 | Núcleo Jornalismo | https://nucleo.jor.br | https://nucleo.jor.br/feed/ |
 | Mobile Time | https://www.mobiletime.com.br | https://www.mobiletime.com.br/feed/ |
