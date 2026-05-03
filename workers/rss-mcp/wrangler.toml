@@ -1,0 +1,15 @@
+name = "rss-mcp"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Secrets — configurar via `wrangler secret put <NAME>`
+#   PROXY_TOKEN  → token do worker rss-proxy (ex: 123123)
+
+[[durable_objects.bindings]]
+name = "MCP_OBJECT"
+class_name = "RssMcp"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["RssMcp"]
