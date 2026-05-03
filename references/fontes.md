@@ -27,8 +27,8 @@ Use **APENAS** para detectar e pontuar relevância. **Nunca extraia conteúdo co
 | Ars Technica | https://arstechnica.com | https://feeds.arstechnica.com/arstechnica/index |
 | MIT Technology Review | https://www.technologyreview.com | https://www.technologyreview.com/feed/ |
 | Wired | https://www.wired.com | https://www.wired.com/feed/rss |
-| Bloomberg Technology | https://www.bloomberg.com/technology | *(sem RSS público — URL de feed a confirmar)* |
-| Financial Times | https://www.ft.com/technology | *(sem RSS público — URL de feed a confirmar)* |
+| Bloomberg Technology | https://www.bloomberg.com/technology | `https://feeds.bloomberg.com/technology/news.rss` |
+| Financial Times | https://www.ft.com/technology | `https://www.ft.com/technology-sector?format=rss` |
 | Rest of World | https://restofworld.org | https://restofworld.org/feed/ |
 | Platformer | https://www.platformer.news | https://www.platformer.news/feed |
 | Garbage Day | https://www.garbageday.email | https://www.garbageday.email/feed |
@@ -46,7 +46,7 @@ Use **APENAS** para detectar e pontuar relevância. **Nunca extraia conteúdo co
 | Folha de S.Paulo (Tec) | https://www1.folha.uol.com.br/tec/ | https://feeds.folha.uol.com.br/tec/rss091.xml |
 | Estadão Link | https://www.estadao.com.br/link/ | https://www.estadao.com.br/link/feed/ |
 | InfoMoney | https://www.infomoney.com.br | https://www.infomoney.com.br/feed/ |
-| Brazil Journal | https://braziljournal.com | *(sem RSS público confirmado — URL de feed a confirmar)* |
+| Brazil Journal | https://braziljournal.com | `https://braziljournal.com/tag/tecnologia-e-internet/feed/` |
 | NeoFeed | https://neofeed.com.br | https://neofeed.com.br/feed/ |
 | The News (Waffle) | https://thenews.waffle.com.br | *(newsletter, sem RSS público — URL de feed a confirmar)* |
 | The Shift | https://www.theshift.info | https://www.theshift.info/feed/ |
