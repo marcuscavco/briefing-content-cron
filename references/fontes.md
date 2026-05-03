@@ -4,11 +4,11 @@
 
 **Única origem permitida** para extração de texto completo e recomendação de leitura. Ordem de preferência quando mais de um cobre o mesmo assunto:
 
-**Método de coleta:** RSS privado de assinante (URL via variável de ambiente), via rss-proxy. Se rss-proxy retornar não-200, registre como inacessível e prossiga. Para artigos selecionados como canônicos, buscar conteúdo via rss-proxy para escrever TL;DR.
+**Método de coleta:** `fetch_rss(url)` (MCP tool do `rss-mcp`) com a URL de assinante via variável de ambiente. Para artigos selecionados como canônicos, buscar conteúdo via `fetch_rss(url=<url_do_artigo>)` para TL;DR. Se a tool retornar erro, registre como inacessível e prossiga.
 
 | Prioridade | Portal | URL base | RSS | Especialidade |
 |---|---|---|---|---|
-| 1 | The Information | https://www.theinformation.com | `https://theinformation-feed.marcusccoelho.workers.dev/theinformation-feed` (Worker dedicado, chamada direta) | Scoops de big tech, IA, VC |
+| 1 | The Information | https://www.theinformation.com | MCP tool `fetch_the_information()` (sem parâmetros) | Scoops de big tech, IA, VC |
 | 2 | Stratechery | https://stratechery.com | `$STRATECHERY_RSS_URL` (assinante) | Análise estratégica de plataformas |
 | 3 | The Economist | https://www.economist.com | `$THE_ECONOMIST_RSS_URL` (assinante, opcional) | Contexto macro/global |
 | 4 | Valor Econômico (inclui Pipeline) | https://valor.globo.com | `https://pox.globo.com/rss/valor` | Mercado BR, M&A, regulação |
@@ -18,7 +18,7 @@
 
 Use **APENAS** para detectar e pontuar relevância. **Nunca extraia conteúdo completo, nunca recomende como leitura, nunca cite o artigo individualmente.** Eles existem só para responder: *"este assunto está sendo coberto?"*
 
-**Método de coleta:** rss-proxy para todos os fetches. Se rss-proxy retornar não-200, registre como inacessível e prossiga.
+**Método de coleta:** `fetch_rss(url)` (MCP tool do `rss-mcp`) com a URL do feed listada na tabela. Se a tool retornar erro, registre como inacessível e prossiga.
 
 ### Internacionais
 

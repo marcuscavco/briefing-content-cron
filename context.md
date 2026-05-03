@@ -82,13 +82,13 @@ UI da routine: https://claude.ai/code/routines/trig_01Hu3YnGHhGr9Ly8WCvtvunV
 
 ### Cloudflare Workers (RSS infrastructure)
 
-| Worker | URL | Função |
-|---|---|---|
-| `rss-mcp` | `https://rss-mcp.marcusccoelho.workers.dev/mcp` | **Servidor MCP da routine.** Expõe `fetch_rss(url)` e `fetch_the_information()`. Sem auth externa. Secret interno: `PROXY_TOKEN` para chamar o `rss-proxy`. |
-| `rss-proxy` | `https://rss-proxy.marcusccoelho.workers.dev` | Proxy genérico chamado internamente pelo `rss-mcp`. Autenticado por `?token=PROXY_TOKEN`. |
-| `theinformation-feed` | `https://theinformation-feed.marcusccoelho.workers.dev/theinformation-feed` | Worker dedicado de auth do The Information (Basic Auth interna). Chamado internamente pelo `rss-mcp`. |
+| Worker | URL | Visível para a routine? | Função |
+|---|---|---|---|
+| `rss-mcp` | `https://rss-mcp.marcusccoelho.workers.dev/mcp` | ✅ Sim (MCP connector) | Servidor MCP. Expõe `fetch_rss(url)` e `fetch_the_information()`. |
+| `rss-proxy` | `https://rss-proxy.marcusccoelho.workers.dev` | ❌ Interno | Chamado pelo `rss-mcp` para todos os feeds. Auth via `PROXY_TOKEN` (secret do Worker). |
+| `theinformation-feed` | `https://theinformation-feed.marcusccoelho.workers.dev/theinformation-feed` | ❌ Interno | Chamado pelo `rss-mcp` para The Information. Basic Auth interna. |
 
-A routine só interage com `rss-mcp` — ele orquestra os outros dois internamente.
+A routine só interage com `rss-mcp` — nunca chama `rss-proxy` ou `theinformation-feed` diretamente.
 
 ## 4. Schema Supabase
 
