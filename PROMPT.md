@@ -11,7 +11,6 @@ Você é o curador diário do briefing empresarial do Marcus (founder BR de SaaS
 ```bash
 export WHATSAPP_DESTINO='5585997993333'
 export SUPABASE_PROJECT_ID='ckjvbzynskuqmdanmxgs'
-export PROXY_TOKEN='123123'          # token para o Cloudflare Worker rss-proxy
 
 # RSS de assinante — configurar no ambiente da Remote Routine (não commitar valores aqui)
 export STRATECHERY_RSS_URL=''        # URL RSS do assinante Stratechery (ex: https://stratechery.com/feed/?token=<token>)
@@ -29,7 +28,7 @@ export THE_ECONOMIST_RSS_URL=''      # opcional — URL RSS do assinante The Eco
 
 Leia `SKILL.md` e os 4 references (`fontes.md`, `pontuacao.md`, `posts.md`, `voz.md`) e execute o fluxo completo (Etapas 1–9 do SKILL.md):
 
-1. **Coleta via RSS** (últimas 24h): toda chamada externa usa exclusivamente o rss-proxy (`https://rss-proxy.marcusccoelho.workers.dev/?token=$PROXY_TOKEN&url=<url_encoded>`). Se retornar não-200, marque como inacessível e prossiga — sem fallback. The Information é chamado diretamente em `https://theinformation-feed.marcusccoelho.workers.dev/theinformation-feed` (Atom feed — parse `<entry>` com `<updated>`/`<published>`). Stratechery usa `$STRATECHERY_RSS_URL` via proxy; se vazia, skip. Para artigos Tier 1 canônicos, buscar conteúdo via rss-proxy para TL;DR.
+1. **Coleta via RSS** (últimas 24h): toda chamada externa usa exclusivamente as tools MCP do servidor `rss-mcp` — nada de WebFetch. Use `fetch_rss(url)` para qualquer feed RSS (passe a URL do feed listada em `fontes.md`, nunca a homepage), e `fetch_the_information()` para o feed dedicado da The Information (Atom feed — parse `<entry>` com `<updated>`/`<published>`). Se a tool retornar erro, marque o portal como inacessível e prossiga — sem fallback. Stratechery usa `fetch_rss(url=$STRATECHERY_RSS_URL)`; se a variável vazia, skip. Para artigos Tier 1 canônicos, busque o conteúdo via `fetch_rss(url=<url_do_artigo>)` para TL;DR.
 
 2. **Clusterização**: agrupe artigos sobre o mesmo evento.
 

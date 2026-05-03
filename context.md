@@ -68,8 +68,8 @@ A routine clona este repo, lê `PROMPT.md`, e executa o fluxo de curadoria diár
 | Modelo | `claude-sonnet-4-6` |
 | Repo source | `https://github.com/marcuscavco/briefing-content-cron` |
 | Environment | `env_01Nr7kmdhe7i9Co8nDZTiNCL` (anthropic_cloud) |
-| `allowed_tools` | Bash, Read, Write, Edit, Glob, Grep, WebSearch, WebFetch, `send_whatsapp_text`, `execute_sql` |
-| MCP connectors | Gmail (legado), zapi-mcp, Supabase |
+| `allowed_tools` | Bash, Read, Write, Edit, Glob, Grep, `fetch_rss`, `fetch_the_information`, `send_whatsapp_text`, `execute_sql` |
+| MCP connectors | rss-mcp, zapi-mcp, Supabase, Gmail (legado) |
 | Prompt da routine | One-liner: "Leia `PROMPT.md` na raiz do repositório clonado e siga exatamente as instruções lá." |
 
 UI da routine: https://claude.ai/code/routines/trig_01Hu3YnGHhGr9Ly8WCvtvunV
@@ -84,10 +84,11 @@ UI da routine: https://claude.ai/code/routines/trig_01Hu3YnGHhGr9Ly8WCvtvunV
 
 | Worker | URL | Função |
 |---|---|---|
-| `theinformation-feed` | `https://theinformation-feed.marcusccoelho.workers.dev` | Proxy para o subscriber Atom feed do The Information (bypassa IP allowlist). Auth via Basic Auth (secrets: `THE_INFORMATION_EMAIL`, `THE_INFORMATION_PASSWORD`). |
-| `rss-proxy` | `https://rss-proxy.marcusccoelho.workers.dev` | Proxy genérico para qualquer feed RSS bloqueado. Autenticado por `?token=$PROXY_TOKEN`. Secret `PROXY_TOKEN` configurado no Worker via `wrangler secret put`. |
+| `rss-mcp` | `https://rss-mcp.marcusccoelho.workers.dev/mcp` | **Servidor MCP da routine.** Expõe `fetch_rss(url)` e `fetch_the_information()`. Sem auth externa. Secret interno: `PROXY_TOKEN` para chamar o `rss-proxy`. |
+| `rss-proxy` | `https://rss-proxy.marcusccoelho.workers.dev` | Proxy genérico chamado internamente pelo `rss-mcp`. Autenticado por `?token=PROXY_TOKEN`. |
+| `theinformation-feed` | `https://theinformation-feed.marcusccoelho.workers.dev/theinformation-feed` | Worker dedicado de auth do The Information (Basic Auth interna). Chamado internamente pelo `rss-mcp`. |
 
-O `PROXY_TOKEN` também é declarado como env var em `PROMPT.md` (`export PROXY_TOKEN='...'`) para que a routine o injete no ambiente ao executar as chamadas ao worker.
+A routine só interage com `rss-mcp` — ele orquestra os outros dois internamente.
 
 ## 4. Schema Supabase
 
@@ -181,13 +182,9 @@ Use UI da routine (https://claude.ai/code/routines/trig_01Hu3YnGHhGr9Ly8WCvtvunV
 
 Use `apply_migration` (DDL) ou `execute_sql` (DML/análises). Sempre via Supabase MCP. Nunca commite credenciais Supabase no repo — o `project_id` é a única referência usada e é público (ele é o subdomínio público da API).
 
-### Feed RSS retornando 403/bloqueado
+### Feed RSS retornando erro
 
-Use o worker `rss-proxy` como proxy:
-```
-WebFetch("https://rss-proxy.marcusccoelho.workers.dev/?token=$PROXY_TOKEN&url=<url_do_feed_encoded>")
-```
-Se precisar adicionar um novo feed via proxy de forma permanente, documente-o em `references/fontes.md` já com a URL do proxy.
+Todos os fetches passam pelo MCP `rss-mcp`. Se `fetch_rss(url)` retornar erro para um portal, ele é marcado como inacessível e o fluxo prossegue sem fallback. Para adicionar um novo feed, documente a URL do feed RSS em `references/fontes.md` — o `rss-mcp` cuida do resto.
 
 ### Mudar tools disponíveis pra routine
 

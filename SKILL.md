@@ -30,7 +30,6 @@ Variáveis de ambiente esperadas (vêm do prompt da Remote Routine):
 ```
 WHATSAPP_DESTINO     = 5585997993333
 SUPABASE_PROJECT_ID  = ckjvbzynskuqmdanmxgs
-PROXY_TOKEN          = <token do Cloudflare Worker rss-proxy>
 ```
 
 Janela temporal padrão: **últimas 24h**.
@@ -52,57 +51,35 @@ Faça varredura nos portais do universo (Tier 1 + Tier 2) buscando notícias das
 
 #### Regra única de fetching
 
-**Toda chamada externa usa o rss-proxy, passando sempre a URL do feed RSS** (nunca a homepage):
+**Toda chamada externa usa exclusivamente as tools MCP do servidor `rss-mcp`. Nada de WebFetch.**
 
-```
-WebFetch("https://rss-proxy.marcusccoelho.workers.dev?token=$PROXY_TOKEN&url=<rss_feed_url>")
-```
+| Portal | Tool | Parâmetros |
+|---|---|---|
+| The Information | `fetch_the_information` | (sem parâmetros) |
+| Demais portais | `fetch_rss` | `url` = URL do feed RSS (não a homepage) |
+| Artigo Tier 1 canônico (TL;DR) | `fetch_rss` | `url` = URL do artigo |
 
-A URL do feed não precisa de encode — passe diretamente como valor do parâmetro `url`. Se o proxy retornar não-200, marque o portal como inacessível e prossiga — **sem retry, sem fallback**.
-
-Exceção: **The Information** tem Worker dedicado e é chamado diretamente (ver abaixo).
+A tool retorna o XML cru do feed (ou o conteúdo bruto da URL no caso de artigos). Se a tool retornar com `isError: true` ou texto de erro, marque o portal como inacessível e prossiga — **sem retry, sem fallback**.
 
 RSS é XML estruturado com `<pubDate>` — filtre as entradas das **últimas 24h** pelo campo de data.
 
-**URLs entregues ao usuário** no digest final são sempre limpas (sem parâmetros de proxy, sem `/rss/`, sem `/feed/`).
+**URLs entregues ao usuário** no digest final são sempre limpas (sem `/rss/`, sem `/feed/`, sem parâmetros de query).
 
 #### Tier 1 — RSS de assinante
 
-**The Information** — chamada direta ao Worker de autenticação dedicado (não usa rss-proxy):
-
-```
-WebFetch("https://theinformation-feed.marcusccoelho.workers.dev/theinformation-feed")
-```
-
-Retorna Atom feed (não RSS). Diferenças de parsing:
+**The Information** — `fetch_the_information()`. Retorna Atom feed (não RSS):
 - Artigos em `<entry>` (não `<item>`)
 - Data em `<updated>` ou `<published>` (não `<pubDate>`)
 - URL em `<link href="...">` (não `<link>texto</link>`)
 
-Se retornar não-200, registre como inacessível e prossiga.
+**Stratechery** — `fetch_rss(url=$STRATECHERY_RSS_URL)`. Se a variável estiver vazia, registre como inacessível e prossiga. Nota meta: `⚠️ RSS de assinante não configurado — Stratechery`.
 
-**Stratechery** — rss-proxy com a URL de assinante:
-
-```
-WebFetch("https://rss-proxy.marcusccoelho.workers.dev/?token=$PROXY_TOKEN&url=<STRATECHERY_RSS_URL_encoded>")
-```
-
-Se `$STRATECHERY_RSS_URL` estiver vazia, registre como inacessível e prossiga. Nota meta: `⚠️ RSS de assinante não configurado — Stratechery`.
-
-**The Economist** — rss-proxy com a URL de assinante:
-
-```
-WebFetch("https://rss-proxy.marcusccoelho.workers.dev/?token=$PROXY_TOKEN&url=<THE_ECONOMIST_RSS_URL_encoded>")
-```
-
-Se `$THE_ECONOMIST_RSS_URL` estiver vazia, registre como inacessível e prossiga. Nota meta: `⚠️ RSS de assinante não configurado — The Economist`.
-
-**Artigos Tier 1 canônicos (TL;DR):** busque o conteúdo do artigo via rss-proxy na URL do artigo.
+**The Economist** — `fetch_rss(url=$THE_ECONOMIST_RSS_URL)`. Se a variável estiver vazia, registre como inacessível e prossiga. Nota meta: `⚠️ RSS de assinante não configurado — The Economist`.
 
 #### Quando falha
 
 - **Portal não publica nas últimas 24h:** registre como "sem publicação no período" — não é falha técnica.
-- **rss-proxy retorna não-200:** marque "fonte temporariamente inacessível" e prossiga. Não substitua por outro portal.
+- **Tool MCP retorna erro:** marque "fonte temporariamente inacessível" e prossiga. Não substitua por outro portal.
 
 ### Etapa 2 — Clusterização
 
@@ -369,7 +346,7 @@ Retorne resumo:
 - **Pipeline (Valor)** → subconjunto de Valor (uma única fonte Tier 1)
 - **Conflito entre fontes** → segue Tier 1, registra divergência no TL;DR
 - **Múltiplos Must-read sem Tier 1** → cada um recebe fallback. Se mais de 2 no mesmo dia, nota meta no fim: "⚠️ N Must-reads sem cobertura Tier 1 hoje — possível ângulo subexplorado"
-- **rss-proxy retorna não-200 para qualquer portal** → marque como inacessível e prossiga. Sem retry, sem fallback.
+- **Tool MCP retorna erro para qualquer portal** → marque como inacessível e prossiga. Sem retry, sem fallback.
 - **RSS de assinante não configurado (Stratechery / The Economist)** → variável de ambiente vazia: registre como inacessível e prossiga. Nota meta: `⚠️ RSS de assinante não configurado para <portal>`
 - **RSS sem entradas nas últimas 24h** → portal não publicou no período; não é erro técnico. Registre como "sem cobertura no período"
-- **URL de RSS retorna HTML em vez de XML** → feed moveu ou foi descontinuado; trate como falha e prossiga
+- **fetch_rss retorna HTML em vez de XML** → feed moveu ou foi descontinuado; trate como falha e prossiga
