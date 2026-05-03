@@ -9,6 +9,7 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
     "agents": "^0.0.94",
+    "fast-xml-parser": "^4.5.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {

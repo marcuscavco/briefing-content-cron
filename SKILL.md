@@ -59,18 +59,44 @@ Faça varredura nos portais do universo (Tier 1 + Tier 2) buscando notícias das
 | Demais portais | `fetch_rss` | `url` = URL do feed RSS (não a homepage) |
 | Artigo Tier 1 canônico (TL;DR) | `fetch_rss` | `url` = URL do artigo |
 
-A tool retorna o XML cru do feed (ou o conteúdo bruto da URL no caso de artigos). Se a tool retornar com `isError: true` ou texto de erro, marque o portal como inacessível e prossiga — **sem retry, sem fallback**.
+A tool retorna **JSON enxuto** (já parseado e filtrado server-side — não devolve mais XML cru). Dois formatos:
 
-RSS é XML estruturado com `<pubDate>` — filtre as entradas das **últimas 24h** pelo campo de data.
+**Para feeds RSS/Atom:**
+```json
+{
+  "kind": "feed",
+  "feed_title": "...",
+  "feed_type": "rss" | "atom",
+  "total_items": 42,
+  "returned_items": 18,
+  "window_hours": 48,
+  "items": [
+    { "title": "...", "link": "https://...", "published": "2026-05-03T12:34:00.000Z", "summary": "..." }
+  ]
+}
+```
+- Itens já vêm filtrados para as últimas 48h (folga sobre a janela de 24h da rotina), ordenados por data desc, capados em 60.
+- `published` em ISO 8601 — refiltre para 24h reais quando aplicar a janela do digest.
+- `summary` é texto puro (sem HTML), truncado em ~500 chars.
+
+**Para URLs HTML (artigos para TL;DR):**
+```json
+{
+  "kind": "html",
+  "title": "...",
+  "text": "...",
+  "truncated": false
+}
+```
+- `text` é o conteúdo do `<article>`/`<main>` da página, sem HTML, capado em ~40k chars.
+
+Se a tool retornar com `isError: true` ou texto de erro, marque o portal como inacessível e prossiga — **sem retry, sem fallback**.
 
 **URLs entregues ao usuário** no digest final são sempre limpas (sem `/rss/`, sem `/feed/`, sem parâmetros de query).
 
 #### Tier 1 — RSS de assinante
 
-**The Information** — `fetch_the_information()`. Retorna Atom feed (não RSS):
-- Artigos em `<entry>` (não `<item>`)
-- Data em `<updated>` ou `<published>` (não `<pubDate>`)
-- URL em `<link href="...">` (não `<link>texto</link>`)
+**The Information** — `fetch_the_information()`. Retorna o mesmo JSON `{kind:"feed", feed_type:"atom", items:[...]}` que `fetch_rss` para feeds — sem necessidade de parsing XML.
 
 **Stratechery** — `fetch_rss(url=$STRATECHERY_RSS_URL)`. Se a variável estiver vazia, registre como inacessível e prossiga. Nota meta: `⚠️ RSS de assinante não configurado — Stratechery`.
 
@@ -349,4 +375,4 @@ Retorne resumo:
 - **Tool MCP retorna erro para qualquer portal** → marque como inacessível e prossiga. Sem retry, sem fallback.
 - **RSS de assinante não configurado (Stratechery / The Economist)** → variável de ambiente vazia: registre como inacessível e prossiga. Nota meta: `⚠️ RSS de assinante não configurado para <portal>`
 - **RSS sem entradas nas últimas 24h** → portal não publicou no período; não é erro técnico. Registre como "sem cobertura no período"
-- **fetch_rss retorna HTML em vez de XML** → feed moveu ou foi descontinuado; trate como falha e prossiga
+- **fetch_rss retorna `kind:"html"` para uma URL de feed** → feed moveu ou foi descontinuado (worker caiu no fallback de extração HTML); trate como falha e prossiga
