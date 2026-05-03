@@ -32,7 +32,7 @@ WHATSAPP_DESTINO     = 5585997993333
 SUPABASE_PROJECT_ID  = ckjvbzynskuqmdanmxgs
 ```
 
-Janela temporal padrão: **últimas 24h**.
+Janela temporal padrão: **últimas 48h** (captura análises semanais de Stratechery/The Economist e cobre o gap de fim de semana às segundas).
 
 ## Setup do diretório de trabalho
 
@@ -47,7 +47,7 @@ mkdir -p $WORKDIR
 
 ### Etapa 1 — Coleta via RSS
 
-Faça varredura nos portais do universo (Tier 1 + Tier 2) buscando notícias das últimas 24h.
+Faça varredura nos portais do universo (Tier 1 + Tier 2) buscando notícias das últimas 48h.
 
 #### Regra única de fetching
 
@@ -75,8 +75,8 @@ A tool retorna **JSON enxuto** (já parseado e filtrado server-side — não dev
   ]
 }
 ```
-- Itens já vêm filtrados para as últimas 48h (folga sobre a janela de 24h da rotina), ordenados por data desc, capados em 60.
-- `published` em ISO 8601 — refiltre para 24h reais quando aplicar a janela do digest.
+- Itens já vêm filtrados para as últimas 48h (alinhado com a janela do digest), ordenados por data desc, capados em 60.
+- `published` em ISO 8601.
 - `summary` é texto puro (sem HTML), truncado em ~500 chars.
 
 **Para URLs HTML (artigos para TL;DR):**
@@ -130,20 +130,38 @@ Para cada cluster:
 
 | Heat | Categoria | Tratamento |
 |---|---|---|
-| ≥ 7 | 🔥 Must-read | Leitura obrigatória, destaque no topo |
-| 4-6 | 📌 Relevante | Leitura sugerida |
-| 2-3 | 📎 No radar | Apenas registrar título |
+| ≥ 6 | 🔥 Must-read | Leitura obrigatória, destaque no topo |
+| 3-5 | 📌 Relevante | Leitura sugerida |
+| 2 | 📎 No radar | Apenas registrar título |
 | < 2 | — | Descartar do digest (mas salvar no Supabase mesmo assim) |
+
+**Calibração:** thresholds afrouxados (antes ≥7/4-6/2-3) pra abrir mais espaço de leitura — combina com a expansão de fallback Tier 2 e o Curator's Pick abaixo.
 
 ### Etapa 4 — Seleção da Fonte de Leitura
 
 Para cada cluster Must-read ou Relevante:
 
 1. Existe portal **Tier 1** cobrindo? → Esse é o canônico. Use prioridade da tabela em `references/fontes.md` (The Information > Stratechery > The Economist > Valor > Exame).
-2. **Sem Tier 1, mas é 🔥 Must-read (Heat ≥ 7)** → exceção: ofereça **um único** link Tier 2 como fallback, marcado `🟡 Fallback Tier 2 — sem fonte canônica`. Use prioridade de fallback em `references/fontes.md`.
-3. **Sem Tier 1, e é apenas 📌 Relevante** → marque como `⚠️ Sinal sem fonte canônica`. Mencione título e heat. **NÃO** ofereça link Tier 2.
+2. **Sem Tier 1 (Must-read OU Relevante)** → ofereça **um único** link Tier 2 como fallback, marcado `🟡 Fallback Tier 2 — sem fonte canônica`. Use prioridade de fallback em `references/fontes.md`. Antes só Must-read tinha esse direito; agora Relevante também recebe link Tier 2 pra evitar "sinal sem fonte" estéril.
+3. **Sem Tier 1 e sem Tier 2 elegível** (todos os Tier 2 que cobrem estão na lista de exclusão): aí sim, marque como `⚠️ Sinal sem fonte canônica`, mencione título e heat, sem link.
 
-**Excluídos como link de fallback** (continuam contando para heat, mas nunca aparecem como leitura): Hacker News, Bloomberg, FT, The News (Waffle).
+**Excluídos como link de fallback** (continuam contando para heat, mas nunca aparecem como leitura): Hacker News (agregador), Bloomberg, FT (paywall sem assinatura), The News/Waffle (newsletter de curadoria).
+
+#### Promoção via Curator's Pick
+
+Algumas matérias têm valor empresarial alto mas não atingiram convergência (Heat baixo). Pra evitar perdê-las, **promova até 2 clusters por digest** uma categoria acima quando ao menos uma das condições for verdadeira:
+
+- 💼 **≥ 3** (impacto empresarial sistêmico) — promove No radar → Relevante, ou Relevante → Must-read
+- **Scoop exclusivo de Tier 1** (1 único Tier 1 cobrindo, ângulo único) com 💼 ≥ 2 — mesma promoção
+- 💻 **≥ 3** combinado com ângulo prático claro (framework, ferramenta, ameaça concreta) e 💼 ≥ 2
+
+**Regras:**
+- Máximo **2 promoções por digest** (preserva exclusividade do "must")
+- Cluster promovido recebe marcador `✨` no WhatsApp e tag `is_curator_pick=true` no Supabase (campo em `clusters.notas` jsonb se a coluna não existir; senão usa boolean dedicado)
+- Promoção não muda Heat nem notas dimensionais — só `categoria`
+- Cluster originalmente "descartado" (Heat < 2) **não é elegível** — Curator's Pick não cria, só promove
+
+Anote no relatório final quais clusters foram promovidos e por qual condição.
 
 ### Etapa 5 — Notas Dimensionais (independentes do Heat)
 
@@ -284,7 +302,9 @@ Use a tool `send_whatsapp_text` do Z-API MCP. Cada mensagem ≤ **1500 caractere
 
 **Notas:**
 - Empresarial sempre antes de Técnica (alinha com prioridade do leitor)
-- Fallback Tier 2 vai com tag `🟡` no item; Sinal sem fonte vira linha `⚠️ Sinal: <título> (sem fonte canônica)` no fim ou junto do item
+- Fallback Tier 2 vai com tag `🟡` no item (vale tanto pra Must-read quanto pra Relevante)
+- Curator's Pick (cluster promovido por 💼/💻 alto ou scoop) recebe `✨` no início do título
+- Sinal sem fonte vira linha `⚠️ Sinal: <título> (sem fonte canônica)` no fim ou junto do item
 - Se ultrapassar 1500: cortar primeiro "No radar", depois reduzir TL;DRs, depois cortar Relevantes mais fracos (manter 2 com maior 💼)
 
 #### Mensagem 2 — Sugestões de Post
@@ -351,8 +371,8 @@ Retorne resumo:
 ## Princípios
 
 1. **Universo fechado.** Não saia da lista. Não invente. Não complemente com agregadores externos.
-2. **Tier 1 canônico por padrão.** Toda recomendação de leitura vem de Tier 1, exceto Must-read sem Tier 1 (1 link fallback Tier 2 marcado).
-3. **Tier 2 é sinal por padrão.** Tier 2 só vira leitura no fallback. Em Relevante ou abaixo, Tier 2 nunca é link.
+2. **Tier 1 canônico por padrão.** Toda recomendação de leitura vem de Tier 1, exceto clusters Must-read ou Relevante sem Tier 1 (1 link fallback Tier 2 marcado `🟡`).
+3. **Tier 2 é sinal por padrão.** Tier 2 só vira leitura no fallback. Em No radar ou abaixo, Tier 2 nunca é link.
 4. **Pontuação por convergência, não por viralidade.** Importa o número de portais distintos cobrindo, não engajamento individual.
 5. **Heat e notas são ortogonais.** Heat = convergência; Técnica/Empresarial = natureza do impacto.
 6. **Digest é leitura pessoal; posts são audiência.** Digest entrega tudo (técnico + empresarial). Posts filtram só o que serve ao posicionamento "tradutor para empresários" (💼 ≥ 2).
@@ -374,5 +394,6 @@ Retorne resumo:
 - **Múltiplos Must-read sem Tier 1** → cada um recebe fallback. Se mais de 2 no mesmo dia, nota meta no fim: "⚠️ N Must-reads sem cobertura Tier 1 hoje — possível ângulo subexplorado"
 - **Tool MCP retorna erro para qualquer portal** → marque como inacessível e prossiga. Sem retry, sem fallback.
 - **RSS de assinante não configurado (Stratechery / The Economist)** → variável de ambiente vazia: registre como inacessível e prossiga. Nota meta: `⚠️ RSS de assinante não configurado para <portal>`
-- **RSS sem entradas nas últimas 24h** → portal não publicou no período; não é erro técnico. Registre como "sem cobertura no período"
+- **RSS sem entradas nas últimas 48h** → portal não publicou no período; não é erro técnico. Registre como "sem cobertura no período"
+- **Curator's Pick saturado** → se mais de 2 candidatos elegíveis no mesmo dia, escolha os 2 com maior 💼 (desempate: scoop Tier 1 > 💻 alto). Os não-promovidos ficam na categoria original.
 - **fetch_rss retorna `kind:"html"` para uma URL de feed** → feed moveu ou foi descontinuado (worker caiu no fallback de extração HTML); trate como falha e prossiga

@@ -28,13 +28,13 @@ export THE_ECONOMIST_RSS_URL=''      # opcional — URL RSS do assinante The Eco
 
 Leia `SKILL.md` e os 4 references (`fontes.md`, `pontuacao.md`, `posts.md`, `voz.md`) e execute o fluxo completo (Etapas 1–9 do SKILL.md):
 
-1. **Coleta via RSS** (últimas 24h): toda chamada externa usa exclusivamente as tools MCP do servidor `rss-mcp` — nada de WebFetch. Use `fetch_rss(url)` para qualquer feed (passe a URL do feed listada em `fontes.md`, nunca a homepage), e `fetch_the_information()` para o feed dedicado da The Information. Ambas retornam **JSON enxuto já parseado**: `{kind:"feed", items:[{title, link, published (ISO 8601), summary}]}` — itens já vêm filtrados às últimas 48h, ordenados por data desc, capados em 60, summaries truncados em ~500 chars. Refiltre `published` para a janela real de 24h. Se a tool retornar erro, marque o portal como inacessível e prossiga — sem fallback. Stratechery usa `fetch_rss(url=$STRATECHERY_RSS_URL)`; se a variável vazia, skip. Para artigos Tier 1 canônicos, busque o conteúdo via `fetch_rss(url=<url_do_artigo>)` — retorna `{kind:"html", title, text, truncated}` com o corpo do artigo extraído (até ~40k chars).
+1. **Coleta via RSS** (últimas 48h): toda chamada externa usa exclusivamente as tools MCP do servidor `rss-mcp` — nada de WebFetch. Use `fetch_rss(url)` para qualquer feed (passe a URL do feed listada em `fontes.md`, nunca a homepage), e `fetch_the_information()` para o feed dedicado da The Information. Ambas retornam **JSON enxuto já parseado**: `{kind:"feed", items:[{title, link, published (ISO 8601), summary}]}` — itens já vêm filtrados às últimas 48h pelo worker, ordenados por data desc, capados em 60, summaries truncados em ~500 chars. Se a tool retornar erro, marque o portal como inacessível e prossiga — sem fallback. Stratechery usa `fetch_rss(url=$STRATECHERY_RSS_URL)`; se a variável vazia, skip. Para artigos Tier 1 canônicos, busque o conteúdo via `fetch_rss(url=<url_do_artigo>)` — retorna `{kind:"html", title, text, truncated}` com o corpo do artigo extraído (até ~40k chars).
 
 2. **Clusterização**: agrupe artigos sobre o mesmo evento.
 
-3. **Heat Score**: +2 por cada Tier 1, +1 por cada Tier 2, +1 bônus se 3+ portais BR, +1 bônus se HN 200+ pts. Categorias: ≥7 Must-read, 4-6 Relevante, 2-3 No radar, <2 descartar.
+3. **Heat Score**: +2 por cada Tier 1, +1 por cada Tier 2, +1 bônus se 3+ portais BR, +1 bônus se HN 200+ pts. Categorias: **≥6 Must-read, 3-5 Relevante, 2 No radar, <2 descartar** (thresholds afrouxados em relação à versão antiga 7/4-6/2-3).
 
-4. **Seleção de fonte**: Tier 1 canônico por padrão. Must-read sem Tier 1 → 1 link fallback Tier 2 marcado 🟡. Relevante sem Tier 1 → sinal sem fonte (sem link). Excluir HN, Bloomberg, FT, The News como fallback.
+4. **Seleção de fonte**: Tier 1 canônico por padrão. **Must-read OU Relevante sem Tier 1** → 1 link fallback Tier 2 marcado 🟡 (antes só Must-read tinha esse direito). Sem Tier 2 elegível → marcar como sinal sem fonte. Excluir HN, Bloomberg, FT, The News como fallback (paywall/agregador). **Curator's Pick**: até 2 clusters por digest podem ser promovidos uma categoria acima quando 💼≥3, ou são scoop exclusivo Tier 1 com 💼≥2, ou têm 💻≥3 com ângulo prático claro (e 💼≥2). Marcar com ✨ no WhatsApp e `is_curator_pick=true` no Supabase.
 
 5. **Notas dimensionais 0-3** (independentes do Heat): 💻 Técnica e 💼 Empresarial. Ver `references/pontuacao.md`.
 
@@ -42,7 +42,7 @@ Leia `SKILL.md` e os 4 references (`fontes.md`, `pontuacao.md`, `posts.md`, `voz
 
 7. **Persistência Supabase** (tool `execute_sql`, project_id=`$SUPABASE_PROJECT_ID`):
    - INSERT `briefings` RETURNING id (capturar `BRIEFING_ID`). Inclua `whatsapp_msg`, `whatsapp_msg_2`, `n_must_read`, `n_relevante`, `n_no_radar`, `n_sinal_sem_fonte`, `n_clusters_total`, `n_posts`, `n_posts_skipped`.
-   - Para cada cluster (Must-read, Relevante, No radar, Sinal sem fonte): INSERT em `clusters` com `categoria`, `heat_score`, `relevancia_tecnica`, `relevancia_empresarial`, `tier_fonte`, `is_fallback`, `portais_cobrindo` (jsonb array).
+   - Para cada cluster (Must-read, Relevante, No radar, Sinal sem fonte): INSERT em `clusters` com `categoria`, `heat_score`, `relevancia_tecnica`, `relevancia_empresarial`, `tier_fonte`, `is_fallback`, `portais_cobrindo` (jsonb array). Se a coluna `is_curator_pick` (boolean) não existir, registre o flag e a condição (💼≥3 / scoop_tier1 / tecnica_pratica) no campo `notas` (jsonb). Conte promoções em `briefings.notas`.
    - Para cada post (publicável E skip): INSERT em `posts` com `cluster_id`, `formato`, `gancho`, `estrutura` (jsonb), `angulo_tipo`, `angulo_descricao`, `skip` (bool), `skip_motivo`.
    - Use `$$...$$` para strings com aspas.
 
