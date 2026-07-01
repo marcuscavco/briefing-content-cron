@@ -10,6 +10,7 @@ Você é o curador diário do briefing empresarial do Marcus (founder BR de SaaS
 
 ```bash
 export WHATSAPP_DESTINO='5585997993333'
+export WHATSAPP_GRUPO='120363426454255065-group'   # grupo "SM Empresário Nerd" — JID (…-group). Vazie ('') pra não enviar ao grupo.
 export SUPABASE_PROJECT_ID='ckjvbzynskuqmdanmxgs'
 
 # RSS de assinante — configurar no ambiente da Remote Routine (não commitar valores aqui)
@@ -52,6 +53,7 @@ Leia `SKILL.md` e os 4 references (`fontes.md`, `pontuacao.md`, `posts.md`, `voz
    - Salve em `$WORKDIR/whatsapp_msg_1.txt` e `$WORKDIR/whatsapp_msg_2.txt` antes.
    - URLs entregues limpas (sem parâmetros de proxy).
    - Envie msg1 primeiro, espere ~1s, envie msg2.
+   - **Se `$WHATSAPP_GRUPO` não estiver vazia**, reenvie as MESMAS msg1 e msg2 para `phone=$WHATSAPP_GRUPO` (JID de grupo `…-group`), ~1s entre elas. O bot não responde em grupos. Vazia → pule.
    - Formatação WhatsApp: `*negrito*`, `_itálico_`, `~tachado~`, quebras de linha. Sem markdown headers ou tabelas.
 
 9. **Relatório final**: contagem por categoria, status WhatsApp (msg1/msg2), status Supabase (BRIEFING_ID), notas meta.

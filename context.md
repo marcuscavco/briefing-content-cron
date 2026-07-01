@@ -76,7 +76,7 @@ UI da routine: https://claude.ai/code/routines/trig_01Hu3YnGHhGr9Ly8WCvtvunV
 
 ### Externo ao repo e à routine
 
-- **WhatsApp destino:** `5585997993333` (hardcoded em `PROMPT.md`)
+- **WhatsApp destino:** `5585997993333` (Marcus, DM) + grupo `SM Empresário Nerd` (JID `120363426454255065-group`), ambos em `PROMPT.md` (`WHATSAPP_DESTINO` / `WHATSAPP_GRUPO`). As 2 mensagens vão para os dois destinos. Cada destino precisa de linha em `contacts` com `is_blocked=false` e `need_response=true` (gate do `zapi-mcp`). O bot conversacional (`whatsapp-webhook` edge function) **nunca responde em grupos** — guard `contact.kind !== "group"` no `canRespond` —, então liberar um grupo no gate serve só pra ele RECEBER envios, sem ligar respostas automáticas.
 - **Z-API**: tokens vivem no MCP server `zapi-mcp` (Cloudflare Worker em `noisy-thunder-5892.marcusccoelho.workers.dev`, OAuth via `mcp.supabase.com/mcp` style). Não há credencial Z-API no repo.
 - **Supabase project:** `ckjvbzynskuqmdanmxgs` (nome: MCIA, region: us-east-2)
 

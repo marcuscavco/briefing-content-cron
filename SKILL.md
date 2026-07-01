@@ -29,6 +29,7 @@ Variáveis de ambiente esperadas (vêm do prompt da Remote Routine):
 
 ```
 WHATSAPP_DESTINO     = 5585997993333
+WHATSAPP_GRUPO       = 120363426454255065-group   # grupo "SM Empresário Nerd" (opcional; vazio = não envia pro grupo)
 SUPABASE_PROJECT_ID  = ckjvbzynskuqmdanmxgs
 ```
 
@@ -351,12 +352,23 @@ Nenhum cluster passou o filtro empresarial hoje. Ver digest para leitura pessoal
 
 #### Envio
 
+Envie primeiro para `$WHATSAPP_DESTINO` (Marcus, DM):
+
 ```
-send_whatsapp_text(phone="5585997993333", message=<conteudo_msg_1>)
-send_whatsapp_text(phone="5585997993333", message=<conteudo_msg_2>)
+send_whatsapp_text(phone=$WHATSAPP_DESTINO, message=<conteudo_msg_1>)
+send_whatsapp_text(phone=$WHATSAPP_DESTINO, message=<conteudo_msg_2>)
 ```
 
 Aguarde ~1 segundo entre as duas pra evitar reordenamento na entrega.
+
+**Se `$WHATSAPP_GRUPO` estiver definida (não vazia)**, repita as duas mesmas mensagens para o grupo (as duas mensagens, idênticas às do DM), aguardando ~1s entre elas:
+
+```
+send_whatsapp_text(phone=$WHATSAPP_GRUPO, message=<conteudo_msg_1>)
+send_whatsapp_text(phone=$WHATSAPP_GRUPO, message=<conteudo_msg_2>)
+```
+
+O destino do grupo é um JID (`...-group`), não um telefone. O bot conversacional **não** responde em grupos (só entrega o briefing). Se `$WHATSAPP_GRUPO` vazia, pule o envio ao grupo silenciosamente. Registre o status de cada destino no relatório final.
 
 ### Etapa 9 — Relatório final
 
