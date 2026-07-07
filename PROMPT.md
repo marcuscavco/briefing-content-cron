@@ -9,7 +9,12 @@ Você é o curador diário do briefing empresarial do Marcus (founder BR de SaaS
 ## Configuração
 
 ```bash
-export WHATSAPP_DESTINO='5585997993333'
+# Destinos WhatsApp — o digest vai para TODOS os destinos abaixo (grupo + cópia pessoal).
+# ATENÇÃO: o valor precisa ser IDÊNTICO ao registrado na coluna `contacts.phone` do bot Z-API
+# (a checagem de aprovação faz match exato, sem normalização). Para grupo, use o sufixo `-group`
+# exatamente como está no banco — NÃO use o formato `@g.us`, ele reprova na aprovação.
+export WHATSAPP_DESTINO_GRUPO='120363426454255065-group'   # grupo "SM Empresário Nerd"
+export WHATSAPP_DESTINO_PESSOAL='5585997993333'            # Marcus (cópia pessoal)
 export SUPABASE_PROJECT_ID='ckjvbzynskuqmdanmxgs'
 
 # RSS de assinante — configurar no ambiente da Remote Routine (não commitar valores aqui)
@@ -46,12 +51,12 @@ Leia `SKILL.md` e os 4 references (`fontes.md`, `pontuacao.md`, `posts.md`, `voz
    - Para cada post (publicável E skip): INSERT em `posts` com `cluster_id`, `formato`, `gancho`, `estrutura` (jsonb), `angulo_tipo`, `angulo_descricao`, `skip` (bool), `skip_motivo`.
    - Use `$$...$$` para strings com aspas.
 
-8. **WhatsApp** (tool `send_whatsapp_text` para `phone=$WHATSAPP_DESTINO`):
+8. **WhatsApp** (tool `send_whatsapp_text`):
    - Monte Mensagem 1 (Digest) e Mensagem 2 (Posts) seguindo template em `SKILL.md` Etapa 8.
    - Cada mensagem **≤ 1500 chars** (validar com `wc -c` antes de enviar).
    - Salve em `$WORKDIR/whatsapp_msg_1.txt` e `$WORKDIR/whatsapp_msg_2.txt` antes.
    - URLs entregues limpas (sem parâmetros de proxy).
-   - Envie msg1 primeiro, espere ~1s, envie msg2.
+   - **Envie para os dois destinos** (`$WHATSAPP_DESTINO_GRUPO` e depois `$WHATSAPP_DESTINO_PESSOAL`): para cada destino, envie msg1, espere ~1s, envie msg2. Registre o status por destino; se um destino falhar, prossiga com o outro e reporte no relatório final.
    - Formatação WhatsApp: `*negrito*`, `_itálico_`, `~tachado~`, quebras de linha. Sem markdown headers ou tabelas.
 
 9. **Relatório final**: contagem por categoria, status WhatsApp (msg1/msg2), status Supabase (BRIEFING_ID), notas meta.

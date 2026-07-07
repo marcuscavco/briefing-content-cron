@@ -53,7 +53,7 @@ A routine clona este repo, lê `PROMPT.md`, e executa o fluxo de curadoria diár
 
 | Arquivo | Função |
 |---|---|
-| `PROMPT.md` | Entry-point. Env vars (`WHATSAPP_DESTINO`, `SUPABASE_PROJECT_ID`), setup do workdir, chamada das etapas |
+| `PROMPT.md` | Entry-point. Env vars (`WHATSAPP_DESTINO_GRUPO`, `WHATSAPP_DESTINO_PESSOAL`, `SUPABASE_PROJECT_ID`), setup do workdir, chamada das etapas |
 | `SKILL.md` | Motor de curadoria detalhado: 9 etapas, queries SQL, formato das mensagens WhatsApp, validações, casos de borda |
 | `references/fontes.md` | Universo fechado: 5 portais Tier 1 (canônicos, leitura) + 25 Tier 2 (sinal). Prioridade de fallback |
 | `references/pontuacao.md` | Heat Score (regras de pontuação por convergência) + notas dimensionais 💻 Técnica / 💼 Empresarial (0-3 cada) |
@@ -76,7 +76,7 @@ UI da routine: https://claude.ai/code/routines/trig_01Hu3YnGHhGr9Ly8WCvtvunV
 
 ### Externo ao repo e à routine
 
-- **WhatsApp destino:** `5585997993333` (hardcoded em `PROMPT.md`)
+- **WhatsApp destinos:** grupo "SM Empresário Nerd" `120363426454255065-group` + cópia pessoal `5585997993333` (ambos em `PROMPT.md`). Cada destino precisa ter linha em `contacts` com `is_blocked=false` e `need_response=true`; o valor tem que bater **exatamente** com `contacts.phone` (match exato na aprovação do worker `zapi-mcp`, grupos usam sufixo `-group`, nunca `@g.us`).
 - **Z-API**: tokens vivem no MCP server `zapi-mcp` (Cloudflare Worker em `noisy-thunder-5892.marcusccoelho.workers.dev`, OAuth via `mcp.supabase.com/mcp` style). Não há credencial Z-API no repo.
 - **Supabase project:** `ckjvbzynskuqmdanmxgs` (nome: MCIA, region: us-east-2)
 
@@ -225,7 +225,7 @@ Este repo já teve outra forma. Foi limpo. **NÃO** tente reintroduzir:
 2. Pra testar imediatamente: clique **Run now** em https://claude.ai/code/routines/trig_01Hu3YnGHhGr9Ly8WCvtvunV
 3. Acompanhe os logs em tempo real na mesma página
 4. Verifique:
-   - Mensagens chegaram no WhatsApp `5585997993333`
+   - Mensagens chegaram nos dois destinos: grupo "SM Empresário Nerd" e no número pessoal `5585997993333`
    - Linhas inseridas em `briefings`, `clusters`, `posts` no Supabase MCIA
    - Relatório final do agente bate com o que esperava
 

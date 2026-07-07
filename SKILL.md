@@ -28,9 +28,12 @@ Lista completa em `references/fontes.md`. Resumo:
 Variáveis de ambiente esperadas (vêm do prompt da Remote Routine):
 
 ```
-WHATSAPP_DESTINO     = 5585997993333
-SUPABASE_PROJECT_ID  = ckjvbzynskuqmdanmxgs
+WHATSAPP_DESTINO_GRUPO   = 120363426454255065-group   # grupo "SM Empresário Nerd"
+WHATSAPP_DESTINO_PESSOAL = 5585997993333               # Marcus (cópia pessoal)
+SUPABASE_PROJECT_ID      = ckjvbzynskuqmdanmxgs
 ```
+
+> O digest é enviado para **os dois destinos**. O valor de cada destino precisa bater exatamente com a coluna `contacts.phone` do bot Z-API (match exato na aprovação). Grupos usam o sufixo `-group`, nunca `@g.us`.
 
 Janela temporal padrão: **últimas 48h** (captura análises semanais de Stratechery/The Economist e cobre o gap de fim de semana às segundas).
 
@@ -226,9 +229,11 @@ INSERT INTO briefings (
   '<DATA>', <n_must_read+n_relevante+n_no_radar>, <n_posts_publicaveis>, <n_posts_skipped>,
   <total>, <must_read>, <relevante>, <no_radar>, <sinal_sem_fonte>,
   '<sent|failed>', $$<msg1>$$, '<sent|failed>', $$<msg2>$$,
-  '{"inacessiveis": [...], "tier1_inacessivel": [...]}'::jsonb
+  '{"inacessiveis": [...], "tier1_inacessivel": [...], "whatsapp_destinos": {"grupo": "<sent|failed>", "pessoal": "<sent|failed>"}}'::jsonb
 ) RETURNING id;
 ```
+
+> `whatsapp_status`/`whatsapp_status_2` refletem o destino **grupo** (primário). O status detalhado por destino vai em `notas.whatsapp_destinos`.
 
 Capture o `id` como `BRIEFING_ID`.
 
@@ -351,12 +356,19 @@ Nenhum cluster passou o filtro empresarial hoje. Ver digest para leitura pessoal
 
 #### Envio
 
+Envie para **os dois destinos** — o grupo primeiro, depois a cópia pessoal. Para cada destino, envie msg1, aguarde ~1s, envie msg2:
+
 ```
+# Grupo "SM Empresário Nerd"
+send_whatsapp_text(phone="120363426454255065-group", message=<conteudo_msg_1>)
+send_whatsapp_text(phone="120363426454255065-group", message=<conteudo_msg_2>)
+
+# Cópia pessoal (Marcus)
 send_whatsapp_text(phone="5585997993333", message=<conteudo_msg_1>)
 send_whatsapp_text(phone="5585997993333", message=<conteudo_msg_2>)
 ```
 
-Aguarde ~1 segundo entre as duas pra evitar reordenamento na entrega.
+Aguarde ~1 segundo entre msg1 e msg2 de cada destino pra evitar reordenamento na entrega. Se um destino falhar (ex.: aprovação recusada no bot), prossiga com o outro e registre o status por destino no relatório final.
 
 ### Etapa 9 — Relatório final
 
@@ -364,7 +376,7 @@ Retorne resumo:
 - Heat médio do dia, contagem por categoria
 - Notícias selecionadas (título + heat + 💼 + 💻)
 - Posts publicáveis vs skips (com motivo)
-- Status WhatsApp (msg1 ✅/❌, msg2 ✅/❌, response Z-API)
+- Status WhatsApp por destino (grupo e pessoal): msg1 ✅/❌, msg2 ✅/❌, response Z-API
 - Status Supabase (✅ + briefing_id, ou ❌ + erro)
 - Notas meta (ex: "3 Must-reads sem Tier 1 hoje — possível ângulo subexplorado")
 
