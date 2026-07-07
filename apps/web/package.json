@@ -12,6 +12,7 @@
   "dependencies": {
     "@briefing/config": "workspace:*",
     "@briefing/db": "workspace:*",
+    "@briefing/ingestion": "workspace:*",
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.49.4",
     "class-variance-authority": "^0.7.1",
