@@ -1,0 +1,32 @@
+{
+  "auth": {
+    "loginTitle": "Entrar",
+    "loginSubtitle": "Acesse seu briefing diário",
+    "signupTitle": "Criar conta",
+    "signupSubtitle": "Comece a receber seu briefing curado por IA",
+    "email": "Email",
+    "password": "Senha",
+    "fullName": "Nome completo",
+    "signIn": "Entrar",
+    "signUp": "Criar conta",
+    "sendMagicLink": "Entrar com link por email",
+    "continueWithGoogle": "Continuar com Google",
+    "or": "ou",
+    "noAccount": "Não tem conta?",
+    "hasAccount": "Já tem conta?",
+    "magicLinkSent": "Link enviado! Confira seu email.",
+    "signupSuccess": "Conta criada! Confira seu email para confirmar.",
+    "errorGeneric": "Algo deu errado. Tente novamente.",
+    "errorInvalidCredentials": "Email ou senha inválidos.",
+    "errorAuthCallback": "Falha na autenticação. Tente novamente.",
+    "errorInvalidLink": "Link inválido ou expirado. Peça um novo.",
+    "signOut": "Sair"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Bem-vindo(a)",
+    "accountLabel": "Workspace",
+    "roleLabel": "Papel",
+    "placeholder": "Seu briefing diário vai aparecer aqui. Nas próximas fases: fontes, curadoria por IA, histórico e entrega por email/WhatsApp."
+  }
+}

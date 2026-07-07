@@ -1,0 +1,33 @@
+import { BRAND } from "@briefing/config/brand";
+import { createClient } from "@briefing/db/server";
+import { getTranslations } from "next-intl/server";
+import { redirect } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { signOut } from "../(auth)/actions";
+
+export default async function AppLayout({ children }: { children: React.ReactNode }) {
+  const supabase = await createClient();
+  const t = await getTranslations("auth");
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  return (
+    <div className="min-h-svh">
+      <header className="flex items-center justify-between border-b px-6 py-3">
+        <span className="font-semibold tracking-tight">{BRAND.productName}</span>
+        <form action={signOut}>
+          <Button type="submit" variant="ghost" size="sm">
+            {t("signOut")}
+          </Button>
+        </form>
+      </header>
+      <main className="mx-auto max-w-4xl p-6">{children}</main>
+    </div>
+  );
+}

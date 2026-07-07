@@ -1,0 +1,10 @@
+{
+  "name": "@briefing/curation",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "echo 'no lint'",
+    "typecheck": "echo 'stub — nada a checar na Fase 0'"
+  }
+}
