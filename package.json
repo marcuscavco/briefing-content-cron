@@ -1,0 +1,23 @@
+{
+  "name": "briefing-saas",
+  "private": true,
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "build": "pnpm --filter web build",
+    "dev": "pnpm --filter web dev",
+    "test:rls": "vitest run --config supabase/tests/vitest.config.ts",
+    "check:secrets": "bash scripts/check-service-role-leak.sh"
+  },
+  "devDependencies": {
+    "@supabase/supabase-js": "^2.49.4",
+    "dotenv": "^16.4.7",
+    "supabase": "^2.109.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.5"
+  }
+}
