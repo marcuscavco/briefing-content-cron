@@ -1,5 +1,49 @@
 # CHANGELOG
 
+## Fase 1 — Fontes, temas & ingestão resiliente (2026-07-08)
+
+### Adicionado
+- **`briefing_profiles`** (decisão de produto pós-Fase 0): o **tema pertence ao
+  briefing, não à fonte**. Cada account nasce com um profile default (trigger);
+  o modelo já comporta múltiplos briefings por conta (quota por plano na Fase 6).
+  Configurações: temas de interesse + exclusões, horário/timezone de entrega,
+  canais, janela de coleta, limite de posts.
+- **`sources`** por profile com tiers 1/2/3 + **`source_health_events`**:
+  status agregado (ok/parcial/bloqueado/erro), preview da última validação,
+  credencial de feed de assinante cifrada (AES-256-GCM, chave server-only).
+- **`suggested_sources`**: biblioteca curada global (32 fontes — portais BR
+  gratuitos e confiáveis em destaque + universo atual do `fontes.md`), leitura
+  para qualquer usuário, escrita só pela plataforma (backoffice na Fase 4).
+- **`packages/ingestion`**: interface `SourceConnector` com `RssConnector`
+  (cascata: feed conhecido → descoberta de feed na homepage → extração de
+  conteúdo → só-título; parser RSS/Atom/RDF portado do worker `rss-mcp`),
+  `WebConnector` (readability simplificada) e `InstagramConnector` (stub Fase 5).
+  Transporte plugável: Worker `rss-proxy` em produção, fetch direto em dev.
+  13 testes unitários (parser + cascata).
+- **UI**: página `/sources` (fontes com badges de health, revalidação, pausa,
+  biblioteca com adição em 1 clique, formulário custom com validação na hora e
+  preview) e `/settings` (temas primeiro — ordem de onboarding tema → fontes).
+- 10 novos testes de RLS (profiles/sources/health isolados; catálogo legível e
+  não-gravável). Total: 20.
+
+### Decisões
+- Fonte `rss` sem `feed_url` é válida (modo parcial; a cascata tenta redescobrir
+  o feed a cada execução) — só Instagram exige `handle`.
+- Portal bloqueado NÃO derruba o fluxo: fonte fica `blocked` com health event e
+  a validação reporta com clareza (aceite da fase verificado com smoke E2E).
+
+### Fora de escopo (por quê)
+- Rate-limit/abuse na validação de fontes: Fase 7 (hardening).
+- Alertas de fonte consistentemente inacessível: precisa do job diário (Fase 2)
+  para ter série histórica — o schema de `source_health_events` já suporta.
+
+### Como testar
+```bash
+pnpm --filter @briefing/ingestion test        # parser + cascata
+pnpm vitest run --config supabase/tests/vitest.config.ts   # 20 testes RLS
+pnpm --filter web dev   # /settings (temas) e /sources (biblioteca + custom)
+```
+
 ## Fase 0 — Arquitetura & scaffolding (2026-07-07)
 
 **Fundação do SaaS multi-tenant, sem tocar no cron legado** (raiz do repo e

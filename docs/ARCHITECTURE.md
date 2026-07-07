@@ -145,10 +145,12 @@ PT-BR na entrega · ≤ 1500 chars por mensagem WhatsApp · URLs limpas.
 
 ## Extension points (Fases 1-7)
 
-1. **Fontes & ingestão resiliente**: CRUD de `sources` (tiers 1/2/3), interface
-   `SourceConnector` (`RssConnector`/`WebConnector`/`InstagramConnector`),
-   fetch em cascata (RSS → proxy CF → readability → só-título), `source_health_events`,
-   validação na adição, biblioteca de fontes sugeridas (seed de `references/fontes.md`).
+1. **Fontes & ingestão resiliente** ✅ (entregue): `briefing_profiles` (temas do
+   briefing, não da fonte — ordem de onboarding: tema → fontes), `sources` com
+   tiers 1/2/3 + health, `suggested_sources` (catálogo global), `packages/ingestion`
+   com `SourceConnector` (cascata feed → discovery → extração → só-título) e
+   credenciais cifradas. Backoffice mínimo (concessão de assinatura `admin_grant`,
+   gestão do catálogo) antecipado para a Fase 4.
 2. **Motor + memória**: porte das 9 etapas do `SKILL.md` para `packages/curation`,
    parametrizado por account; `topic_memory` com pgvector — regra novo /
    "Atualização" (com o que mudou) / suprimir; janela de memória configurável.
