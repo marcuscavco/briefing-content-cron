@@ -36,6 +36,20 @@ verificado por double opt-in e entrega idempotente.**
   A regra de match exato do phone foi portada e documentada na migração.
 - Destinos WhatsApp por **briefing profile** (não por account) — preparado para
   múltiplos briefings por conta.
+- **Só WhatsApp por enquanto (Marcus, 2026-07-08)**: o canal email nasce
+  desligado (migração `20260708210001`). O código de email está pronto e
+  testado E2E, mas sem domínio próprio verificado no Resend o envio só chega ao
+  email da conta Resend. **Para ativar**: verificar o domínio em
+  resend.com/domains (3 registros DNS), trocar `EMAIL_FROM` para um endereço do
+  domínio e reverter o default de `channels`.
+
+### Validado E2E em produção (2026-07-08)
+- Double opt-in real: destino adicionado na UI → código de 6 dígitos chegou no
+  WhatsApp do Marcus via Z-API → confirmado → verificado.
+- Briefing entregue: 2 mensagens (1143 e 1403 chars) no número verificado;
+  grupo **não verificado recusado** (`skipped_unverified`); email entregue via
+  Resend (id `af542443…`) antes da decisão de desligar o canal; reexecução do
+  estágio **não reenviou** o WhatsApp já enviado (idempotência em produção).
 
 ## Fase 2 — Motor de curadoria + memória/dedupe (2026-07-08)
 
