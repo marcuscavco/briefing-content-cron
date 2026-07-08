@@ -17,7 +17,9 @@ import type { SupabaseClient } from "@supabase/supabase-js";
  * de tempo. O estado vive em `jobs` — o engine é substituível.
  */
 
-const STAGE_TIME_BUDGET_MS = 600_000; // ~10min de trabalho por invocação (teto 800s)
+// Orçamento por invocação < maxDuration da rota (300s no Hobby). O pipeline é
+// checkpointado por estágio: o que não couber é retomado na próxima invocação.
+const STAGE_TIME_BUDGET_MS = Number(process.env.WORKER_BUDGET_MS ?? 240_000);
 
 function buildDeps(db: SupabaseClient): PipelineDeps {
   return {

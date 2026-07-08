@@ -8,7 +8,7 @@ import { processQueue } from "@/lib/worker";
  * processa inline (Fluid Compute). Se já existe job do dia, reprocessa a fila
  * (retoma de onde parou). RLS cobre o insert; o processamento usa service role.
  */
-export const maxDuration = 800;
+export const maxDuration = 300; // Hobby: teto Fluid 300s; Pro destrava 800s
 
 export async function POST() {
   const { supabase, accountId, profile } = await requireTenant();

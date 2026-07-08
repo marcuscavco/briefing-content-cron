@@ -2,11 +2,12 @@ import { NextResponse } from "next/server";
 import { tick } from "@/lib/worker";
 
 /**
- * Tick do motor (Vercel Cron a cada 15min — vercel.json). Fluid Compute:
+ * Tick do motor (Vercel Cron diário 10h UTC = 7h BRT no Hobby; Pro destrava
+ * */15min — vercel.json). Fluid Compute:
  * maioria do tempo é I/O-wait da API Claude, maxDuration dá o teto.
  * Auth: Vercel envia Authorization: Bearer ${CRON_SECRET} automaticamente.
  */
-export const maxDuration = 800;
+export const maxDuration = 300; // Hobby: teto Fluid 300s; Pro destrava 800s
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
