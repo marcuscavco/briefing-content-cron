@@ -69,7 +69,23 @@ export class ClaudeLlmProvider implements LlmProvider {
   }
 
   async complete(req: LlmRequest): Promise<LlmResult> {
-    const response = await this.client.messages.create({
+    // Orgs em tier de rate limit baixo (OTPM pequeno) recusam requests cujo
+    // max_tokens excede a janela do minuto — espera e tenta de novo.
+    for (let attempt = 1; ; attempt++) {
+      try {
+        return await this.completeOnce(req);
+      } catch (e) {
+        const isRateLimit = e instanceof Anthropic.RateLimitError;
+        if (!isRateLimit || attempt >= 4) throw e;
+        await new Promise((r) => setTimeout(r, 65_000));
+      }
+    }
+  }
+
+  private async completeOnce(req: LlmRequest): Promise<LlmResult> {
+    // Streaming sempre: com adaptive thinking o max_tokens cobre pensamento +
+    // saída, então tetos altos são normais — e streaming evita timeout HTTP.
+    const stream = this.client.messages.stream({
       model: MODELS[req.task],
       max_tokens: req.maxTokens ?? 8192,
       system: [
@@ -91,6 +107,7 @@ export class ClaudeLlmProvider implements LlmProvider {
           }
         : {}),
     });
+    const response = await stream.finalMessage();
 
     if (response.stop_reason === "refusal") {
       throw new Error("LLM recusou a requisição (stop_reason=refusal)");

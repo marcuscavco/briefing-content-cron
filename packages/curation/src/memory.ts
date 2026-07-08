@@ -63,9 +63,21 @@ export class MemoryEngine {
     private readonly windowDays = MEMORY_WINDOW_DAYS_DEFAULT,
   ) {}
 
-  async check(cluster: RawCluster, metrics: StageMetrics): Promise<MemoryMatchResult & { embedding: number[] }> {
-    const [embedding] = await this.embeddings.embed([`${cluster.titulo}\n${cluster.resumo}`]);
-    if (!embedding) throw new Error("embedding vazio");
+  /** Texto canônico do cluster para embedding (mesma forma no check e no record). */
+  static textOf(cluster: Pick<RawCluster, "titulo" | "resumo">): string {
+    return `${cluster.titulo}\n${cluster.resumo}`;
+  }
+
+  /**
+   * O embedding vem de fora (o pipeline embeda TODOS os clusters numa chamada
+   * batch — 1 request por briefing em vez de 1 por cluster).
+   */
+  async check(
+    cluster: RawCluster,
+    embedding: number[],
+    metrics: StageMetrics,
+  ): Promise<MemoryMatchResult & { embedding: number[] }> {
+    if (!embedding.length) throw new Error("embedding vazio");
 
     const { data: matches, error } = await this.db.rpc("match_topic_memory", {
       p_profile_id: this.profileId,

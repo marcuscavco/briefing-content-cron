@@ -235,7 +235,7 @@ async function cluster(
     task: "heavy",
     system: CLUSTER_SYSTEM,
     user: `TEMAS DE INTERESSE: ${profile.themes.join(", ") || "(todos — usuário não restringiu)"}\nTEMAS EXCLUÍDOS: ${profile.excludedThemes.join(", ") || "(nenhum)"}\n\nITENS (${items.length}):\n${itemList}`,
-    maxTokens: 16000,
+    maxTokens: 40_000, // adaptive thinking + JSON de ~30 clusters cabem folgados
     jsonSchema: CLUSTER_SCHEMA as unknown as Record<string, unknown>,
   });
   metrics.tokensInput += result.usage.inputTokens;
@@ -297,6 +297,14 @@ async function applyMemoryAndSelect(
   const processed: ProcessedCluster[] = [];
   const embeddings: number[][] = [];
 
+  // Embeddings em BATCH: uma chamada por briefing (não uma por cluster) —
+  // essencial para caber nos rate limits do provedor.
+  const toEmbed = selected.filter((c) => c.categoria !== "descartado");
+  const batch = toEmbed.length
+    ? await deps.embeddings.embed(toEmbed.map((c) => MemoryEngine.textOf(c)))
+    : [];
+  const embeddingByCluster = new Map(toEmbed.map((c, i) => [c, batch[i] ?? []]));
+
   for (const cluster of selected) {
     // Descartado (heat < 2) é salvo para análise, mas não passa pela memória
     if (cluster.categoria === "descartado") {
@@ -311,7 +319,7 @@ async function applyMemoryAndSelect(
       continue;
     }
 
-    const verdict = await memory.check(cluster, metrics);
+    const verdict = await memory.check(cluster, embeddingByCluster.get(cluster) ?? [], metrics);
     processed.push({
       ...cluster,
       categoria: verdict.decision === "suprimir" ? "suprimido" : cluster.categoria,
@@ -351,7 +359,7 @@ async function suggestPosts(
     task: "heavy",
     system: POSTS_SYSTEM,
     user: `LIMITE DE POSTS PUBLICÁVEIS: ${profile.maxPostsPerDay}\n\nCLUSTERS:\n${list}`,
-    maxTokens: 8192,
+    maxTokens: 12_000,
     jsonSchema: POSTS_SCHEMA as unknown as Record<string, unknown>,
   });
   metrics.tokensInput += result.usage.inputTokens;

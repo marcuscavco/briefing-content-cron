@@ -19,24 +19,32 @@ export class VoyageEmbeddingProvider implements EmbeddingProvider {
   }
 
   async embed(texts: string[]): Promise<number[][]> {
-    const res = await fetch("https://api.voyageai.com/v1/embeddings", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${this.apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: this.model,
-        input: texts,
-        output_dimension: EMBEDDING_DIMS,
-      }),
-      signal: AbortSignal.timeout(30_000),
-    });
-    if (!res.ok) {
-      throw new Error(`Voyage API ${res.status}: ${(await res.text()).slice(0, 300)}`);
+    // 429 do free tier (3 RPM sem cartão): retry com backoff. O pipeline embeda
+    // em batch (1 chamada por briefing), então isso raramente dispara.
+    for (let attempt = 1; ; attempt++) {
+      const res = await fetch("https://api.voyageai.com/v1/embeddings", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: this.model,
+          input: texts,
+          output_dimension: EMBEDDING_DIMS,
+        }),
+        signal: AbortSignal.timeout(60_000),
+      });
+      if (res.status === 429 && attempt < 4) {
+        await new Promise((r) => setTimeout(r, 22_000 * attempt));
+        continue;
+      }
+      if (!res.ok) {
+        throw new Error(`Voyage API ${res.status}: ${(await res.text()).slice(0, 300)}`);
+      }
+      const body = (await res.json()) as { data: { index: number; embedding: number[] }[] };
+      return body.data.sort((a, b) => a.index - b.index).map((d) => d.embedding);
     }
-    const body = (await res.json()) as { data: { index: number; embedding: number[] }[] };
-    return body.data.sort((a, b) => a.index - b.index).map((d) => d.embedding);
   }
 }
 
