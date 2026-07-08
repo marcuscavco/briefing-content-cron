@@ -33,6 +33,7 @@ async function validateAndInsert(input: {
   handle?: string | null;
   tier: number;
   credential?: string | null;
+  fallbackEligible?: boolean;
 }): Promise<AddSourceResult> {
   const { supabase, accountId, profile } = await requireTenant();
 
@@ -67,6 +68,7 @@ async function validateAndInsert(input: {
       feed_url: validation.discoveredFeedUrl ?? input.feedUrl ?? null,
       handle: input.handle ?? null,
       tier: input.tier,
+      fallback_eligible: input.fallbackEligible ?? true,
       credential_enc: input.credential ? await encryptCredential(input.credential) : null,
       last_status: validation.status,
       last_error: validation.error ?? null,
@@ -146,6 +148,7 @@ export async function addFromLibrary(formData: FormData): Promise<void> {
     url: suggestion.url,
     feedUrl: suggestion.feed_url,
     tier: suggestion.suggested_tier,
+    fallbackEligible: suggestion.fallback_eligible,
   });
 }
 

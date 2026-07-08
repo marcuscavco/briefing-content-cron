@@ -7,6 +7,7 @@ cd "$(dirname "$0")/.."
 
 matches=$(grep -rn "SERVICE_ROLE" \
   --include='*.ts' --include='*.tsx' --include='*.js' --include='*.mjs' \
+  --exclude-dir=.next --exclude-dir=node_modules --exclude-dir=dist \
   apps packages 2>/dev/null \
   | grep -v '^packages/db/src/admin.ts:' || true)
 

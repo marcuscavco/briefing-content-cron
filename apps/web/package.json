@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@briefing/config": "workspace:*",
+    "@briefing/curation": "workspace:*",
     "@briefing/db": "workspace:*",
     "@briefing/ingestion": "workspace:*",
     "@supabase/ssr": "^0.12.0",

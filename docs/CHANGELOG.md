@@ -1,5 +1,60 @@
 # CHANGELOG
 
+## Fase 2 — Motor de curadoria + memória/dedupe (2026-07-08)
+
+**O coração do produto: as 9 etapas do `SKILL.md` viram pipeline de código
+parametrizado por briefing profile, com a memória entre briefings que resolve
+a dor nº 1 (repetição de notícias).**
+
+### Adicionado
+- **`packages/curation`**: pipeline stage-checkpointado (collect → cluster →
+  memory → posts → persist → deliver → report). Clusterização + notas 💻/💼 numa
+  chamada `claude-sonnet-5` (structured outputs + prompt caching das instruções
+  fixas); Heat Score, categorização, seleção de fonte canônica/fallback e
+  Curator's Pick determinísticos em código (pesos default = legado; Tier 3 vale
+  0.5 e nunca vira link); posts com voz/formatos/ângulos do `posts.md`
+  (skip por padrão, filtro 💼≥2, limite por profile enforced em código).
+- **Memória semântica (`topic_memory`, pgvector 1024 dims via Voyage
+  voyage-3.5-lite)**: antes de incluir um assunto, o motor busca o histórico do
+  profile — já tratado sem novidade → **suprime**; com novidade material
+  (judge `claude-haiku-4-5`) → reintroduz como **"Atualização"** com o que mudou
+  e link ao briefing anterior; senão → novo. Dedupe exato por content-hash
+  economiza judge. Janela de memória configurável (default 90 dias).
+- **Fila `jobs`**: claim atômico `FOR UPDATE SKIP LOCKED`, retry com backoff,
+  requeue de stale, idempotência 1 job/profile/dia, tokens+custo por job,
+  stage_log. Worker: `/api/cron/tick` (Vercel Cron 15min, Fluid maxDuration
+  800s, auth CRON_SECRET) com dispatch por delivery_time/timezone do profile;
+  `/api/jobs/run-now` ("gerar agora" autenticado).
+- **Dashboard**: briefing do dia com categorias, ✨Curator's Pick, 🔁Atualização
+  ("o que mudou"), contagens de suprimidos/atualizações, posts sugeridos e skips.
+- Schema: `briefings`/`clusters`/`posts` (evolução do legado sem colunas
+  DEPRECATED), `fallback_eligible` (regra HN generalizada), RPCs
+  `match_topic_memory`/`claim_next_job`/`requeue_stale_jobs` (execute só
+  service_role).
+- **Teste de aceite** (`supabase/tests/curation/`): pipeline real contra o stack
+  local com LLM fake determinístico — dia 1 novo · dia 2 sem novidade suprimido ·
+  dia 3 com novidade vira Atualização com o que mudou · timeline com 2 aparições.
+
+### Decisões
+- Embeddings: **Voyage AI** (decisão do usuário; interface `EmbeddingProvider`
+  troca de provedor barato; dev sem key usa fallback hash determinístico).
+- `job_runs` do brief §9 absorvido em `jobs` (stage_log + tokens/custo) —
+  volume v1 não justifica duas tabelas.
+- Etapa "select" fundida em "memory" (a seleção precisa das categorias
+  pós-supressão); bônus HN 200+ pts fora do v1 (feed hnrss não expõe score).
+- Correção de design achada pelo teste: hash de dedupe exato inclui o resumo —
+  senão "Atualização" com título canônico igual era suprimida indevidamente.
+
+### Aceite (verificado)
+Dois dias seguidos não repetem assunto sem novidade (dia 2 suprimido); assunto
+com novidade entra como "Atualização" com o que mudou (dia 3). 24 testes verdes.
+
+### Fora de escopo (por quê)
+- Execução com LLM real neste ambiente: sem ANTHROPIC_API_KEY aqui; primeira
+  rodada real acontece na Vercel com as keys configuradas.
+- Entrega email/WhatsApp: Fase 3 (estágio `deliver` é stub declarado).
+- Pesos de Heat configuráveis por usuário/plano: Fase 6 (constantes já isoladas).
+
 ## Fase 1 — Fontes, temas & ingestão resiliente (2026-07-08)
 
 ### Adicionado

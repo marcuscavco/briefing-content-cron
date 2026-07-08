@@ -151,9 +151,13 @@ PT-BR na entrega · ≤ 1500 chars por mensagem WhatsApp · URLs limpas.
    com `SourceConnector` (cascata feed → discovery → extração → só-título) e
    credenciais cifradas. Backoffice mínimo (concessão de assinatura `admin_grant`,
    gestão do catálogo) antecipado para a Fase 4.
-2. **Motor + memória**: porte das 9 etapas do `SKILL.md` para `packages/curation`,
-   parametrizado por account; `topic_memory` com pgvector — regra novo /
-   "Atualização" (com o que mudou) / suprimir; janela de memória configurável.
+2. **Motor + memória** ✅ (entregue): 9 etapas do `SKILL.md` em `packages/curation`
+   (clusterização+notas via `claude-sonnet-5` com structured outputs e prompt
+   caching; judge de novidade via `claude-haiku-4-5`; heat/seleção/Curator's Pick
+   determinísticos em código); `topic_memory` pgvector (Voyage voyage-3.5-lite,
+   1024 dims) com regra novo / "Atualização" / suprimir; fila `jobs` com claim
+   `FOR UPDATE SKIP LOCKED`, worker em `/api/cron/tick` (Vercel Cron 15min,
+   Fluid maxDuration 800s) + "gerar agora"; tokens/custo por job.
 3. **Entrega**: Resend (React Email) + WhatsApp multi-tenant (`whatsapp_destinations`
    com **match exato** contra `contacts.phone`, grupos com sufixo `-group`, nunca
    `@g.us` — pegadinha real do worker zapi); double opt-in; `delivery_log`;
