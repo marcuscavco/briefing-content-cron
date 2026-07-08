@@ -7,6 +7,7 @@ import {
   type JobRow,
   type PipelineDeps,
 } from "@briefing/curation";
+import { ResendEmailSender, ZapiClient } from "@briefing/delivery";
 import { createAdminClient } from "@briefing/db/admin";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -28,6 +29,12 @@ function buildDeps(db: SupabaseClient): PipelineDeps {
     embeddings: process.env.VOYAGE_API_KEY
       ? new VoyageEmbeddingProvider()
       : new HashEmbeddingProvider(), // dev sem key: mecânica funciona, semântica é lexical
+    // Entrega (Fase 3): sem as envs, o deliver loga skipped_disabled sem quebrar
+    email: process.env.RESEND_API_KEY ? new ResendEmailSender() : undefined,
+    whatsapp:
+      process.env.ZAPI_INSTANCE_ID && process.env.ZAPI_TOKEN ? new ZapiClient() : undefined,
+    appBaseUrl: process.env.APP_BASE_URL ?? "https://briefing-saas-weld.vercel.app",
+    unsubscribeSecret: process.env.CRON_SECRET,
   };
 }
 

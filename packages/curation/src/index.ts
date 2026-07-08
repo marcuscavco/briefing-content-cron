@@ -3,6 +3,7 @@ export { runStage, type JobRow, type PipelineDeps, type StageResult } from "./pi
 export { computeHeat, categorize, DEFAULT_WEIGHTS, type HeatWeights } from "./heat";
 export { selectSources, cleanUrl } from "./select";
 export { MemoryEngine, contentHash, type MemoryMatchResult } from "./memory";
+export { deliverBriefing } from "./deliver";
 export {
   ClaudeLlmProvider,
   FakeLlmProvider,

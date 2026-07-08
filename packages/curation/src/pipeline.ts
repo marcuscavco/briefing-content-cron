@@ -1,4 +1,6 @@
+import type { EmailSender, WhatsappSender } from "@briefing/delivery";
 import { decryptCredential, getConnector, type Transport } from "@briefing/ingestion";
+import { deliverBriefing } from "./deliver";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { categorize, computeHeat, DEFAULT_WEIGHTS } from "./heat";
 import { MemoryEngine } from "./memory";
@@ -42,6 +44,12 @@ export interface PipelineDeps {
   embeddings: EmbeddingProvider;
   transport?: Transport;
   now?: () => Date;
+  // Fase 3 — entrega (injetáveis; ausentes = skipped_disabled logado)
+  email?: EmailSender;
+  whatsapp?: WhatsappSender;
+  appBaseUrl?: string;
+  unsubscribeSecret?: string;
+  sleepMs?: (ms: number) => Promise<void>;
 }
 
 export interface StageResult {
@@ -115,14 +123,21 @@ export async function runStage(job: JobRow, deps: PipelineDeps): Promise<StageRe
       };
     }
 
-    case "deliver":
-      // Fase 3: email (Resend) + WhatsApp multi-tenant. Por ora o dashboard é o canal.
-      return {
-        nextStage: "report",
+    case "deliver": {
+      const log = await deliverBriefing(
+        {
+          db: deps.db,
+          email: deps.email,
+          whatsapp: deps.whatsapp,
+          appBaseUrl: deps.appBaseUrl,
+          unsubscribeSecret: deps.unsubscribeSecret,
+          sleepMs: deps.sleepMs,
+        },
+        profile,
         checkpoint,
-        metrics,
-        log: "entrega por email/WhatsApp chega na Fase 3 — dashboard disponível",
-      };
+      );
+      return { nextStage: "report", checkpoint, metrics, log };
+    }
 
     case "report": {
       await finalizeReport(deps, job, checkpoint);
@@ -145,6 +160,7 @@ async function loadProfile(db: SupabaseClient, profileId: string): Promise<Profi
     windowHours: data.window_hours ?? 48,
     maxPostsPerDay: data.max_posts_per_day ?? 3,
     timezone: data.timezone ?? "America/Sao_Paulo",
+    channels: data.channels ?? { email: true, whatsapp: false },
     voiceOverrides: data.voice_overrides,
   };
 }

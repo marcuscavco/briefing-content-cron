@@ -82,6 +82,7 @@ export interface ProfileConfig {
   windowHours: number;
   maxPostsPerDay: number;
   timezone: string;
+  channels: unknown; // {"email": bool, "whatsapp": bool}
   voiceOverrides: unknown;
 }
 
