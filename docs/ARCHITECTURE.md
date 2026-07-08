@@ -168,8 +168,14 @@ PT-BR na entrega · ≤ 1500 chars por mensagem WhatsApp · URLs limpas.
    **Decisão**: Z-API chamada direto da Vercel (REST) — o worker `zapi-mcp`
    existia só pela allowlist do sandbox da Remote Routine; segue intocado
    servindo o cron legado até a Fase 7.
-4. **Dashboard**: histórico com busca full-text + semântica, timeline de assunto,
-   status de fontes, configurações.
+4. **Dashboard** ✅ (entregue): histórico `/briefings` + detalhe (componente
+   `BriefingView` compartilhado), busca full-text (`clusters.fts` tsvector
+   'portuguese' + GIN, RLS normal) + semântica (Voyage → `match_topic_memory`
+   do próprio tenant), timeline de assunto `/topics/[id]`, status de fontes no
+   dashboard. **Backoffice mínimo** `/admin` (antecipado da Fase 6): `plans` +
+   `subscriptions` (`source: admin_grant | stripe`), concessão/revogação por
+   platform admin (gate service-role via `requirePlatformAdmin`) e gestão do
+   catálogo `suggested_sources`.
 5. **Instagram connector**: API terceira (Apify ou equivalente) isolada atrás de
    `SourceConnector`, feature-flag por plano + kill-switch global em `app_config`.
 6. **Billing**: Stripe Checkout/Portal/Webhooks; `plans`, `subscriptions`,

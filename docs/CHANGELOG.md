@@ -1,5 +1,43 @@
 # CHANGELOG
 
+## Fase 4 — Dashboard completo + backoffice mínimo (2026-07-08)
+
+**Navegação completa read/write com RLS (aceite do brief) + o backoffice de
+concessão de assinaturas antecipado da Fase 6.**
+
+### Adicionado
+- **Histórico** (`/briefings`): arquivo paginado de briefings com contadores;
+  detalhe (`/briefings/[id]`) reusa o render do dashboard via componente
+  compartilhado `BriefingView` (RLS: briefing de outra conta → 404).
+- **Busca** (`/search`): **full-text** nos clusters (coluna `tsvector`
+  'portuguese' gerada + GIN, consulta via `textSearch` com a RLS normal) e
+  **semântica** (embedding da query via Voyage → `match_topic_memory` com o
+  profile do próprio tenant; sem key/erro do provedor degrada para só-FTS).
+- **Timeline de assunto** (`/topics/[id]`): todas as aparições de um tópico da
+  memória com "o que mudou" de cada Atualização e links pros briefings; entrada
+  pelo título do cluster no dashboard/detalhe e pela busca.
+- **Dashboard**: alerta de fontes com problema no último briefing (status de
+  fontes na navegação diária) + link pro histórico.
+- **Backoffice** (`/admin`, gate 100% server-side via `platform_admins` +
+  service role — quem não é admin recebe redirect): contas com owner/assinatura,
+  **conceder/revogar plano** (`source: admin_grant`, audit de quem concedeu),
+  e catálogo global de fontes sugeridas (`/admin/catalog`: adicionar, pausar,
+  remover). Link "Admin" na nav só aparece para admins.
+- **Schema**: `plans` (free/pro seed) + `subscriptions` (única vigente por
+  account via unique parcial; colunas `stripe_*` prontas para a Fase 6);
+  `clusters.fts`; `isPlatformAdmin` helper em `packages/db`.
+- **Testes**: +4 RLS (planos legíveis/imutáveis; assinatura visível só ao dono
+  e não gravável pelo cliente; FTS não vaza clusters entre contas; timeline
+  isolada) — suíte total 37. Smoke Playwright dos 7 fluxos (dashboard →
+  histórico → detalhe → timeline → busca → conceder pro → catálogo).
+
+### Decisões
+- Backoffice usa service role **depois** de `requirePlatformAdmin` (padrão da
+  Fase 0: `platform_admins` sem policies, bypass impossível via PostgREST).
+- Busca semântica reusa a RPC do pipeline (`match_topic_memory`, execute
+  revogado de authenticated) — o gate é o `requireTenant` + profile_id próprio,
+  sem RPC nova exposta.
+
 ## Fase 3 — Entrega: email + WhatsApp multi-tenant (2026-07-08)
 
 **O briefing chega nos canais do usuário no horário dele, com destino WhatsApp
