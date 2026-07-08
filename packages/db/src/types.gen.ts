@@ -132,6 +132,278 @@ export type Database = {
           },
         ]
       }
+      briefings: {
+        Row: {
+          account_id: string
+          created_at: string
+          executed_at: string
+          id: string
+          n_clusters_total: number
+          n_must_read: number
+          n_no_radar: number
+          n_posts: number
+          n_posts_skipped: number
+          n_relevante: number
+          n_sinal_sem_fonte: number
+          n_suppressed: number
+          n_updates: number
+          notas: Json
+          profile_id: string
+          run_date: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          executed_at?: string
+          id?: string
+          n_clusters_total?: number
+          n_must_read?: number
+          n_no_radar?: number
+          n_posts?: number
+          n_posts_skipped?: number
+          n_relevante?: number
+          n_sinal_sem_fonte?: number
+          n_suppressed?: number
+          n_updates?: number
+          notas?: Json
+          profile_id: string
+          run_date: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          executed_at?: string
+          id?: string
+          n_clusters_total?: number
+          n_must_read?: number
+          n_no_radar?: number
+          n_posts?: number
+          n_posts_skipped?: number
+          n_relevante?: number
+          n_sinal_sem_fonte?: number
+          n_suppressed?: number
+          n_updates?: number
+          notas?: Json
+          profile_id?: string
+          run_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "briefings_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "briefings_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "briefing_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clusters: {
+        Row: {
+          account_id: string
+          briefing_id: string
+          categoria: Database["public"]["Enums"]["cluster_category"]
+          created_at: string
+          curator_pick_motivo: string | null
+          data_publicacao: string | null
+          fonte: string | null
+          heat_score: number
+          id: string
+          is_curator_pick: boolean
+          is_fallback: boolean
+          is_update: boolean
+          itens: Json
+          ordem: number
+          portais_cobrindo: Json
+          previous_briefing_id: string | null
+          relevancia_empresarial: number | null
+          relevancia_tecnica: number | null
+          resumo: string | null
+          tier_fonte: number | null
+          titulo: string
+          topic_memory_id: string | null
+          update_resumo: string | null
+          url: string | null
+        }
+        Insert: {
+          account_id: string
+          briefing_id: string
+          categoria: Database["public"]["Enums"]["cluster_category"]
+          created_at?: string
+          curator_pick_motivo?: string | null
+          data_publicacao?: string | null
+          fonte?: string | null
+          heat_score?: number
+          id?: string
+          is_curator_pick?: boolean
+          is_fallback?: boolean
+          is_update?: boolean
+          itens?: Json
+          ordem: number
+          portais_cobrindo?: Json
+          previous_briefing_id?: string | null
+          relevancia_empresarial?: number | null
+          relevancia_tecnica?: number | null
+          resumo?: string | null
+          tier_fonte?: number | null
+          titulo: string
+          topic_memory_id?: string | null
+          update_resumo?: string | null
+          url?: string | null
+        }
+        Update: {
+          account_id?: string
+          briefing_id?: string
+          categoria?: Database["public"]["Enums"]["cluster_category"]
+          created_at?: string
+          curator_pick_motivo?: string | null
+          data_publicacao?: string | null
+          fonte?: string | null
+          heat_score?: number
+          id?: string
+          is_curator_pick?: boolean
+          is_fallback?: boolean
+          is_update?: boolean
+          itens?: Json
+          ordem?: number
+          portais_cobrindo?: Json
+          previous_briefing_id?: string | null
+          relevancia_empresarial?: number | null
+          relevancia_tecnica?: number | null
+          resumo?: string | null
+          tier_fonte?: number | null
+          titulo?: string
+          topic_memory_id?: string | null
+          update_resumo?: string | null
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clusters_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clusters_briefing_id_fkey"
+            columns: ["briefing_id"]
+            isOneToOne: false
+            referencedRelation: "briefings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clusters_previous_briefing_id_fkey"
+            columns: ["previous_briefing_id"]
+            isOneToOne: false
+            referencedRelation: "briefings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clusters_topic_memory_fk"
+            columns: ["topic_memory_id"]
+            isOneToOne: false
+            referencedRelation: "topic_memory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      jobs: {
+        Row: {
+          account_id: string
+          attempts: number
+          checkpoint: Json
+          cost_usd: number
+          created_at: string
+          error: string | null
+          finished_at: string | null
+          id: string
+          locked_at: string | null
+          locked_by: string | null
+          max_attempts: number
+          payload: Json
+          profile_id: string
+          result: Json | null
+          run_at: string
+          run_date: string
+          stage: string
+          stage_log: Json
+          status: Database["public"]["Enums"]["job_status"]
+          tokens_input: number
+          tokens_output: number
+          type: string
+        }
+        Insert: {
+          account_id: string
+          attempts?: number
+          checkpoint?: Json
+          cost_usd?: number
+          created_at?: string
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          locked_at?: string | null
+          locked_by?: string | null
+          max_attempts?: number
+          payload?: Json
+          profile_id: string
+          result?: Json | null
+          run_at?: string
+          run_date: string
+          stage?: string
+          stage_log?: Json
+          status?: Database["public"]["Enums"]["job_status"]
+          tokens_input?: number
+          tokens_output?: number
+          type?: string
+        }
+        Update: {
+          account_id?: string
+          attempts?: number
+          checkpoint?: Json
+          cost_usd?: number
+          created_at?: string
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          locked_at?: string | null
+          locked_by?: string | null
+          max_attempts?: number
+          payload?: Json
+          profile_id?: string
+          result?: Json | null
+          run_at?: string
+          run_date?: string
+          stage?: string
+          stage_log?: Json
+          status?: Database["public"]["Enums"]["job_status"]
+          tokens_input?: number
+          tokens_output?: number
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jobs_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "jobs_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "briefing_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       memberships: {
         Row: {
           account_id: string
@@ -175,6 +447,82 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      posts: {
+        Row: {
+          account_id: string
+          angulo_descricao: string | null
+          angulo_tipo: string | null
+          briefing_id: string
+          cluster_id: string | null
+          created_at: string
+          cta: string | null
+          estrutura: Json | null
+          formato: string | null
+          gancho: string | null
+          id: string
+          justificativa_formato: string | null
+          ordem: number
+          skip: boolean
+          skip_motivo: string | null
+        }
+        Insert: {
+          account_id: string
+          angulo_descricao?: string | null
+          angulo_tipo?: string | null
+          briefing_id: string
+          cluster_id?: string | null
+          created_at?: string
+          cta?: string | null
+          estrutura?: Json | null
+          formato?: string | null
+          gancho?: string | null
+          id?: string
+          justificativa_formato?: string | null
+          ordem: number
+          skip?: boolean
+          skip_motivo?: string | null
+        }
+        Update: {
+          account_id?: string
+          angulo_descricao?: string | null
+          angulo_tipo?: string | null
+          briefing_id?: string
+          cluster_id?: string | null
+          created_at?: string
+          cta?: string | null
+          estrutura?: Json | null
+          formato?: string | null
+          gancho?: string | null
+          id?: string
+          justificativa_formato?: string | null
+          ordem?: number
+          skip?: boolean
+          skip_motivo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "posts_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "posts_briefing_id_fkey"
+            columns: ["briefing_id"]
+            isOneToOne: false
+            referencedRelation: "briefings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "posts_cluster_id_fkey"
+            columns: ["cluster_id"]
+            isOneToOne: false
+            referencedRelation: "clusters"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       source_health_events: {
         Row: {
@@ -233,6 +581,7 @@ export type Database = {
           active: boolean
           created_at: string
           credential_enc: string | null
+          fallback_eligible: boolean
           feed_url: string | null
           handle: string | null
           id: string
@@ -253,6 +602,7 @@ export type Database = {
           active?: boolean
           created_at?: string
           credential_enc?: string | null
+          fallback_eligible?: boolean
           feed_url?: string | null
           handle?: string | null
           id?: string
@@ -273,6 +623,7 @@ export type Database = {
           active?: boolean
           created_at?: string
           credential_enc?: string | null
+          fallback_eligible?: boolean
           feed_url?: string | null
           handle?: string | null
           id?: string
@@ -312,6 +663,7 @@ export type Database = {
           country: string
           created_at: string
           description: string | null
+          fallback_eligible: boolean
           feed_url: string | null
           id: string
           is_free: boolean
@@ -330,6 +682,7 @@ export type Database = {
           country?: string
           created_at?: string
           description?: string | null
+          fallback_eligible?: boolean
           feed_url?: string | null
           id?: string
           is_free?: boolean
@@ -348,6 +701,7 @@ export type Database = {
           country?: string
           created_at?: string
           description?: string | null
+          fallback_eligible?: boolean
           feed_url?: string | null
           id?: string
           is_free?: boolean
@@ -362,14 +716,150 @@ export type Database = {
         }
         Relationships: []
       }
+      topic_memory: {
+        Row: {
+          account_id: string
+          appearances: number
+          canonical_title: string
+          content_hash: string
+          embedding: string
+          entities: string[]
+          first_briefing_id: string | null
+          first_seen_at: string
+          id: string
+          last_briefing_id: string | null
+          last_seen_at: string
+          profile_id: string
+          summary: string | null
+        }
+        Insert: {
+          account_id: string
+          appearances?: number
+          canonical_title: string
+          content_hash: string
+          embedding: string
+          entities?: string[]
+          first_briefing_id?: string | null
+          first_seen_at?: string
+          id?: string
+          last_briefing_id?: string | null
+          last_seen_at?: string
+          profile_id: string
+          summary?: string | null
+        }
+        Update: {
+          account_id?: string
+          appearances?: number
+          canonical_title?: string
+          content_hash?: string
+          embedding?: string
+          entities?: string[]
+          first_briefing_id?: string | null
+          first_seen_at?: string
+          id?: string
+          last_briefing_id?: string | null
+          last_seen_at?: string
+          profile_id?: string
+          summary?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "topic_memory_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "topic_memory_first_briefing_id_fkey"
+            columns: ["first_briefing_id"]
+            isOneToOne: false
+            referencedRelation: "briefings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "topic_memory_last_briefing_id_fkey"
+            columns: ["last_briefing_id"]
+            isOneToOne: false
+            referencedRelation: "briefings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "topic_memory_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "briefing_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      claim_next_job: {
+        Args: { p_worker: string }
+        Returns: {
+          account_id: string
+          attempts: number
+          checkpoint: Json
+          cost_usd: number
+          created_at: string
+          error: string | null
+          finished_at: string | null
+          id: string
+          locked_at: string | null
+          locked_by: string | null
+          max_attempts: number
+          payload: Json
+          profile_id: string
+          result: Json | null
+          run_at: string
+          run_date: string
+          stage: string
+          stage_log: Json
+          status: Database["public"]["Enums"]["job_status"]
+          tokens_input: number
+          tokens_output: number
+          type: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "jobs"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      match_topic_memory: {
+        Args: {
+          p_count?: number
+          p_embedding: string
+          p_profile_id: string
+          p_threshold?: number
+          p_window_days?: number
+        }
+        Returns: {
+          appearances: number
+          canonical_title: string
+          id: string
+          last_briefing_id: string
+          last_seen_at: string
+          similarity: number
+          summary: string
+        }[]
+      }
+      requeue_stale_jobs: { Args: never; Returns: number }
     }
     Enums: {
+      cluster_category:
+        | "must_read"
+        | "relevante"
+        | "no_radar"
+        | "sinal_sem_fonte"
+        | "descartado"
+        | "suprimido"
+      job_status: "queued" | "running" | "done" | "failed"
       membership_role: "owner" | "admin" | "member"
       source_health_status: "pending" | "ok" | "partial" | "blocked" | "error"
       source_type: "rss" | "web" | "instagram"
@@ -503,6 +993,15 @@ export const Constants = {
   },
   public: {
     Enums: {
+      cluster_category: [
+        "must_read",
+        "relevante",
+        "no_radar",
+        "sinal_sem_fonte",
+        "descartado",
+        "suprimido",
+      ],
+      job_status: ["queued", "running", "done", "failed"],
       membership_role: ["owner", "admin", "member"],
       source_health_status: ["pending", "ok", "partial", "blocked", "error"],
       source_type: ["rss", "web", "instagram"],
