@@ -150,6 +150,8 @@ export type Database = {
           notas: Json
           profile_id: string
           run_date: string
+          whatsapp_msg_1: string | null
+          whatsapp_msg_2: string | null
         }
         Insert: {
           account_id: string
@@ -168,6 +170,8 @@ export type Database = {
           notas?: Json
           profile_id: string
           run_date: string
+          whatsapp_msg_1?: string | null
+          whatsapp_msg_2?: string | null
         }
         Update: {
           account_id?: string
@@ -186,6 +190,8 @@ export type Database = {
           notas?: Json
           profile_id?: string
           run_date?: string
+          whatsapp_msg_1?: string | null
+          whatsapp_msg_2?: string | null
         }
         Relationships: [
           {
@@ -310,6 +316,57 @@ export type Database = {
             columns: ["topic_memory_id"]
             isOneToOne: false
             referencedRelation: "topic_memory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      delivery_log: {
+        Row: {
+          account_id: string
+          briefing_id: string
+          channel: string
+          created_at: string
+          destination: string
+          error: string | null
+          id: number
+          provider_response: Json | null
+          status: string
+        }
+        Insert: {
+          account_id: string
+          briefing_id: string
+          channel: string
+          created_at?: string
+          destination: string
+          error?: string | null
+          id?: never
+          provider_response?: Json | null
+          status: string
+        }
+        Update: {
+          account_id?: string
+          briefing_id?: string
+          channel?: string
+          created_at?: string
+          destination?: string
+          error?: string | null
+          id?: never
+          provider_response?: Json | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_log_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delivery_log_briefing_id_fkey"
+            columns: ["briefing_id"]
+            isOneToOne: false
+            referencedRelation: "briefings"
             referencedColumns: ["id"]
           },
         ]
@@ -786,6 +843,78 @@ export type Database = {
           },
           {
             foreignKeyName: "topic_memory_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "briefing_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_destinations: {
+        Row: {
+          account_id: string
+          active: boolean
+          created_at: string
+          id: string
+          kind: string
+          label: string | null
+          phone: string
+          profile_id: string
+          updated_at: string
+          verification_attempts: number
+          verification_code: string | null
+          verification_expires_at: string | null
+          verification_sends: number
+          verification_window: string | null
+          verified: boolean
+          verified_at: string | null
+        }
+        Insert: {
+          account_id: string
+          active?: boolean
+          created_at?: string
+          id?: string
+          kind: string
+          label?: string | null
+          phone: string
+          profile_id: string
+          updated_at?: string
+          verification_attempts?: number
+          verification_code?: string | null
+          verification_expires_at?: string | null
+          verification_sends?: number
+          verification_window?: string | null
+          verified?: boolean
+          verified_at?: string | null
+        }
+        Update: {
+          account_id?: string
+          active?: boolean
+          created_at?: string
+          id?: string
+          kind?: string
+          label?: string | null
+          phone?: string
+          profile_id?: string
+          updated_at?: string
+          verification_attempts?: number
+          verification_code?: string | null
+          verification_expires_at?: string | null
+          verification_sends?: number
+          verification_window?: string | null
+          verified?: boolean
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_destinations_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_destinations_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "briefing_profiles"
