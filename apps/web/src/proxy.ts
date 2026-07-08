@@ -37,8 +37,11 @@ export async function proxy(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
   const isAuthPage = path.startsWith("/login") || path.startsWith("/signup");
+  // Rotas com autenticação própria (Bearer CRON_SECRET / token HMAC no link
+  // do email) — sem sessão por definição, não podem cair no redirect de login.
+  const isSelfAuthed = path.startsWith("/api/cron") || path.startsWith("/api/unsubscribe");
 
-  if (!user && !isAuthPage && !path.startsWith("/auth")) {
+  if (!user && !isAuthPage && !isSelfAuthed && !path.startsWith("/auth")) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
