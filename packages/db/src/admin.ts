@@ -16,6 +16,17 @@ export function createAdminClient() {
   );
 }
 
+/** Checagem booleana (ex.: mostrar link do backoffice na nav). */
+export async function isPlatformAdmin(userId: string): Promise<boolean> {
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from("platform_admins")
+    .select("user_id")
+    .eq("user_id", userId)
+    .maybeSingle();
+  return Boolean(data);
+}
+
 /** Lança erro se o usuário não for platform_admin. Bypass nunca acontece via policy. */
 export async function requirePlatformAdmin(userId: string): Promise<void> {
   const admin = createAdminClient();

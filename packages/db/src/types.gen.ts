@@ -219,6 +219,7 @@ export type Database = {
           curator_pick_motivo: string | null
           data_publicacao: string | null
           fonte: string | null
+          fts: unknown
           heat_score: number
           id: string
           is_curator_pick: boolean
@@ -245,6 +246,7 @@ export type Database = {
           curator_pick_motivo?: string | null
           data_publicacao?: string | null
           fonte?: string | null
+          fts?: unknown
           heat_score?: number
           id?: string
           is_curator_pick?: boolean
@@ -271,6 +273,7 @@ export type Database = {
           curator_pick_motivo?: string | null
           data_publicacao?: string | null
           fonte?: string | null
+          fts?: unknown
           heat_score?: number
           id?: string
           is_curator_pick?: boolean
@@ -489,6 +492,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      plans: {
+        Row: {
+          active: boolean
+          created_at: string
+          currency: string
+          description: string | null
+          features: Json
+          id: string
+          max_posts_per_day: number
+          max_sources: number
+          name: string
+          price_cents: number
+          sort_order: number
+          stripe_price_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          currency?: string
+          description?: string | null
+          features?: Json
+          id: string
+          max_posts_per_day?: number
+          max_sources?: number
+          name: string
+          price_cents?: number
+          sort_order?: number
+          stripe_price_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          currency?: string
+          description?: string | null
+          features?: Json
+          id?: string
+          max_posts_per_day?: number
+          max_sources?: number
+          name?: string
+          price_cents?: number
+          sort_order?: number
+          stripe_price_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       platform_admins: {
         Row: {
@@ -709,6 +760,72 @@ export type Database = {
             columns: ["profile_id"]
             isOneToOne: false
             referencedRelation: "briefing_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscriptions: {
+        Row: {
+          account_id: string
+          canceled_at: string | null
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string
+          granted_by: string | null
+          id: string
+          notes: string | null
+          plan_id: string
+          source: Database["public"]["Enums"]["subscription_source"]
+          status: Database["public"]["Enums"]["subscription_status"]
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          canceled_at?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string
+          granted_by?: string | null
+          id?: string
+          notes?: string | null
+          plan_id: string
+          source: Database["public"]["Enums"]["subscription_source"]
+          status?: Database["public"]["Enums"]["subscription_status"]
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          canceled_at?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string
+          granted_by?: string | null
+          id?: string
+          notes?: string | null
+          plan_id?: string
+          source?: Database["public"]["Enums"]["subscription_source"]
+          status?: Database["public"]["Enums"]["subscription_status"]
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
             referencedColumns: ["id"]
           },
         ]
@@ -992,6 +1109,8 @@ export type Database = {
       membership_role: "owner" | "admin" | "member"
       source_health_status: "pending" | "ok" | "partial" | "blocked" | "error"
       source_type: "rss" | "web" | "instagram"
+      subscription_source: "admin_grant" | "stripe"
+      subscription_status: "active" | "trialing" | "past_due" | "canceled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1134,6 +1253,8 @@ export const Constants = {
       membership_role: ["owner", "admin", "member"],
       source_health_status: ["pending", "ok", "partial", "blocked", "error"],
       source_type: ["rss", "web", "instagram"],
+      subscription_source: ["admin_grant", "stripe"],
+      subscription_status: ["active", "trialing", "past_due", "canceled"],
     },
   },
 } as const
