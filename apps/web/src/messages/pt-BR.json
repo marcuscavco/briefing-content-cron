@@ -44,12 +44,20 @@
     "curatorPick": "Curator's Pick",
     "fallback": "Fallback Tier 2",
     "whatChanged": "O que mudou",
-    "signalNoSource": "Sinal sem fonte canônica"
+    "signalNoSource": "Sinal sem fonte canônica",
+    "sourcesWithIssues": "Fontes com problema no último briefing",
+    "checkSources": "ver fontes",
+    "viewHistory": "Ver histórico completo →",
+    "emptyBriefing": "Nada digno de nota neste dia — silêncio honesto.",
+    "topicTimeline": "Ver a linha do tempo deste assunto"
   },
   "nav": {
     "dashboard": "Dashboard",
     "sources": "Fontes",
-    "settings": "Configurações"
+    "settings": "Configurações",
+    "briefings": "Histórico",
+    "search": "Buscar",
+    "admin": "Admin"
   },
   "sources": {
     "title": "Fontes",
@@ -57,7 +65,13 @@
     "yourSources": "Suas fontes",
     "empty": "Nenhuma fonte ainda. Adicione da biblioteca abaixo ou cadastre uma personalizada.",
     "tier": "Tier",
-    "status": { "pending": "Pendente", "ok": "OK", "partial": "Parcial", "blocked": "Bloqueado", "error": "Erro" },
+    "status": {
+      "pending": "Pendente",
+      "ok": "OK",
+      "partial": "Parcial",
+      "blocked": "Bloqueado",
+      "error": "Erro"
+    },
     "lastChecked": "Última checagem",
     "preview": "Preview da última validação",
     "revalidate": "Revalidar",
@@ -119,5 +133,68 @@
       "resume": "Reativar",
       "empty": "Nenhum destino ainda."
     }
+  },
+  "briefings": {
+    "title": "Histórico",
+    "subtitle": "Arquivo de todos os briefings gerados para o seu perfil.",
+    "archive": "Arquivo",
+    "total": "{count} briefings no total",
+    "empty": "Nenhum briefing ainda — gere o primeiro no dashboard.",
+    "newer": "mais recentes",
+    "older": "mais antigos",
+    "searchLink": "Buscar no arquivo →",
+    "backToArchive": "Voltar ao histórico",
+    "briefingOf": "Briefing"
+  },
+  "search": {
+    "title": "Buscar",
+    "subtitle": "Busca no seu arquivo de briefings: por texto (títulos e resumos) e por semelhança de assunto (memória semântica).",
+    "placeholder": "ex.: aquisição OpenAI, pix parcelado, datacenter no Ceará…",
+    "submit": "Buscar",
+    "ftsTitle": "Resultados por texto",
+    "ftsSubtitle": "Clusters cujo título ou resumo mencionam “{query}”",
+    "semanticTitle": "Assuntos parecidos",
+    "semanticSubtitle": "Tópicos da sua memória semanticamente próximos da busca",
+    "noResults": "Nada encontrado.",
+    "timelineLink": "linha do tempo",
+    "appearances": "{count} aparições",
+    "similar": "similar",
+    "semanticUnavailable": "Busca semântica indisponível no momento — mostrando só resultados por texto."
+  },
+  "topics": {
+    "backToArchive": "Voltar ao histórico",
+    "appearances": "{count} aparições",
+    "firstSeen": "primeira vez em",
+    "lastSeen": "última em",
+    "entities": "Entidades",
+    "update": "Atualização",
+    "whatChanged": "O que mudou",
+    "noClusters": "Este assunto ainda não apareceu em nenhum briefing arquivado."
+  },
+  "admin": {
+    "title": "Backoffice",
+    "subtitle": "Contas, assinaturas e catálogo global — visível só para admins da plataforma.",
+    "catalogLink": "Catálogo de fontes →",
+    "accounts": "Contas",
+    "accountsSubtitle": "{count} contas na plataforma",
+    "noSubscription": "sem assinatura",
+    "grantedByAdmin": "concedida por admin",
+    "grant": "Conceder",
+    "grantNotes": "nota da concessão (opcional)",
+    "revoke": "Revogar",
+    "backToAdmin": "Backoffice",
+    "catalogTitle": "Catálogo de fontes sugeridas",
+    "catalogSubtitle": "Biblioteca global que todos os usuários veem em /sources.",
+    "catalogAdd": "Adicionar ao catálogo",
+    "catalogName": "Nome do portal",
+    "catalogFeedUrl": "URL do feed (opcional)",
+    "catalogAddButton": "Adicionar",
+    "catalogList": "Fontes no catálogo",
+    "catalogCount": "{count} fontes",
+    "catalogActive": "ativa",
+    "catalogPaused": "pausada",
+    "catalogPause": "Pausar",
+    "catalogResume": "Reativar",
+    "catalogRemove": "Remover"
   }
 }
