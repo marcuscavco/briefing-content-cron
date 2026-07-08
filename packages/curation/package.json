@@ -3,8 +3,23 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "scripts": {
     "lint": "echo 'no lint'",
-    "typecheck": "echo 'stub — nada a checar na Fase 0'"
+    "typecheck": "tsc --noEmit",
+    "test": "echo 'testes de aceite em supabase/tests/curation (precisam do stack local)'"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.71.2",
+    "@briefing/db": "workspace:*",
+    "@briefing/ingestion": "workspace:*",
+    "@supabase/supabase-js": "^2.49.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.0",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.5"
   }
 }
