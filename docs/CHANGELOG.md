@@ -1,5 +1,42 @@
 # CHANGELOG
 
+## Fase 3 — Entrega: email + WhatsApp multi-tenant (2026-07-08)
+
+**O briefing chega nos canais do usuário no horário dele, com destino WhatsApp
+verificado por double opt-in e entrega idempotente.**
+
+### Adicionado
+- **`packages/delivery`**: render WhatsApp fiel aos templates da Etapa 8 do
+  `SKILL.md` (Digest + Posts, marcações ✨🔁🟡⚠️💡, silêncio honesto) com **corte
+  progressivo garantindo ≤ 1500 chars SEMPRE** (provado por teste); template de
+  email React Email (digest completo + posts + link do dashboard + unsubscribe);
+  `ZapiClient` (REST direto, phone LITERAL) e `ResendEmailSender` atrás das
+  interfaces `WhatsappSender`/`EmailSender` (fakes em teste).
+- **Estágio `deliver` real** (`packages/curation/src/deliver.ts`): email ao
+  owner da account; WhatsApp para cada destino — **não verificado é recusado**
+  (`skipped_unverified`), inativo pula, já-enviado não repete (unique parcial
+  `sent` no `delivery_log`), falha em um destino não derruba os outros; msg1/msg2
+  persistidas no briefing (auditoria); relatório em `briefings.notas.entrega`.
+  Sem env do provedor, canal loga `skipped_disabled` (não quebra o pipeline).
+- **Double opt-in** (`whatsapp_destinations`): código 6 dígitos via Z-API
+  (grupo recebe no grupo — prova que o bot é membro), expira em 15min, máx
+  3 envios/hora e 5 tentativas; **`verified` só muda via service role** —
+  trigger `protect_whatsapp_verification` bloqueia auto-verificação e troca de
+  phone pelo cliente (mudou o número? apaga e verifica de novo).
+- **UI /settings**: seção "Entrega" com destinos (adicionar/verificar/pausar/
+  remover), checkbox WhatsApp habilitado só com destino verificado;
+  `GET /api/unsubscribe?token=` (HMAC-SHA256 com `CRON_SECRET`) desliga o email.
+- **Testes**: 9 unit (render ≤1500/formatação/atualização), 7 RLS
+  (isolamento + anti auto-verificação + formato `@g.us` rejeitado), 2 aceite
+  (canais entregam; não verificado recusado; retry não duplica).
+
+### Decisões
+- **Z-API direto da Vercel** (sem o Worker `zapi-mcp`): o worker existia pela
+  allowlist do sandbox da Remote Routine; a Vercel não tem essa restrição.
+  A regra de match exato do phone foi portada e documentada na migração.
+- Destinos WhatsApp por **briefing profile** (não por account) — preparado para
+  múltiplos briefings por conta.
+
 ## Fase 2 — Motor de curadoria + memória/dedupe (2026-07-08)
 
 **O coração do produto: as 9 etapas do `SKILL.md` viram pipeline de código

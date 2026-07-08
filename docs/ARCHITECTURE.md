@@ -158,10 +158,16 @@ PT-BR na entrega · ≤ 1500 chars por mensagem WhatsApp · URLs limpas.
    1024 dims) com regra novo / "Atualização" / suprimir; fila `jobs` com claim
    `FOR UPDATE SKIP LOCKED`, worker em `/api/cron/tick` (Vercel Cron 15min,
    Fluid maxDuration 800s) + "gerar agora"; tokens/custo por job.
-3. **Entrega**: Resend (React Email) + WhatsApp multi-tenant (`whatsapp_destinations`
-   com **match exato** contra `contacts.phone`, grupos com sufixo `-group`, nunca
-   `@g.us` — pegadinha real do worker zapi); double opt-in; `delivery_log`;
-   agendamento por timezone do usuário.
+3. **Entrega** ✅ (entregue): `packages/delivery` — email via Resend (template
+   React Email com unsubscribe HMAC) + WhatsApp multi-tenant
+   (`whatsapp_destinations` com **match exato**: `phone` literal, grupos com
+   sufixo `-group`, nunca `@g.us` — pegadinha real do worker zapi); double
+   opt-in por código de 6 dígitos (verified só muda via service role — trigger
+   bloqueia auto-verificação); `delivery_log` com unique parcial em `sent`
+   (retry idempotente); render WhatsApp com corte progressivo ≤ 1500 chars.
+   **Decisão**: Z-API chamada direto da Vercel (REST) — o worker `zapi-mcp`
+   existia só pela allowlist do sandbox da Remote Routine; segue intocado
+   servindo o cron legado até a Fase 7.
 4. **Dashboard**: histórico com busca full-text + semântica, timeline de assunto,
    status de fontes, configurações.
 5. **Instagram connector**: API terceira (Apify ou equivalente) isolada atrás de
