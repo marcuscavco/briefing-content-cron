@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { requireTenant } from "@/lib/tenant";
 import { updateProfile } from "./actions";
+import { WhatsappDestinations } from "./whatsapp-destinations";
 
 export default async function SettingsPage({
   searchParams,
@@ -12,8 +13,15 @@ export default async function SettingsPage({
   searchParams: Promise<{ saved?: string }>;
 }) {
   const t = await getTranslations("settings");
-  const { profile } = await requireTenant();
+  const { supabase, profile } = await requireTenant();
   const { saved } = await searchParams;
+
+  const { data: destinations } = await supabase
+    .from("whatsapp_destinations")
+    .select("id, phone, label, kind, verified, active, verification_expires_at")
+    .eq("profile_id", profile.id)
+    .order("created_at");
+  const hasVerified = (destinations ?? []).some((d) => d.verified);
   const channels = (profile.channels ?? {}) as { email?: boolean; whatsapp?: boolean };
 
   return (
@@ -90,14 +98,14 @@ export default async function SettingsPage({
                 <input type="checkbox" name="channel_email" defaultChecked={channels.email ?? true} />
                 {t("channelEmail")}
               </label>
-              <label className="flex items-center gap-2 text-sm text-muted-foreground">
+              <label className="flex items-center gap-2 text-sm">
                 <input
                   type="checkbox"
                   name="channel_whatsapp"
                   defaultChecked={channels.whatsapp ?? false}
-                  disabled
+                  disabled={!hasVerified}
                 />
-                {t("channelWhatsapp")}
+                {hasVerified ? t("channelWhatsapp") : t("channelWhatsappNeedsDestination")}
               </label>
             </fieldset>
 
@@ -105,6 +113,36 @@ export default async function SettingsPage({
               {t("save")}
             </Button>
           </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("delivery.title")}</CardTitle>
+          <CardDescription>{t("delivery.subtitle")}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <WhatsappDestinations
+            destinations={destinations ?? []}
+            labels={{
+              empty: t("delivery.empty"),
+              phoneLabel: t("delivery.phoneLabel"),
+              phoneHint: t("delivery.phoneHint"),
+              labelLabel: t("delivery.labelLabel"),
+              add: t("delivery.add"),
+              verified: t("delivery.verified"),
+              pending: t("delivery.pending"),
+              paused: t("delivery.paused"),
+              sendCode: t("delivery.sendCode"),
+              codeSent: t("delivery.codeSent"),
+              codePlaceholder: t("delivery.codePlaceholder"),
+              confirm: t("delivery.confirm"),
+              confirmed: t("delivery.confirmed"),
+              remove: t("delivery.remove"),
+              pause: t("delivery.pause"),
+              resume: t("delivery.resume"),
+            }}
+          />
         </CardContent>
       </Card>
     </div>

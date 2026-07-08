@@ -96,7 +96,28 @@
     "windowHours": "Janela de coleta (horas)",
     "channels": "Canais de entrega",
     "channelEmail": "Email",
-    "channelWhatsapp": "WhatsApp (disponível na Fase 3)",
-    "save": "Salvar"
+    "channelWhatsapp": "WhatsApp",
+    "channelWhatsappNeedsDestination": "WhatsApp (adicione e verifique um destino abaixo para ativar)",
+    "save": "Salvar",
+    "delivery": {
+      "title": "Destinos de WhatsApp",
+      "subtitle": "O briefing chega em 2 mensagens (≤1500 caracteres cada). Cada destino precisa ser verificado com um código antes de receber — números pessoais recebem o código por DM; grupos recebem no próprio grupo (o bot precisa ser membro).",
+      "phoneLabel": "Número ou JID de grupo",
+      "phoneHint": "Só dígitos com DDI+DDD (ex.: 5585999990000). Grupo: JID com sufixo -group (ex.: 120363000000000000-group) — exatamente como está no WhatsApp, sem @g.us.",
+      "labelLabel": "Apelido (opcional)",
+      "add": "Adicionar destino",
+      "verified": "Verificado",
+      "pending": "Pendente",
+      "paused": "Pausado",
+      "sendCode": "Enviar código",
+      "codeSent": "Código enviado! Confira o WhatsApp.",
+      "codePlaceholder": "Código de 6 dígitos",
+      "confirm": "Confirmar",
+      "confirmed": "Destino verificado ✅",
+      "remove": "Remover",
+      "pause": "Pausar",
+      "resume": "Reativar",
+      "empty": "Nenhum destino ainda."
+    }
   }
 }
