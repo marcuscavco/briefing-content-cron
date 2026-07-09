@@ -4,14 +4,14 @@ import { createAdminClient } from "@briefing/db/admin";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { grantSubscription, revokeSubscription } from "./actions";
+import { grantSubscription, revokeSubscription, setInstagramKillSwitch } from "./actions";
 
 /** Backoffice: contas + assinaturas (admin_grant). Gate no layout. */
 export default async function AdminPage() {
   const t = await getTranslations("admin");
   const admin = createAdminClient();
 
-  const [{ data: accounts }, { data: plans }, { data: subs }, { data: memberships }] =
+  const [{ data: accounts }, { data: plans }, { data: subs }, { data: memberships }, { data: igCfg }] =
     await Promise.all([
       admin.from("accounts").select("id, name, created_at").order("created_at"),
       admin.from("plans").select("id, name").eq("active", true).order("sort_order"),
@@ -20,7 +20,9 @@ export default async function AdminPage() {
         .select("account_id, plan_id, status, source, current_period_end")
         .in("status", ["active", "trialing"]),
       admin.from("memberships").select("account_id, user_id, role").eq("role", "owner"),
+      admin.from("app_config").select("value").eq("key", "instagram_connector_enabled").maybeSingle(),
     ]);
+  const instagramOn = igCfg?.value !== false;
 
   // Email dos owners (admin API; volume v1 é pequeno)
   const ownerEmail = new Map<string, string>();
@@ -41,6 +43,23 @@ export default async function AdminPage() {
           {t("catalogLink")}
         </Link>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("instagramSwitch")}</CardTitle>
+          <CardDescription>
+            {instagramOn ? t("instagramSwitchOn") : t("instagramSwitchOff")}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form action={setInstagramKillSwitch}>
+            <input type="hidden" name="enabled" value={String(!instagramOn)} />
+            <Button type="submit" size="sm" variant={instagramOn ? "destructive" : "default"}>
+              {instagramOn ? t("instagramTurnOff") : t("instagramTurnOn")}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

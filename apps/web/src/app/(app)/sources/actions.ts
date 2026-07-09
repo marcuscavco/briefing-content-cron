@@ -3,8 +3,10 @@
 import {
   decryptCredential,
   encryptCredential,
+  ApifyInstagramFetcher,
   getConnector,
   type FetchResult,
+  type InstagramFetcher,
   type SourceType,
 } from "@briefing/ingestion";
 import { revalidatePath } from "next/cache";
@@ -25,6 +27,11 @@ function cleanUrl(raw: string): string {
 }
 
 /** Valida a fonte na hora (cascata), persiste com health + preview e loga o evento. */
+/** Provedor do Instagram para validação na adição (mesmo do worker). */
+function instagramFetcher(): InstagramFetcher | undefined {
+  return process.env.APIFY_TOKEN ? new ApifyInstagramFetcher() : undefined;
+}
+
 async function validateAndInsert(input: {
   name: string;
   type: SourceType;
@@ -37,11 +44,7 @@ async function validateAndInsert(input: {
 }): Promise<AddSourceResult> {
   const { supabase, accountId, profile } = await requireTenant();
 
-  if (input.type === "instagram") {
-    return { ok: false, error: "Fontes de Instagram chegam na Fase 5." };
-  }
-
-  const connector = getConnector(input.type);
+  const connector = getConnector(input.type, undefined, instagramFetcher());
   const validation = await connector.validate({
     type: input.type,
     url: input.url,
@@ -159,7 +162,7 @@ export async function revalidateSource(formData: FormData): Promise<void> {
   const { data: source } = await supabase.from("sources").select("*").eq("id", id).single();
   if (!source) return;
 
-  const connector = getConnector(source.type);
+  const connector = getConnector(source.type, undefined, instagramFetcher());
   const validation = await connector.validate({
     type: source.type,
     url: source.url,
@@ -213,4 +216,48 @@ export async function deleteSource(formData: FormData): Promise<void> {
   const { supabase } = await requireTenant();
   await supabase.from("sources").delete().eq("id", id);
   revalidatePath("/sources");
+}
+
+/** Fase 5: adicionar perfil do Instagram como fonte (gated por plano). */
+export async function addInstagramSource(
+  _prev: AddSourceResult | null,
+  formData: FormData,
+): Promise<AddSourceResult> {
+  try {
+    const handle = String(formData.get("handle") ?? "")
+      .trim()
+      .replace(/^@/, "")
+      .toLowerCase();
+    if (!/^[a-z0-9._]{1,30}$/.test(handle)) {
+      return { ok: false, error: "Handle inválido — use só letras, números, ponto e underline." };
+    }
+
+    // Feature por plano (o mesmo gate roda de novo na coleta, com kill-switch).
+    const { supabase } = await requireTenant();
+    const { data: sub } = await supabase
+      .from("subscriptions")
+      .select("plan_id")
+      .in("status", ["active", "trialing"])
+      .maybeSingle();
+    const { data: plan } = sub
+      ? await supabase.from("plans").select("features").eq("id", sub.plan_id).maybeSingle()
+      : { data: null };
+    const features = (plan?.features ?? {}) as { instagram?: boolean };
+    if (features.instagram !== true) {
+      return {
+        ok: false,
+        error: "Fontes de Instagram não estão inclusas no seu plano.",
+      };
+    }
+
+    return await validateAndInsert({
+      name: `@${handle}`,
+      type: "instagram",
+      url: `https://www.instagram.com/${handle}/`,
+      handle,
+      tier: 3, // rede social é sinal/contexto — nunca fonte canônica de leitura
+    });
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "handle inválido" };
+  }
 }

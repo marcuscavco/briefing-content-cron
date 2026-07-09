@@ -94,7 +94,14 @@
     "addedPartial": "Fonte adicionada em modo parcial: sem feed utilizável, vamos ler só título/resumo da página.",
     "addedBlocked": "Fonte adicionada, mas o portal bloqueou nosso acesso. Ela fica marcada e não derruba seu briefing.",
     "addedError": "Fonte adicionada, mas inacessível agora. Vamos monitorar o health dela.",
-    "itemsFound": "itens encontrados"
+    "itemsFound": "itens encontrados",
+    "instagramTitle": "Perfil do Instagram",
+    "instagramSubtitle": "Posts das últimas 24h do perfil viram itens do briefing (legenda + link). Disponível em planos com social.",
+    "instagramHandle": "Handle do perfil",
+    "instagramHint": "Só o nome do perfil, com ou sem @ (ex.: @oempresarionerd). Janela fixa de 24h — post de rede envelhece rápido.",
+    "instagramAdd": "Validar e adicionar perfil",
+    "instagramAdded": "Perfil adicionado",
+    "instagramPostsFound": "posts nas últimas 24h"
   },
   "settings": {
     "title": "Configurações do briefing",
@@ -195,6 +202,11 @@
     "catalogPaused": "pausada",
     "catalogPause": "Pausar",
     "catalogResume": "Reativar",
-    "catalogRemove": "Remover"
+    "catalogRemove": "Remover",
+    "instagramSwitch": "Instagram (kill-switch global)",
+    "instagramSwitchOn": "Ligado — fontes de Instagram coletam normalmente nos planos com social.",
+    "instagramSwitchOff": "DESLIGADO — nenhuma fonte de Instagram coleta, em nenhuma conta.",
+    "instagramTurnOff": "Desligar para todos",
+    "instagramTurnOn": "Religar"
   }
 }

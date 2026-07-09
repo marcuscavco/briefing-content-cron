@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { requireTenant } from "@/lib/tenant";
 import { addFromLibrary, deleteSource, revalidateSource, toggleSourceActive } from "./actions";
 import { AddCustomSourceForm } from "./add-custom-form";
+import { AddInstagramForm } from "./add-instagram-form";
 import { StatusBadge, TierBadge } from "./status-badge";
 
 type PreviewItem = { title: string; url: string; publishedAt: string | null };
@@ -167,6 +168,25 @@ export default async function SourcesPage() {
               addedBlocked: t("addedBlocked"),
               addedError: t("addedError"),
               itemsFound: t("itemsFound"),
+            }}
+          />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("instagramTitle")}</CardTitle>
+          <CardDescription>{t("instagramSubtitle")}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <AddInstagramForm
+            labels={{
+              handle: t("instagramHandle"),
+              hint: t("instagramHint"),
+              add: t("instagramAdd"),
+              validating: t("validating"),
+              added: t("instagramAdded"),
+              postsFound: t("instagramPostsFound"),
             }}
           />
         </CardContent>

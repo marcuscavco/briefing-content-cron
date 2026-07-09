@@ -100,3 +100,14 @@ export async function removeSuggestedSource(formData: FormData) {
   if (error) throw new Error(`remoção falhou: ${error.message}`);
   revalidatePath("/admin/catalog");
 }
+
+/** Kill-switch global do Instagram (Fase 5): desliga a coleta para TODAS as contas. */
+export async function setInstagramKillSwitch(formData: FormData) {
+  const { admin } = await requireAdmin();
+  const enabled = String(formData.get("enabled") ?? "") === "true";
+  const { error } = await admin
+    .from("app_config")
+    .upsert({ key: "instagram_connector_enabled", value: enabled, updated_at: new Date().toISOString() });
+  if (error) throw new Error(`kill-switch falhou: ${error.message}`);
+  revalidatePath("/admin");
+}

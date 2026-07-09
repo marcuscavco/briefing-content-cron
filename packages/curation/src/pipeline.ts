@@ -1,5 +1,10 @@
 import type { EmailSender, WhatsappSender } from "@briefing/delivery";
-import { decryptCredential, getConnector, type Transport } from "@briefing/ingestion";
+import {
+  decryptCredential,
+  getConnector,
+  type InstagramFetcher,
+  type Transport,
+} from "@briefing/ingestion";
 import { deliverBriefing } from "./deliver";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { categorize, computeHeat, DEFAULT_WEIGHTS } from "./heat";
@@ -50,6 +55,8 @@ export interface PipelineDeps {
   appBaseUrl?: string;
   unsubscribeSecret?: string;
   sleepMs?: (ms: number) => Promise<void>;
+  // Fase 5 — Instagram (injetável; ausente = fonte IG reporta erro claro)
+  instagramFetcher?: InstagramFetcher;
 }
 
 export interface StageResult {
@@ -177,8 +184,40 @@ async function collect(deps: PipelineDeps, profile: ProfileConfig) {
   const items: CollectedItem[] = [];
   const report: NonNullable<PipelineCheckpoint["sourceReport"]> = [];
 
-  for (const source of (sources ?? []) as (SourceRow & { account_id: string })[]) {
-    const connector = getConnector(source.type, deps.transport);
+  // Fase 5: Instagram é gated — kill-switch global + feature do plano.
+  const sourceRows = (sources ?? []) as (SourceRow & { account_id: string })[];
+  let instagramBlock: string | null = null;
+  if (sourceRows.some((s) => s.type === "instagram")) {
+    instagramBlock = await instagramGate(deps, profile);
+  }
+
+  for (const source of sourceRows) {
+    if (source.type === "instagram" && instagramBlock) {
+      report.push({
+        sourceId: source.id,
+        portal: source.name,
+        status: "blocked",
+        itemsFound: 0,
+        error: instagramBlock,
+      });
+      const now = (deps.now?.() ?? new Date()).toISOString();
+      await deps.db
+        .from("sources")
+        .update({ last_status: "blocked", last_error: instagramBlock, last_checked_at: now })
+        .eq("id", source.id);
+      await deps.db.from("source_health_events").insert({
+        source_id: source.id,
+        account_id: source.account_id,
+        status: "blocked",
+        method: null,
+        latency_ms: 0,
+        items_found: 0,
+        error: instagramBlock,
+      });
+      continue;
+    }
+
+    const connector = getConnector(source.type, deps.transport, deps.instagramFetcher);
     const result = await connector.collect(
       {
         type: source.type,
@@ -229,6 +268,40 @@ async function collect(deps: PipelineDeps, profile: ProfileConfig) {
   }
 
   return { items: items.slice(0, MAX_ITEMS_FOR_LLM), report };
+}
+
+/**
+ * Fase 5: por que uma fonte de Instagram NÃO coleta hoje (null = liberada).
+ * 1. Kill-switch global `app_config.instagram_connector_enabled` (backoffice) —
+ *    desliga o connector para a plataforma inteira na hora, sem deploy.
+ * 2. Feature por plano: `plans.features.instagram` da assinatura vigente.
+ */
+async function instagramGate(deps: PipelineDeps, profile: ProfileConfig): Promise<string | null> {
+  const { data: cfg } = await deps.db
+    .from("app_config")
+    .select("value")
+    .eq("key", "instagram_connector_enabled")
+    .maybeSingle();
+  if (cfg && cfg.value === false) {
+    return "Instagram desativado pela plataforma (kill-switch)";
+  }
+
+  const { data: sub } = await deps.db
+    .from("subscriptions")
+    .select("plan_id")
+    .eq("account_id", profile.accountId)
+    .in("status", ["active", "trialing"])
+    .maybeSingle();
+  if (sub) {
+    const { data: plan } = await deps.db
+      .from("plans")
+      .select("features")
+      .eq("id", sub.plan_id)
+      .maybeSingle();
+    const features = (plan?.features ?? {}) as { instagram?: boolean };
+    if (features.instagram === true) return null;
+  }
+  return "Fontes de Instagram não estão inclusas no seu plano";
 }
 
 // ── Etapas 2+5: clusterização + notas dimensionais (uma chamada LLM) ─────────

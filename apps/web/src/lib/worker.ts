@@ -8,6 +8,7 @@ import {
   type PipelineDeps,
 } from "@briefing/curation";
 import { ResendEmailSender, ZapiClient } from "@briefing/delivery";
+import { ApifyInstagramFetcher } from "@briefing/ingestion";
 import { createAdminClient } from "@briefing/db/admin";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -35,6 +36,8 @@ function buildDeps(db: SupabaseClient): PipelineDeps {
       process.env.ZAPI_INSTANCE_ID && process.env.ZAPI_TOKEN ? new ZapiClient() : undefined,
     appBaseUrl: process.env.APP_BASE_URL ?? "https://briefing-saas-weld.vercel.app",
     unsubscribeSecret: process.env.CRON_SECRET,
+    // Instagram (Fase 5): sem token, a fonte IG reporta erro claro na coleta
+    instagramFetcher: process.env.APIFY_TOKEN ? new ApifyInstagramFetcher() : undefined,
   };
 }
 

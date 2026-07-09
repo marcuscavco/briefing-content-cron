@@ -1,5 +1,40 @@
 # CHANGELOG
 
+## Fase 5 — Instagram connector (2026-07-09)
+
+**Handle do IG vira fonte normalizada; kill-switch global funciona (aceite do
+brief) — connector isolado atrás de interface, provedor trocável num arquivo.**
+
+### Adicionado
+- **`InstagramConnector` real** (`packages/ingestion/src/connectors/instagram.ts`):
+  posts do perfil viram `FetchedItem` — 1ª linha da legenda é o título, legenda
+  completa é o conteúdo (com `[transcrição do vídeo]` anexada quando o provedor
+  fornecer — extension point), permalink é a URL. **Janela capada em 24h**
+  (decisão do Marcus: post de rede envelhece rápido; a janela do profile só
+  encolhe isso). Tier fixo 3 — rede social é sinal, nunca fonte canônica.
+- **Provedor Apify** (`providers/apify.ts`): actor `apify/instagram-scraper`
+  via run-sync, atrás da interface `InstagramFetcher` — trocar de provedor =
+  escrever outra classe. Env `APIFY_TOKEN`; ausente → erro claro na
+  validação/coleta, sem quebrar o pipeline.
+- **Kill-switch global**: `app_config.instagram_connector_enabled`, togglável
+  no backoffice `/admin` — desliga a coleta de IG para TODAS as contas na hora,
+  sem deploy. Checado no pipeline antes de chamar o provedor.
+- **Feature por plano**: `plans.features.instagram` (hoje: pro). Conta sem
+  plano com social → fonte bloqueada com mensagem clara no health/report, e a
+  adição em `/sources` também recusa.
+- **UI**: card "Perfil do Instagram" em `/sources` (handle com validação na
+  hora) + card do kill-switch em `/admin`.
+- **Testes**: 6 unit no connector (normalização, cap de 24h, transcrição,
+  sem legenda, sem provedor, erro do provedor) + **3 de aceite** com o estágio
+  collect real: kill-switch desligado → bloqueado e provedor NUNCA chamado;
+  sem plano → bloqueado; com pro → item normalizado no checkpoint (suíte 40).
+
+### Fora de escopo (documentado)
+- Transcrição de vídeo: o Apify não transcreve; o shape (`transcript`) já
+  aceita — quando quisermos, um segundo provedor (ex.: Whisper sobre o vídeo)
+  preenche o campo sem tocar no resto.
+- E2E com Apify real aguarda `APIFY_TOKEN` (pedir ao usuário).
+
 ## Fase 4 — Dashboard completo + backoffice mínimo (2026-07-08)
 
 **Navegação completa read/write com RLS (aceite do brief) + o backoffice de

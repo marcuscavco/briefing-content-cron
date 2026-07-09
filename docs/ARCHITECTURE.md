@@ -176,8 +176,13 @@ PT-BR na entrega · ≤ 1500 chars por mensagem WhatsApp · URLs limpas.
    `subscriptions` (`source: admin_grant | stripe`), concessão/revogação por
    platform admin (gate service-role via `requirePlatformAdmin`) e gestão do
    catálogo `suggested_sources`.
-5. **Instagram connector**: API terceira (Apify ou equivalente) isolada atrás de
-   `SourceConnector`, feature-flag por plano + kill-switch global em `app_config`.
+5. **Instagram connector** ✅ (entregue): Apify (`apify/instagram-scraper`)
+   isolado atrás de `InstagramFetcher` (troca de provedor = 1 arquivo);
+   janela capada em 24h; legenda → título/conteúdo, permalink → URL, tier 3
+   fixo; kill-switch global `app_config.instagram_connector_enabled`
+   (backoffice) + feature por plano `plans.features.instagram` — ambos checados
+   no pipeline ANTES de chamar o provedor. Transcrição de vídeo é extension
+   point (campo `transcript` no shape).
 6. **Billing**: Stripe Checkout/Portal/Webhooks; `plans`, `subscriptions`,
    `usage_counters`; enforcement de quota server-side antes de cada execução.
 7. **Migração**: seed do account do Marcus (fontes de `fontes.md`, destinos
