@@ -19,7 +19,7 @@ export default async function SettingsPage({
 
   const { data: destinations } = await supabase
     .from("whatsapp_destinations")
-    .select("id, phone, label, kind, verified, active, verification_expires_at")
+    .select("id, phone, label, kind, verified, active")
     .eq("profile_id", profile.id)
     .order("created_at");
   const hasVerified = (destinations ?? []).some((d) => d.verified);
@@ -118,27 +118,7 @@ export default async function SettingsPage({
           <CardDescription>{t("delivery.subtitle")}</CardDescription>
         </CardHeader>
         <CardContent>
-          <WhatsappDestinations
-            destinations={destinations ?? []}
-            labels={{
-              empty: t("delivery.empty"),
-              phoneLabel: t("delivery.phoneLabel"),
-              phoneHint: t("delivery.phoneHint"),
-              labelLabel: t("delivery.labelLabel"),
-              add: t("delivery.add"),
-              verified: t("delivery.verified"),
-              pending: t("delivery.pending"),
-              paused: t("delivery.paused"),
-              sendCode: t("delivery.sendCode"),
-              codeSent: t("delivery.codeSent"),
-              codePlaceholder: t("delivery.codePlaceholder"),
-              confirm: t("delivery.confirm"),
-              confirmed: t("delivery.confirmed"),
-              remove: t("delivery.remove"),
-              pause: t("delivery.pause"),
-              resume: t("delivery.resume"),
-            }}
-          />
+          <WhatsappDestinations destinations={destinations ?? []} />
         </CardContent>
       </Card>
     </div>

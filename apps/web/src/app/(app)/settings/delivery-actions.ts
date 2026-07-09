@@ -6,61 +6,29 @@ import { revalidatePath } from "next/cache";
 import { requireTenant } from "@/lib/tenant";
 
 /**
- * Double opt-in de destino WhatsApp (brief §8). O phone é LITERAL (match exato,
- * grupos com sufixo -group). Campos de verificação só mudam via service role —
- * trigger no banco impede o cliente de se auto-verificar.
+ * Double opt-in de destino WhatsApp (brief §8), agora no formato wizard:
+ * número (só pessoal, BR) → código enviado → confirmação no mesmo fluxo.
+ * O phone é LITERAL para a Z-API (55+DDD+número). Campos de verificação só
+ * mudam via service role — trigger no banco impede auto-verificação.
+ * Grupos não são mais aceitos pela UI (legado continua suportado no banco).
  */
 
-export interface VerificationResult {
+export interface WizardDestinationResult {
   ok: boolean;
+  destinationId?: string;
   error?: string;
-  verified?: boolean;
 }
 
-const PHONE_RE = /^[0-9]+(-group)?$/;
-
-export async function addWhatsappDestination(
-  _prev: VerificationResult | null,
-  formData: FormData,
-): Promise<VerificationResult> {
-  const { supabase, accountId, profile } = await requireTenant();
-  const phone = String(formData.get("phone") ?? "").trim();
-  const label = String(formData.get("label") ?? "").trim() || null;
-
-  if (!PHONE_RE.test(phone)) {
-    return { ok: false, error: "Formato inválido. Use só dígitos (ex.: 5585999990000) ou JID de grupo com sufixo -group." };
-  }
-
-  const { error } = await supabase.from("whatsapp_destinations").insert({
-    account_id: accountId,
-    profile_id: profile.id,
-    kind: phone.endsWith("-group") ? "group" : "personal",
-    phone, // LITERAL — nunca normalizar
-    label,
-  });
-  if (error) {
-    return { ok: false, error: error.code === "23505" ? "Esse destino já existe." : error.message };
-  }
-  revalidatePath("/settings");
-  return { ok: true };
-}
-
-export async function sendVerificationCode(
-  _prev: VerificationResult | null,
-  formData: FormData,
-): Promise<VerificationResult> {
-  const { profile } = await requireTenant(); // valida sessão/tenant
-  const id = String(formData.get("id"));
+async function sendCodeById(id: string, profileId: string): Promise<WizardDestinationResult> {
   const admin = createAdminClient();
-
   const { data: dest } = await admin
     .from("whatsapp_destinations")
     .select("*")
     .eq("id", id)
-    .eq("profile_id", profile.id) // garante que o destino é do tenant
+    .eq("profile_id", profileId) // garante que o destino é do tenant
     .single();
   if (!dest) return { ok: false, error: "Destino não encontrado." };
-  if (dest.verified) return { ok: true, verified: true };
+  if (dest.verified) return { ok: true, destinationId: id };
 
   // Rate limit: máx 3 códigos por hora
   const windowStart = dest.verification_window ? new Date(dest.verification_window) : null;
@@ -96,27 +64,81 @@ export async function sendVerificationCode(
     })
     .eq("id", id);
 
-  revalidatePath("/settings");
-  return { ok: true };
+  return { ok: true, destinationId: id };
 }
 
-export async function confirmVerification(
-  _prev: VerificationResult | null,
-  formData: FormData,
-): Promise<VerificationResult> {
+/**
+ * Passo "número" do wizard: valida (BR, só pessoal — sem grupos), insere (ou
+ * reaproveita um pendente com o mesmo número) e já dispara o código.
+ */
+export async function addDestinationAndSendCode(
+  nationalDigits: string,
+  label?: string,
+): Promise<WizardDestinationResult> {
+  const clean = nationalDigits.replace(/\D/g, "");
+  if (!/^\d{10,11}$/.test(clean)) {
+    return { ok: false, error: "Número inválido — informe DDD + número, ex.: (85) 99999-0000." };
+  }
+  const phone = `55${clean}`; // LITERAL — nunca normalizar depois daqui
+
+  const { supabase, accountId, profile } = await requireTenant();
+
+  const { data: existing } = await supabase
+    .from("whatsapp_destinations")
+    .select("id, verified")
+    .eq("profile_id", profile.id)
+    .eq("phone", phone)
+    .maybeSingle();
+  if (existing?.verified) {
+    return { ok: false, error: "Esse número já está verificado neste briefing." };
+  }
+
+  let id = existing?.id;
+  if (!id) {
+    const { data, error } = await supabase
+      .from("whatsapp_destinations")
+      .insert({
+        account_id: accountId,
+        profile_id: profile.id,
+        kind: "personal",
+        phone,
+        label: label?.trim() || null,
+      })
+      .select("id")
+      .single();
+    if (error) return { ok: false, error: error.message };
+    id = data.id;
+  }
+
+  const sent = await sendCodeById(id, profile.id);
+  revalidatePath("/settings");
+  return sent.ok ? { ok: true, destinationId: id } : { ...sent, destinationId: id };
+}
+
+/** Reenvio (ou retomada de verificação de um destino pendente). */
+export async function resendCode(destinationId: string): Promise<WizardDestinationResult> {
   const { profile } = await requireTenant();
-  const id = String(formData.get("id"));
-  const code = String(formData.get("code") ?? "").trim();
+  const result = await sendCodeById(destinationId, profile.id);
+  revalidatePath("/settings");
+  return result;
+}
+
+/** Passo "código" do wizard: confere o código de 6 dígitos e verifica o destino. */
+export async function confirmCode(
+  destinationId: string,
+  code: string,
+): Promise<WizardDestinationResult> {
+  const { profile } = await requireTenant();
   const admin = createAdminClient();
 
   const { data: dest } = await admin
     .from("whatsapp_destinations")
     .select("*")
-    .eq("id", id)
+    .eq("id", destinationId)
     .eq("profile_id", profile.id)
     .single();
   if (!dest) return { ok: false, error: "Destino não encontrado." };
-  if (dest.verified) return { ok: true, verified: true };
+  if (dest.verified) return { ok: true, destinationId };
   if (!dest.verification_code || !dest.verification_expires_at) {
     return { ok: false, error: "Peça um código primeiro." };
   }
@@ -127,11 +149,11 @@ export async function confirmVerification(
     return { ok: false, error: "Muitas tentativas. Peça um código novo." };
   }
 
-  if (code !== dest.verification_code) {
+  if (code.trim() !== dest.verification_code) {
     await admin
       .from("whatsapp_destinations")
       .update({ verification_attempts: dest.verification_attempts + 1 })
-      .eq("id", id);
+      .eq("id", destinationId);
     return { ok: false, error: "Código incorreto." };
   }
 
@@ -144,10 +166,10 @@ export async function confirmVerification(
       verification_expires_at: null,
       updated_at: new Date().toISOString(),
     })
-    .eq("id", id);
+    .eq("id", destinationId);
 
   revalidatePath("/settings");
-  return { ok: true, verified: true };
+  return { ok: true, destinationId };
 }
 
 export async function removeDestination(formData: FormData): Promise<void> {

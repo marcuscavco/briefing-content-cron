@@ -12,28 +12,42 @@ export function Modal({
   title,
   description,
   children,
+  open: controlledOpen,
+  onClose,
 }: {
-  trigger: React.ReactNode;
+  trigger?: React.ReactNode;
   title: string;
   description?: string;
   children: React.ReactNode;
+  /** Modo controlado (wizards que abrem programaticamente). */
+  open?: boolean;
+  onClose?: () => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = (v: boolean) => {
+    if (onClose && !v) onClose();
+    if (controlledOpen === undefined) setInternalOpen(v);
+  };
 
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      onClose?.();
+      setInternalOpen(false);
+    };
     document.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
     return () => {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
     };
-  }, [open]);
+  }, [open, onClose]);
 
   return (
     <>
-      <span onClick={() => setOpen(true)}>{trigger}</span>
+      {trigger && <span onClick={() => setOpen(true)}>{trigger}</span>}
       {open &&
         createPortal(
           <div

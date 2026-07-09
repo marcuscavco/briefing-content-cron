@@ -158,7 +158,7 @@
     "save": "Salvar",
     "delivery": {
       "title": "Destinos de WhatsApp",
-      "subtitle": "O briefing chega em 2 mensagens (≤1500 caracteres cada). Cada destino precisa ser verificado com um código antes de receber — números pessoais recebem o código por DM; grupos recebem no próprio grupo (o bot precisa ser membro).",
+      "subtitle": "O briefing chega em 2 mensagens (≤1500 caracteres cada) no WhatsApp. Cada número precisa ser verificado com um código antes de receber.",
       "phoneLabel": "Número ou JID de grupo",
       "phoneHint": "Só dígitos com DDI+DDD (ex.: 5585999990000). Grupo: JID com sufixo -group (ex.: 120363000000000000-group) — exatamente como está no WhatsApp, sem @g.us.",
       "labelLabel": "Apelido (opcional)",
