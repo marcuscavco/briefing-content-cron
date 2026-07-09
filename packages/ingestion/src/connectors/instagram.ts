@@ -115,3 +115,54 @@ export function parseInstagramHandle(input: string): string | null {
   s = s.replace(/^@/, "").replace(/\/+$/, "").toLowerCase();
   return /^[a-z0-9._]{1,30}$/.test(s) ? s : null;
 }
+
+export interface InstagramProfileInfo {
+  /** null = não foi possível verificar (IG bloqueou) — seguir em frente (fail-open). */
+  exists: boolean | null;
+  fullName?: string | null;
+  followers?: number | null;
+  isPrivate?: boolean;
+}
+
+/**
+ * Checagem LEVE de existência do perfil (API web pública do IG, ~1s), para
+ * falhar rápido quando o usuário erra o @ — antes de gastar a coleta de posts
+ * no provedor pago. Bloqueio/timeout → exists: null (nunca trava o fluxo).
+ */
+export async function checkInstagramProfile(handle: string): Promise<InstagramProfileInfo> {
+  try {
+    const res = await fetch(
+      `https://www.instagram.com/api/v1/users/web_profile_info/?username=${encodeURIComponent(handle)}`,
+      {
+        headers: {
+          "x-ig-app-id": "936619743392459",
+          "user-agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36",
+          accept: "application/json",
+        },
+        signal: AbortSignal.timeout(8_000),
+      },
+    );
+    if (res.status === 404) return { exists: false };
+    if (!res.ok) return { exists: null };
+    const json = (await res.json()) as {
+      data?: {
+        user?: {
+          full_name?: string;
+          is_private?: boolean;
+          edge_followed_by?: { count?: number };
+        } | null;
+      };
+    };
+    const user = json?.data?.user;
+    if (!user) return { exists: false };
+    return {
+      exists: true,
+      fullName: user.full_name ?? null,
+      followers: user.edge_followed_by?.count ?? null,
+      isPrivate: Boolean(user.is_private),
+    };
+  } catch {
+    return { exists: null };
+  }
+}

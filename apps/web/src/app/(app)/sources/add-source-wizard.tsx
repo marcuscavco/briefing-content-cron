@@ -11,6 +11,8 @@ import { PreviewCards } from "./preview-cards";
 import {
   confirmWizardSource,
   probeWizardSource,
+  verifyInstagramProfile,
+  type InstagramCheckResult,
   type ProbeResult,
   type WizardPayload,
 } from "./actions";
@@ -43,6 +45,9 @@ export function AddSourceWizard({ suggestions }: { suggestions: Suggestion[] }) 
   const [url, setUrl] = useState("");
   const [handle, setHandle] = useState("");
   const [probe, setProbe] = useState<ProbeResult | null>(null);
+  const [igProfile, setIgProfile] = useState<InstagramCheckResult | null>(null);
+  const [inputError, setInputError] = useState<string | null>(null);
+  const [checking, startCheck] = useTransition();
   const [added, setAdded] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
   const [probing, startProbe] = useTransition();
@@ -75,6 +80,8 @@ export function AddSourceWizard({ suggestions }: { suggestions: Suggestion[] }) 
 
   const reset = () => {
     setStep("pick");
+    setIgProfile(null);
+    setInputError(null);
     setPayload(null);
     setProbe(null);
     setAdded(false);
@@ -199,12 +206,23 @@ export function AddSourceWizard({ suggestions }: { suggestions: Suggestion[] }) 
           className="flex flex-col gap-4"
           onSubmit={(e) => {
             e.preventDefault();
+            setInputError(null);
             if (kind === "site") {
               const withProto = /^https?:\/\//i.test(url.trim()) ? url.trim() : `https://${url.trim()}`;
               runProbe({ kind: "site", url: withProto }, withProto);
-            } else {
-              runProbe({ kind: "instagram", handle }, handle);
+              return;
             }
+            // Instagram: 1º confere se o perfil existe (barato, ~1s) — errou o
+            // @, falha aqui; só então gastamos a coleta de posts no provedor.
+            startCheck(async () => {
+              const check = await verifyInstagramProfile(handle);
+              if (!check.ok) {
+                setInputError(check.error ?? "perfil inválido");
+                return;
+              }
+              setIgProfile(check);
+              runProbe({ kind: "instagram", handle: check.handle! }, `@${check.handle}`);
+            });
           }}
         >
           {kind === "site" ? (
@@ -238,11 +256,17 @@ export function AddSourceWizard({ suggestions }: { suggestions: Suggestion[] }) 
               </p>
             </div>
           )}
+          {inputError && <p className="text-sm text-destructive">{inputError}</p>}
           <div className="flex gap-2">
-            <Button type="button" variant="ghost" onClick={() => setStep("type")}>
+            <Button type="button" variant="ghost" onClick={() => setStep("type")} disabled={checking}>
               Voltar
             </Button>
-            <Button type="submit">Validar fonte →</Button>
+            <Button type="submit" disabled={checking}>
+              {checking && (
+                <span className="size-3.5 animate-spin rounded-full border-[1.5px] border-current border-t-transparent" />
+              )}
+              {checking ? "Verificando perfil…" : "Validar fonte →"}
+            </Button>
           </div>
         </form>
       )}
@@ -250,8 +274,16 @@ export function AddSourceWizard({ suggestions }: { suggestions: Suggestion[] }) 
       {/* PASSO 3: validação com coleta ao vivo + relevância */}
       {step === "validate" && (
         <div className="flex flex-col gap-4">
-          <p className="text-sm text-muted-foreground">
+          <p className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             <span className="font-medium text-foreground">{sourceLabel}</span>
+            {igProfile?.ok && !igProfile.unverified && (
+              <span className="rounded-full border border-emerald-400/25 bg-emerald-400/10 px-2.5 py-0.5 text-[11px] text-emerald-300">
+                ✓ perfil encontrado{igProfile.fullName ? `: ${igProfile.fullName}` : ""}
+                {typeof igProfile.followers === "number"
+                  ? ` · ${new Intl.NumberFormat("pt-BR", { notation: "compact" }).format(igProfile.followers)} seguidores`
+                  : ""}
+              </span>
+            )}
           </p>
 
           {probing && (

@@ -1,4 +1,4 @@
-import type { InstagramFetcher, InstagramPost } from "../connectors/instagram";
+import type { InstagramFetcher, InstagramPost, InstagramProfileInfo } from "../connectors/instagram";
 
 /**
  * Provedor real do Instagram: Apify (actor apify/instagram-scraper) via
@@ -56,5 +56,45 @@ export class ApifyInstagramFetcher implements InstagramFetcher {
         isVideo: i.type === "Video",
         transcript: null,
       }));
+  }
+
+  /**
+   * Existência do perfil via modo `details` (1 resultado, ~6-8s): perfil real
+   * volta com nome/seguidores; inexistente volta `error: not_found`. Usado
+   * como fallback quando a checagem leve da API web do IG é bloqueada.
+   */
+  async fetchProfile(handle: string): Promise<InstagramProfileInfo> {
+    const clean = handle.replace(/^@/, "").trim();
+    const res = await fetch(
+      `https://api.apify.com/v2/acts/${this.actor}/run-sync-get-dataset-items?token=${this.token}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          directUrls: [`https://www.instagram.com/${clean}/`],
+          resultsType: "details",
+          resultsLimit: 1,
+        }),
+        signal: AbortSignal.timeout(120_000),
+      },
+    );
+    if (!res.ok) return { exists: null };
+    const items = (await res.json()) as {
+      username?: string;
+      fullName?: string;
+      followersCount?: number;
+      private?: boolean;
+      error?: string;
+    }[];
+    const first = items[0];
+    if (!first) return { exists: null };
+    if (first.error === "not_found") return { exists: false };
+    if (!first.username) return { exists: null };
+    return {
+      exists: true,
+      fullName: first.fullName ?? null,
+      followers: first.followersCount ?? null,
+      isPrivate: Boolean(first.private),
+    };
   }
 }

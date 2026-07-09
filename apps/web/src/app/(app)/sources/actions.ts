@@ -6,6 +6,7 @@ import {
   ApifyInstagramFetcher,
   getConnector,
   parseInstagramHandle,
+  checkInstagramProfile,
   type FetchResult,
   type InstagramFetcher,
   type SourceType,
@@ -355,4 +356,51 @@ export async function deleteSource(formData: FormData): Promise<void> {
   const { supabase } = await requireTenant();
   await supabase.from("sources").delete().eq("id", id);
   revalidatePath("/sources");
+}
+
+export interface InstagramCheckResult {
+  ok: boolean;
+  handle?: string;
+  fullName?: string | null;
+  followers?: number | null;
+  /** true quando o IG bloqueou a checagem — seguimos em frente sem confirmação. */
+  unverified?: boolean;
+  error?: string;
+}
+
+/**
+ * Passo 2→3 do wizard (Instagram): confere se o perfil EXISTE antes de gastar
+ * a coleta de posts no provedor. Erro de digitação falha aqui, em ~1s.
+ */
+export async function verifyInstagramProfile(raw: string): Promise<InstagramCheckResult> {
+  const handle = parseInstagramHandle(raw);
+  if (!handle) {
+    return { ok: false, error: "Perfil inválido — cole o link do perfil, @usuario ou o nome do usuário." };
+  }
+  const blocked = await assertInstagramAllowed();
+  if (blocked) return { ok: false, error: blocked };
+
+  let info = await checkInstagramProfile(handle);
+  // IPs de datacenter (Vercel) costumam ser bloqueados na checagem leve —
+  // cai para o modo details do Apify (1 resultado, ~6-8s), que é conclusivo.
+  if (info.exists === null && process.env.APIFY_TOKEN) {
+    try {
+      info = await new ApifyInstagramFetcher().fetchProfile(handle);
+    } catch {
+      /* fail-open */
+    }
+  }
+  if (info.exists === false) {
+    return { ok: false, error: `O perfil @${handle} não existe no Instagram — confira o nome.` };
+  }
+  if (info.exists === true && info.isPrivate) {
+    return { ok: false, error: `O perfil @${handle} é privado — não dá para coletar os posts.` };
+  }
+  return {
+    ok: true,
+    handle,
+    fullName: info.fullName ?? null,
+    followers: info.followers ?? null,
+    unverified: info.exists === null,
+  };
 }

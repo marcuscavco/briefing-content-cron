@@ -14,6 +14,8 @@ export {
   InstagramConnector,
   INSTAGRAM_WINDOW_HOURS_MAX,
   parseInstagramHandle,
+  checkInstagramProfile,
+  type InstagramProfileInfo,
   type InstagramFetcher,
   type InstagramPost,
 } from "./connectors/instagram";
