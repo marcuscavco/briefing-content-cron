@@ -14,6 +14,7 @@ type ApifyItem = {
   url?: string;
   caption?: string | null;
   timestamp?: string;
+  displayUrl?: string; // thumb/capa
   type?: string; // 'Image' | 'Video' | 'Sidecar'
 };
 
@@ -51,6 +52,7 @@ export class ApifyInstagramFetcher implements InstagramFetcher {
         url: i.url!,
         caption: i.caption ?? null,
         timestamp: i.timestamp!,
+        imageUrl: i.displayUrl ?? null,
         isVideo: i.type === "Video",
         transcript: null,
       }));

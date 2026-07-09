@@ -35,9 +35,6 @@ export default async function BriefingsPage({
           <h1 className="font-display text-3xl font-medium tracking-tight md:text-4xl">{t("title")}</h1>
           <p className="mt-1 text-sm text-muted-foreground">{t("subtitle")}</p>
         </div>
-        <Link href="/search" className="text-sm underline underline-offset-2">
-          {t("searchLink")}
-        </Link>
       </div>
 
       <Card>

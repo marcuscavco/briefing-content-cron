@@ -1,5 +1,30 @@
 # CHANGELOG
 
+## UX pass 2 — fluxos mais intuitivos (2026-07-09)
+
+- **Wizard de adição de fonte** (decisão do Marcus): o modal abre listando a
+  biblioteca de fontes predefinidas + botão "fonte completamente nova". Fonte
+  nova = 3 passos (tipo site/Instagram → link → validação); fonte da biblioteca
+  pula direto para a validação. A validação faz a **1ª coleta AO VIVO das
+  últimas 48h** e um judge barato (haiku) marca **quais itens têm a ver com os
+  temas do briefing** ("✦ seu tema") antes do usuário confirmar a inclusão —
+  nada é persistido sem o ok.
+- **Preview rico**: cards clicáveis com título, resumo, data e mídia (thumb do
+  post no Instagram via `image` no `FetchedItem`), na lista de fontes e no
+  wizard; revalidação também guarda o preview rico.
+- **Instagram aceita qualquer forma**: link do perfil, @usuario ou usuario
+  (`parseInstagramHandle`).
+- **Temas fechados**: taxonomia de 7 categorias × ~35 subcategorias
+  (`lib/themes.ts`) com seletor por chips — categoria inteira num clique
+  (ex.: todo o Jurídico) ou refinado (só Direito Tributário).
+- **Loadings em toda ação**: `SubmitButton` (useFormStatus + spinner) nos forms
+  de fontes/admin/settings; spinners nos fluxos de verificação de WhatsApp;
+  campos controlados nos forms do wizard (React 19 reseta uncontrolled após
+  server action — bug real pego no smoke).
+- **Buscar removido da nav/home** (por enquanto; a rota `/search` continua
+  funcional para reativar depois).
+
+
 ## Redesign UI/UX — high-end visual pass (2026-07-09)
 
 **Todos os fluxos revistos com a linguagem "Ethereal Glass" (skill de design

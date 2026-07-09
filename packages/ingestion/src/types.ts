@@ -20,6 +20,8 @@ export interface FetchedItem {
   url: string;
   publishedAt: string | null; // ISO 8601
   summary: string;
+  /** Mídia principal (thumb do post no Instagram; opcional em RSS). */
+  image?: string | null;
 }
 
 export interface FetchResult {

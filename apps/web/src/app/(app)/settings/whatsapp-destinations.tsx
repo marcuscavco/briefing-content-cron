@@ -58,6 +58,7 @@ export function WhatsappDestinations({
           <Input id="wa-label" name="label" placeholder="Meu número" />
         </div>
         <Button type="submit" disabled={addPending} className="w-fit">
+          {addPending && <span className="size-3.5 animate-spin rounded-full border-[1.5px] border-current border-t-transparent" />}
           {labels.add}
         </Button>
         {addResult && !addResult.ok && (
@@ -111,6 +112,7 @@ function DestinationRow({
           <form action={sendAction}>
             <input type="hidden" name="id" value={d.id} />
             <Button type="submit" variant="outline" size="sm" disabled={sendPending}>
+              {sendPending && <span className="size-3.5 animate-spin rounded-full border-[1.5px] border-current border-t-transparent" />}
               {labels.sendCode}
             </Button>
           </form>
@@ -125,6 +127,7 @@ function DestinationRow({
                 required
               />
               <Button type="submit" size="sm" disabled={confirmPending}>
+                {confirmPending && <span className="size-3.5 animate-spin rounded-full border-[1.5px] border-current border-t-transparent" />}
                 {labels.confirm}
               </Button>
             </form>

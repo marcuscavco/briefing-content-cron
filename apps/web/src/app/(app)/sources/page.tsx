@@ -1,13 +1,21 @@
 import { getTranslations } from "next-intl/server";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Modal } from "@/components/ui/modal";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { requireTenant } from "@/lib/tenant";
-import { addFromLibrary, deleteSource, revalidateSource, toggleSourceActive } from "./actions";
-import { AddCustomSourceForm } from "./add-custom-form";
-import { AddInstagramForm } from "./add-instagram-form";
+import { deleteSource, revalidateSource, toggleSourceActive } from "./actions";
+import { AddSourceWizard } from "./add-source-wizard";
 import { StatusBadge, TierBadge } from "./status-badge";
+import { PreviewCards } from "./preview-cards";
 
-type PreviewItem = { title: string; url: string; publishedAt: string | null };
+type PreviewItem = {
+  title: string;
+  url: string;
+  publishedAt: string | null;
+  summary?: string | null;
+  image?: string | null;
+};
 
 export default async function SourcesPage() {
   const t = await getTranslations("sources");
@@ -36,10 +44,28 @@ export default async function SourcesPage() {
   const statusLabel = (s: string) => t(`status.${s}` as Parameters<typeof t>[0]);
 
   return (
-    <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="font-display text-3xl font-medium tracking-tight md:text-4xl">{t("title")}</h1>
-        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{t("subtitle")}</p>
+    <div className="rise flex flex-col gap-8">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="font-display text-3xl font-medium tracking-tight md:text-4xl">{t("title")}</h1>
+          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{t("subtitle")}</p>
+        </div>
+        <Modal
+          trigger={<Button>{t("addSource")}</Button>}
+          title={t("addModalTitle")}
+          description={t("addModalSubtitle")}
+        >
+          <AddSourceWizard
+            suggestions={availableSuggestions.map((s) => ({
+              id: s.id,
+              name: s.name,
+              description: s.description,
+              suggested_tier: s.suggested_tier,
+              country: s.country,
+              requires_credential: s.requires_credential,
+            }))}
+          />
+        </Modal>
       </div>
 
       <Card>
@@ -50,147 +76,64 @@ export default async function SourcesPage() {
           {(sources ?? []).length === 0 ? (
             <p className="text-sm text-muted-foreground">{t("empty")}</p>
           ) : (
-            <ul className="divide-y">
-              {(sources ?? []).map((source) => (
-                <li key={source.id} className="flex flex-col gap-2 py-4">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className={`font-medium ${source.active ? "" : "text-muted-foreground line-through"}`}>
-                      {source.name}
-                    </span>
-                    <TierBadge tier={source.tier} />
-                    <StatusBadge status={source.last_status} label={statusLabel(source.last_status)} />
-                    {source.last_checked_at && (
-                      <span className="text-xs text-muted-foreground">
-                        {t("lastChecked")}:{" "}
-                        {new Date(source.last_checked_at).toLocaleString("pt-BR", {
-                          timeZone: profile.timezone,
-                        })}
+            <ul className="divide-y divide-white/6">
+              {(sources ?? []).map((source) => {
+                const preview = (
+                  Array.isArray(source.last_preview) ? source.last_preview : []
+                ) as PreviewItem[];
+                return (
+                  <li key={source.id} className="flex flex-col gap-3 py-5">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className={`font-display font-medium ${source.active ? "" : "text-muted-foreground line-through"}`}>
+                        {source.name}
                       </span>
+                      <TierBadge tier={source.tier} />
+                      <StatusBadge status={source.last_status} label={statusLabel(source.last_status)} />
+                      {source.last_checked_at && (
+                        <span className="text-xs text-muted-foreground">
+                          {t("lastChecked")}:{" "}
+                          {new Date(source.last_checked_at).toLocaleString("pt-BR", {
+                            timeZone: profile.timezone,
+                          })}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">{source.feed_url ?? source.url}</p>
+                    {source.last_error && (
+                      <p className="text-xs text-destructive">{source.last_error}</p>
                     )}
-                  </div>
-                  <p className="text-xs text-muted-foreground">{source.feed_url ?? source.url}</p>
-                  {source.last_error && (
-                    <p className="text-xs text-destructive">{source.last_error}</p>
-                  )}
-                  {Array.isArray(source.last_preview) && source.last_preview.length > 0 && (
-                    <details className="text-sm">
-                      <summary className="cursor-pointer text-muted-foreground">
-                        {t("preview")}
-                      </summary>
-                      <ul className="mt-1 list-disc pl-5 text-muted-foreground">
-                        {(source.last_preview as PreviewItem[]).map((item) => (
-                          <li key={item.url}>{item.title}</li>
-                        ))}
-                      </ul>
-                    </details>
-                  )}
-                  <div className="flex gap-2">
-                    <form action={revalidateSource}>
-                      <input type="hidden" name="id" value={source.id} />
-                      <Button type="submit" variant="outline" size="sm">
-                        {t("revalidate")}
-                      </Button>
-                    </form>
-                    <form action={toggleSourceActive}>
-                      <input type="hidden" name="id" value={source.id} />
-                      <input type="hidden" name="active" value={String(!source.active)} />
-                      <Button type="submit" variant="ghost" size="sm">
-                        {source.active ? t("deactivate") : t("activate")}
-                      </Button>
-                    </form>
-                    <form action={deleteSource}>
-                      <input type="hidden" name="id" value={source.id} />
-                      <Button type="submit" variant="ghost" size="sm" className="text-destructive">
-                        {t("remove")}
-                      </Button>
-                    </form>
-                  </div>
-                </li>
-              ))}
+
+                    <PreviewCards items={preview} />
+
+                    <div className="flex flex-wrap gap-2">
+                      <form action={revalidateSource}>
+                        <input type="hidden" name="id" value={source.id} />
+                        <SubmitButton variant="outline" size="sm" pendingText={t("revalidating")}>
+                          {t("revalidate")}
+                        </SubmitButton>
+                      </form>
+                      <form action={toggleSourceActive}>
+                        <input type="hidden" name="id" value={source.id} />
+                        <input type="hidden" name="active" value={String(!source.active)} />
+                        <SubmitButton variant="ghost" size="sm">
+                          {source.active ? t("deactivate") : t("activate")}
+                        </SubmitButton>
+                      </form>
+                      <form action={deleteSource}>
+                        <input type="hidden" name="id" value={source.id} />
+                        <SubmitButton variant="ghost" size="sm" className="text-destructive">
+                          {t("remove")}
+                        </SubmitButton>
+                      </form>
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("library")}</CardTitle>
-          <CardDescription>{t("librarySubtitle")}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ul className="grid gap-3 sm:grid-cols-2">
-            {availableSuggestions.map((s) => (
-              <li key={s.id} className="flex items-start justify-between gap-3 rounded-md border p-3">
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-medium">{s.name}</span>
-                    <TierBadge tier={s.suggested_tier} />
-                    <span className="text-xs text-muted-foreground">{s.country}</span>
-                    {s.requires_credential && (
-                      <span className="text-xs text-amber-700 dark:text-amber-400">
-                        {t("requiresCredential")}
-                      </span>
-                    )}
-                  </div>
-                  {s.description && (
-                    <p className="mt-1 text-xs text-muted-foreground">{s.description}</p>
-                  )}
-                </div>
-                <form action={addFromLibrary}>
-                  <input type="hidden" name="suggested_id" value={s.id} />
-                  <Button type="submit" size="sm" variant="outline">
-                    {t("add")}
-                  </Button>
-                </form>
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("customTitle")}</CardTitle>
-          <CardDescription>{t("customSubtitle")}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <AddCustomSourceForm
-            labels={{
-              name: t("name"),
-              tier: t("tier"),
-              siteUrl: t("siteUrl"),
-              feedUrl: t("feedUrl"),
-              credential: t("credential"),
-              validateAndAdd: t("validateAndAdd"),
-              validating: t("validating"),
-              addedOk: t("addedOk"),
-              addedPartial: t("addedPartial"),
-              addedBlocked: t("addedBlocked"),
-              addedError: t("addedError"),
-              itemsFound: t("itemsFound"),
-            }}
-          />
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("instagramTitle")}</CardTitle>
-          <CardDescription>{t("instagramSubtitle")}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <AddInstagramForm
-            labels={{
-              handle: t("instagramHandle"),
-              hint: t("instagramHint"),
-              add: t("instagramAdd"),
-              validating: t("validating"),
-              added: t("instagramAdded"),
-              postsFound: t("instagramPostsFound"),
-            }}
-          />
-        </CardContent>
-      </Card>
     </div>
   );
 }

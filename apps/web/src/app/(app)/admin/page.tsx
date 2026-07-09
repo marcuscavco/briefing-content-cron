@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { createAdminClient } from "@briefing/db/admin";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { grantSubscription, revokeSubscription, setInstagramKillSwitch } from "./actions";
@@ -54,9 +54,9 @@ export default async function AdminPage() {
         <CardContent>
           <form action={setInstagramKillSwitch}>
             <input type="hidden" name="enabled" value={String(!instagramOn)} />
-            <Button type="submit" size="sm" variant={instagramOn ? "destructive" : "default"}>
+            <SubmitButton size="sm" variant={instagramOn ? "destructive" : "default"}>
               {instagramOn ? t("instagramTurnOff") : t("instagramTurnOn")}
-            </Button>
+            </SubmitButton>
           </form>
         </CardContent>
       </Card>
@@ -114,16 +114,16 @@ export default async function AdminPage() {
                         placeholder={t("grantNotes")}
                         className="h-9 w-48 text-sm"
                       />
-                      <Button type="submit" size="sm" variant="outline">
+                      <SubmitButton size="sm" variant="outline">
                         {t("grant")}
-                      </Button>
+                      </SubmitButton>
                     </form>
                     {sub && (
                       <form action={revokeSubscription}>
                         <input type="hidden" name="account_id" value={a.id} />
-                        <Button type="submit" size="sm" variant="ghost">
+                        <SubmitButton size="sm" variant="ghost">
                           {t("revoke")}
-                        </Button>
+                        </SubmitButton>
                       </form>
                     )}
                   </div>

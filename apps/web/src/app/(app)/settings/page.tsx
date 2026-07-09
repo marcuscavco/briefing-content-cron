@@ -1,10 +1,11 @@
 import { getTranslations } from "next-intl/server";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { requireTenant } from "@/lib/tenant";
 import { updateProfile } from "./actions";
+import { ThemePicker } from "./theme-picker";
 import { WhatsappDestinations } from "./whatsapp-destinations";
 
 export default async function SettingsPage({
@@ -46,13 +47,8 @@ export default async function SettingsPage({
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="themes">{t("themes")}</Label>
-              <Input
-                id="themes"
-                name="themes"
-                defaultValue={(profile.themes ?? []).join(", ")}
-                placeholder={t("themesHint")}
-              />
+              <Label>{t("themes")}</Label>
+              <ThemePicker initial={profile.themes ?? []} />
             </div>
 
             <div className="grid gap-2">
@@ -109,9 +105,9 @@ export default async function SettingsPage({
               </label>
             </fieldset>
 
-            <Button type="submit" className="w-fit">
+            <SubmitButton className="w-fit" pendingText={t("saving")}>
               {t("save")}
-            </Button>
+            </SubmitButton>
           </form>
         </CardContent>
       </Card>

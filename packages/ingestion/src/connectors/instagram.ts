@@ -20,6 +20,7 @@ export interface InstagramPost {
   url: string; // permalink do post
   caption: string | null;
   timestamp: string; // ISO 8601
+  imageUrl?: string | null; // thumb/capa do post
   isVideo?: boolean;
   /** Transcrição da fala do vídeo, quando o provedor fornecer. */
   transcript?: string | null;
@@ -37,7 +38,7 @@ function normalize(post: InstagramPost): FetchedItem {
   const summary = post.transcript
     ? `${caption}\n\n[transcrição do vídeo] ${post.transcript}`.trim()
     : caption;
-  return { title, url: post.url, publishedAt: post.timestamp, summary };
+  return { title, url: post.url, publishedAt: post.timestamp, summary, image: post.imageUrl ?? null };
 }
 
 export class InstagramConnector implements SourceConnector {
@@ -101,4 +102,16 @@ export class InstagramConnector implements SourceConnector {
       };
     }
   }
+}
+
+/**
+ * Aceita o que o usuário colar — URL do perfil, @user ou user — e devolve o
+ * handle normalizado (ou null se não parecer um handle válido).
+ */
+export function parseInstagramHandle(input: string): string | null {
+  let s = input.trim();
+  const urlMatch = s.match(/instagram\.com\/([A-Za-z0-9._]+)/i);
+  if (urlMatch) s = urlMatch[1]!;
+  s = s.replace(/^@/, "").replace(/\/+$/, "").toLowerCase();
+  return /^[a-z0-9._]{1,30}$/.test(s) ? s : null;
 }

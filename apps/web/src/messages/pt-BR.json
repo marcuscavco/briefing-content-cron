@@ -118,17 +118,33 @@
     "instagramTitle": "Perfil do Instagram",
     "instagramSubtitle": "Posts das últimas 24h do perfil viram itens do briefing (legenda + link). Disponível em planos com social.",
     "instagramHandle": "Handle do perfil",
-    "instagramHint": "Só o nome do perfil, com ou sem @ (ex.: @oempresarionerd). Janela fixa de 24h — post de rede envelhece rápido.",
+    "instagramHint": "Cole o link do perfil, @usuario ou só o nome (ex.: @oempresarionerd). Janela fixa de 24h.",
     "instagramAdd": "Validar e adicionar perfil",
     "instagramAdded": "Perfil adicionado",
-    "instagramPostsFound": "posts nas últimas 24h"
+    "instagramPostsFound": "posts nas últimas 24h",
+    "addSource": "+ Adicionar fonte",
+    "addModalTitle": "Adicionar fonte",
+    "addModalSubtitle": "Escolha da biblioteca ou traga uma fonte nova — a gente valida ao vivo antes de incluir.",
+    "revalidating": "Validando…",
+    "adding": "Adicionando…",
+    "previewOpen": "abrir",
+    "probe": "Buscar últimas 48h",
+    "probeInstagram": "Buscar últimas 24h do perfil",
+    "probing": "Coletando…",
+    "itemsIn48h": "itens nas últimas 48h — revise antes de confirmar",
+    "nothingIn48h": "Nada nas últimas 48h.",
+    "postsIn24h": "posts nas últimas 24h — revise antes de confirmar",
+    "nothingIn24h": "Nenhum post nas últimas 24h.",
+    "confirmAdd": "Confirmar e adicionar fonte",
+    "confirming": "Adicionando…",
+    "confirmed": "Fonte adicionada ao seu briefing!"
   },
   "settings": {
     "title": "Configurações do briefing",
     "subtitle": "Primeiro os temas, depois as fontes: o tema vale para o briefing inteiro e é aplicado sobre todas as fontes que você escolher.",
     "saved": "Configurações salvas.",
     "profileName": "Nome do briefing",
-    "themes": "Temas de interesse (separados por vírgula)",
+    "themes": "Temas do briefing",
     "themesHint": "Ex.: inteligência artificial, SaaS, regulação de tech",
     "excludedThemes": "Temas a ignorar (separados por vírgula)",
     "excludedThemesHint": "Ex.: criptomoedas, games",
@@ -159,7 +175,8 @@
       "pause": "Pausar",
       "resume": "Reativar",
       "empty": "Nenhum destino ainda."
-    }
+    },
+    "saving": "Salvando…"
   },
   "briefings": {
     "title": "Histórico",
@@ -169,7 +186,6 @@
     "empty": "Nenhum briefing ainda — gere o primeiro no dashboard.",
     "newer": "mais recentes",
     "older": "mais antigos",
-    "searchLink": "Buscar no arquivo →",
     "backToArchive": "Voltar ao histórico",
     "briefingOf": "Briefing"
   },

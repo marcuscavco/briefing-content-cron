@@ -51,7 +51,6 @@ export default async function DashboardPage() {
 
   const shortcuts = [
     { href: "/briefings", title: t("shortcutHistoryTitle"), desc: t("shortcutHistoryDesc") },
-    { href: "/search", title: t("shortcutSearchTitle"), desc: t("shortcutSearchDesc") },
     { href: "/sources", title: t("shortcutSourcesTitle"), desc: t("shortcutSourcesDesc") },
     { href: "/settings", title: t("shortcutSettingsTitle"), desc: t("shortcutSettingsDesc") },
   ];
@@ -152,7 +151,7 @@ export default async function DashboardPage() {
       </section>
 
       {/* shortcuts */}
-      <section className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="grid grid-cols-1 gap-6 sm:grid-cols-3">
         {shortcuts.map((s, i) => (
           <Link key={s.href} href={s.href} className={`bezel rise rise-${i + 2} group block transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-1`}>
             <div className="bezel-core flex h-full flex-col justify-between gap-8 p-6">

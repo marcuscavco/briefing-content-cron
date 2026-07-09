@@ -13,6 +13,7 @@ export { WebConnector } from "./connectors/web";
 export {
   InstagramConnector,
   INSTAGRAM_WINDOW_HOURS_MAX,
+  parseInstagramHandle,
   type InstagramFetcher,
   type InstagramPost,
 } from "./connectors/instagram";

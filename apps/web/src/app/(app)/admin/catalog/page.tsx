@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { createAdminClient } from "@briefing/db/admin";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/app/(app)/sources/status-badge";
@@ -67,9 +67,9 @@ export default async function AdminCatalogPage() {
                 <option value="INTL">INTL</option>
               </select>
             </div>
-            <Button type="submit" className="w-fit">
+            <SubmitButton className="w-fit">
               {t("catalogAddButton")}
-            </Button>
+            </SubmitButton>
           </form>
         </CardContent>
       </Card>
@@ -102,15 +102,15 @@ export default async function AdminCatalogPage() {
                   <form action={toggleSuggestedSource}>
                     <input type="hidden" name="id" value={s.id} />
                     <input type="hidden" name="active" value={String(!s.active)} />
-                    <Button type="submit" size="sm" variant="outline">
+                    <SubmitButton size="sm" variant="outline">
                       {s.active ? t("catalogPause") : t("catalogResume")}
-                    </Button>
+                    </SubmitButton>
                   </form>
                   <form action={removeSuggestedSource}>
                     <input type="hidden" name="id" value={s.id} />
-                    <Button type="submit" size="sm" variant="ghost">
+                    <SubmitButton size="sm" variant="ghost">
                       {t("catalogRemove")}
-                    </Button>
+                    </SubmitButton>
                   </form>
                 </div>
               </li>
