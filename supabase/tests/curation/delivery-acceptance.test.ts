@@ -146,7 +146,7 @@ describe("entrega (aceite Fase 3)", () => {
     const toVerified = whatsapp.sent.filter((s) => s.phone === "5585900000001");
     expect(toVerified).toHaveLength(2);
     for (const s of toVerified) expect(s.message.length).toBeLessThanOrEqual(WHATSAPP_HARD_LIMIT);
-    expect(toVerified[0]!.message).toContain("📰 *Digest");
+    expect(toVerified[0]!.message).toContain("🔥 *Must-read*");
     expect(toVerified[1]!.message).toContain("📱 *Posts sugeridos*");
 
     // NÃO VERIFICADO É RECUSADO: fake nunca chamado com o grupo
@@ -167,7 +167,7 @@ describe("entrega (aceite Fase 3)", () => {
       .select("whatsapp_msg_1, whatsapp_msg_2, notas")
       .eq("id", briefingId)
       .single();
-    expect(b!.whatsapp_msg_1).toContain("Digest");
+    expect(b!.whatsapp_msg_1).toContain("Must-read");
     expect((b!.notas as { entrega: { email: string } }).entrega.email).toBe("sent");
   });
 

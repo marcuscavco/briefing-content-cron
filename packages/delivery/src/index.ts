@@ -1,6 +1,6 @@
 export * from "./types";
 export {
-  renderDigestMessage,
+  renderWhatsappMessages,
   renderPostsMessage,
   WHATSAPP_HARD_LIMIT,
 } from "./render-whatsapp";

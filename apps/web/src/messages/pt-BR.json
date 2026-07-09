@@ -73,7 +73,8 @@
     "channelConnected": "WhatsApp conectado",
     "sendingTo": "enviando o briefing diário para",
     "channelDisconnected": "Nenhum canal conectado",
-    "channelDisconnectedCta": "verifique um número de WhatsApp em Configurações →"
+    "channelDisconnectedCta": "verifique um número de WhatsApp em Configurações →",
+    "postsExplain": "Sugestões prontas de conteúdo para suas redes, no seu tom — quando um assunto não rende post útil, ele é pulado de propósito."
   },
   "nav": {
     "dashboard": "Dashboard",

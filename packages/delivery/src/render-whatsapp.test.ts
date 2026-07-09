@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { renderDigestMessage, renderPostsMessage, WHATSAPP_HARD_LIMIT } from "./render-whatsapp";
+import { renderPostsMessage, renderWhatsappMessages, WHATSAPP_HARD_LIMIT } from "./render-whatsapp";
 import type { DeliveryBriefing, DeliveryCluster, DeliveryPost } from "./types";
 
 const briefing: DeliveryBriefing = {
@@ -32,106 +32,114 @@ function cluster(over: Partial<DeliveryCluster>): DeliveryCluster {
 
 function bigDataset(): DeliveryCluster[] {
   const out: DeliveryCluster[] = [];
-  for (let i = 0; i < 3; i++) out.push(cluster({ categoria: "must_read", heat_score: 7, titulo: `Must-read número ${i + 1} com título comprido para estressar o limite de caracteres da mensagem` }));
+  for (let i = 0; i < 5; i++) out.push(cluster({ categoria: "must_read", heat_score: 7, titulo: `Must-read número ${i + 1} com título comprido para estressar o limite de caracteres da mensagem` }));
   for (let i = 0; i < 6; i++) out.push(cluster({ categoria: "relevante", relevancia_empresarial: (i % 4) as 0 | 1 | 2 | 3, titulo: `Relevante número ${i + 1} com título igualmente comprido para o teste de corte progressivo do digest` }));
   for (let i = 0; i < 8; i++) out.push(cluster({ categoria: "no_radar", heat_score: 2, titulo: `No radar item ${i + 1} título longo` }));
   out.push(cluster({ categoria: "sinal_sem_fonte", fonte: null, url: null }));
   return out;
 }
 
-describe("renderDigestMessage (Mensagem 1)", () => {
-  it("SEMPRE respeita o limite hard de 1500 chars, mesmo com dataset grande", () => {
-    const msg = renderDigestMessage(briefing, bigDataset());
-    expect(msg.length).toBeLessThanOrEqual(WHATSAPP_HARD_LIMIT);
+function post(over: Partial<DeliveryPost>): DeliveryPost {
+  return {
+    titulo: "Post sobre o assunto do dia",
+    formato: "Carrossel",
+    gancho: "Você viu o que aconteceu com o mercado de IA hoje? Isso muda o jogo para o seu negócio nos próximos meses.",
+    estrutura: Array.from({ length: 8 }, (_, i) => ({ slide: i + 1, texto: `Slide ${i + 1} com um texto razoavelmente longo` })),
+    angulo_tipo: "traducao_empresario",
+    angulo_descricao: "o que muda na prática para o dono de PME",
+    skip: false,
+    skip_motivo: null,
+    ...over,
+  };
+}
+
+describe("renderWhatsappMessages (3 mensagens por categoria)", () => {
+  it("separa em must-read, outros assuntos e posts — TODAS ≤ 1500", () => {
+    const msgs = renderWhatsappMessages(briefing, bigDataset(), [post({})]);
+    expect(msgs).toHaveLength(3);
+    expect(msgs[0]).toContain("🔥 *Must-read*");
+    expect(msgs[0]).not.toContain("📌 *Relevante*");
+    expect(msgs[1]).toContain("🗞️ *Outros assuntos");
+    expect(msgs[1]).toContain("📌 *Relevante*");
+    expect(msgs[1]).not.toContain("Must-read número");
+    expect(msgs[2]).toContain("📱 *Posts sugeridos*");
+    for (const m of msgs) expect(m.length).toBeLessThanOrEqual(WHATSAPP_HARD_LIMIT);
   });
 
-  it("dataset pequeno mantém No radar e TL;DRs completos", () => {
-    const msg = renderDigestMessage(briefing, [
-      cluster({ categoria: "must_read", heat_score: 7 }),
-      cluster({ categoria: "no_radar" }),
-    ]);
-    expect(msg).toContain("🔥 *Must-read*");
-    expect(msg).toContain("📎 *No radar*");
-    expect(msg).toContain("💡");
-    expect(msg.length).toBeLessThanOrEqual(WHATSAPP_HARD_LIMIT);
+  it("sem outros assuntos → só 2 mensagens (nada de mensagem vazia)", () => {
+    const msgs = renderWhatsappMessages(briefing, [cluster({ categoria: "must_read" })], [post({})]);
+    expect(msgs).toHaveLength(2);
+    expect(msgs[0]).toContain("Must-read");
+    expect(msgs[1]).toContain("Posts sugeridos");
   });
 
-  it("sem markdown proibido (headers, listas com hífen no início)", () => {
-    const msg = renderDigestMessage(briefing, bigDataset());
-    expect(msg).not.toMatch(/^#/m);
-    expect(msg).not.toMatch(/^- /m);
-    expect(msg).not.toMatch(/\|.*\|/);
+  it("sinal sem fonte vai na mensagem de outros assuntos, sem link", () => {
+    const msgs = renderWhatsappMessages(
+      briefing,
+      [cluster({ categoria: "must_read" }), cluster({ categoria: "sinal_sem_fonte", fonte: null, url: null })],
+      [],
+    );
+    expect(msgs[1]).toContain("⚠️ Sinal:");
+    expect(msgs[1]).toContain("sem fonte canônica");
   });
 
-  it("Atualização mostra 🔁 com o que mudou", () => {
-    const msg = renderDigestMessage(briefing, [
-      cluster({
-        categoria: "must_read",
-        is_update: true,
-        update_resumo: "Preço caiu 50% desde o anúncio original.",
-      }),
-    ]);
-    expect(msg).toContain("🔁");
-    expect(msg).toContain("Preço caiu 50%");
+  it("silêncio honesto: nada relevante → diz isso, sem inflar", () => {
+    const silent: DeliveryBriefing = { ...briefing, n_suppressed: 0 };
+    const msgs = renderWhatsappMessages(silent, [], []);
+    expect(msgs).toHaveLength(2); // must-read (vazio honesto) + posts (vazio honesto)
+    expect(msgs[0]).toContain("Sem cobertura relevante no universo monitorado hoje.");
+    expect(msgs[1]).toContain("Nenhum cluster passou o filtro empresarial hoje.");
   });
 
-  it("marca curator's pick (✨) e fallback (🟡)", () => {
-    const msg = renderDigestMessage(briefing, [
-      cluster({ categoria: "must_read", is_curator_pick: true }),
-      cluster({ categoria: "relevante", is_fallback: true, fonte: "NeoFeed", url: "https://neofeed.com.br/x" }),
-    ]);
-    expect(msg).toContain("✨");
-    expect(msg).toContain("🟡 NeoFeed");
+  it("assuntos suprimidos pela memória aparecem no rodapé do must-read", () => {
+    const msgs = renderWhatsappMessages(briefing, [cluster({ categoria: "must_read" })], []);
+    expect(msgs[0]).toContain("🤫 2 assuntos já tratados sem novidade — suprimidos.");
   });
 
-  it("sinal sem fonte vira linha ⚠️ sem link", () => {
-    const msg = renderDigestMessage(briefing, [
-      cluster({ categoria: "sinal_sem_fonte", fonte: null, url: null }),
-    ]);
-    expect(msg).toContain("⚠️ Sinal:");
-    expect(msg).not.toContain("📖");
+  it("cluster Atualização mostra 🔁 e o que mudou", () => {
+    const msgs = renderWhatsappMessages(
+      briefing,
+      [cluster({ categoria: "must_read", is_update: true, update_resumo: "Escopo caiu para 50% do anunciado." })],
+      [],
+    );
+    expect(msgs[0]).toContain("🔁");
+    expect(msgs[0]).toContain("Escopo caiu para 50%");
   });
 
-  it("silêncio honesto quando não há must-read nem relevante", () => {
-    const msg = renderDigestMessage({ ...briefing, n_suppressed: 0 }, []);
-    expect(msg).toContain("Sem cobertura relevante");
+  it("curator's pick ✨ e fallback 🟡 marcados", () => {
+    const msgs = renderWhatsappMessages(
+      briefing,
+      [cluster({ categoria: "must_read", is_curator_pick: true, is_fallback: true })],
+      [],
+    );
+    expect(msgs[0]).toContain("✨");
+    expect(msgs[0]).toContain("🟡");
+  });
+
+  it("sem markdown proibido (headers e listas com hífen)", () => {
+    for (const m of renderWhatsappMessages(briefing, bigDataset(), [post({})])) {
+      expect(m).not.toMatch(/^#/m);
+      expect(m).not.toMatch(/^- /m);
+    }
   });
 });
 
-describe("renderPostsMessage (Mensagem 2)", () => {
-  function post(over: Partial<DeliveryPost>): DeliveryPost {
-    return {
-      titulo: "Cluster do post com título longo o bastante para testar cortes",
-      formato: "Carrossel",
-      gancho: "Um gancho de até quinze palavras que provoca o empresário a repensar o uso de IA",
-      estrutura: Array.from({ length: 8 }, (_, i) => ({ slide: i + 1, texto: `Bloco número ${i + 1} da estrutura` })),
-      angulo_tipo: "traducao_empresario",
-      angulo_descricao: "o que isso significa para quem decide numa empresa que usa essa tecnologia",
-      cta: "Salva esse post.",
-      skip: false,
-      skip_motivo: null,
-      ...over,
-    };
-  }
-
-  it("SEMPRE ≤ 1500 mesmo com 3 posts cheios + muitos skips", () => {
-    const posts = [
-      post({}),
-      post({ formato: "Reels" }),
-      post({ formato: "Post longo" }),
+describe("renderPostsMessage", () => {
+  it("SEMPRE ≤ 1500 mesmo com muitos posts e skips", () => {
+    const many = [
+      ...Array.from({ length: 5 }, (_, i) => post({ titulo: `Post número ${i + 1} com título comprido de teste` })),
       ...Array.from({ length: 6 }, (_, i) =>
-        post({ skip: true, skip_motivo: `motivo de skip número ${i + 1} razoavelmente longo` }),
+        post({ skip: true, titulo: `Skip ${i + 1}`, skip_motivo: "relevância empresarial 1/3 — não traduz em conteúdo útil" }),
       ),
     ];
-    const msg = renderPostsMessage(posts);
-    expect(msg.length).toBeLessThanOrEqual(WHATSAPP_HARD_LIMIT);
-    expect(msg).toContain("📱 *Posts sugeridos*");
-    expect(msg).toContain("🎯 Ângulo:");
+    expect(renderPostsMessage(many).length).toBeLessThanOrEqual(WHATSAPP_HARD_LIMIT);
   });
 
-  it("nenhum post publicável → mensagem de silêncio honesto", () => {
-    const msg = renderPostsMessage([post({ skip: true, skip_motivo: "sem ângulo" })]);
-    expect(msg).toContain("Nenhum cluster passou o filtro empresarial hoje");
-    expect(msg.length).toBeLessThanOrEqual(WHATSAPP_HARD_LIMIT);
+  it("mostra formato, ângulo, hook e estrutura", () => {
+    const msg = renderPostsMessage([post({})]);
+    expect(msg).toContain("🎠 Carrossel");
+    expect(msg).toContain("🎯 Ângulo:");
+    expect(msg).toContain("📣 Hook:");
+    expect(msg).toContain("🧱 Estrutura:");
   });
 });

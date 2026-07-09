@@ -1,7 +1,6 @@
 import {
   renderBriefingEmail,
-  renderDigestMessage,
-  renderPostsMessage,
+  renderWhatsappMessages,
   unsubscribeToken,
   type DeliveryCluster,
   type DeliveryPost,
@@ -147,11 +146,15 @@ export async function deliverBriefing(
   // ── WhatsApp ───────────────────────────────────────────────────────────────
   const whatsappDestinos: Record<string, string> = {};
   if (channels.whatsapp) {
-    const msg1 = renderDigestMessage(briefing, clusters);
-    const msg2 = renderPostsMessage(posts);
+    // Até 3 mensagens por categoria: must-read · outros assuntos · posts.
+    const messages = renderWhatsappMessages(briefing, clusters, posts);
     await db
       .from("briefings")
-      .update({ whatsapp_msg_1: msg1, whatsapp_msg_2: msg2 })
+      .update({
+        whatsapp_msg_1: messages[0] ?? null,
+        whatsapp_msg_2: messages[1] ?? null,
+        whatsapp_msg_3: messages[2] ?? null,
+      })
       .eq("id", briefingId);
 
     const { data: destinations } = await db
@@ -178,11 +181,15 @@ export async function deliverBriefing(
       }
       try {
         // Envio LITERAL do phone (match exato — nunca normalizar).
-        const r1 = await deps.whatsapp.sendText(dest.phone, msg1);
-        await wait(1000);
-        const r2 = await deps.whatsapp.sendText(dest.phone, msg2);
-        const ok = r1.ok && r2.ok;
-        await log("whatsapp", dest.phone, ok ? "sent" : "failed", { msg1: r1.response, msg2: r2.response });
+        const responses: unknown[] = [];
+        let ok = true;
+        for (const [i, message] of messages.entries()) {
+          if (i > 0) await wait(1000);
+          const r = await deps.whatsapp.sendText(dest.phone, message);
+          responses.push(r.response);
+          ok = ok && r.ok;
+        }
+        await log("whatsapp", dest.phone, ok ? "sent" : "failed", { messages: responses });
         whatsappDestinos[dest.phone] = ok ? "sent" : "failed";
       } catch (e) {
         // Falha em um destino não derruba os outros (regra do PROMPT.md legado).

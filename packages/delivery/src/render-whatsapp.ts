@@ -1,12 +1,12 @@
 import type { DeliveryBriefing, DeliveryCluster, DeliveryPost } from "./types";
 
 /**
- * Porta fiel dos templates da Etapa 8 do SKILL.md legado.
- * REGRAS INEGOCIÁVEIS: cada mensagem ≤ 1500 chars (hard limit, sempre validado);
- * formatação WhatsApp (*negrito*, sem headers/listas markdown); URLs limpas;
- * PT-BR. Corte progressivo da Mensagem 1 na ordem do SKILL.md:
- * cortar "No radar" → reduzir TL;DRs → cortar Relevantes mais fracos (manter
- * os 2 de maior 💼).
+ * Templates da Etapa 8 do SKILL.md, agora em ATÉ 3 MENSAGENS por categoria
+ * (decisão do Marcus): 1) Must-read · 2) Outros assuntos (relevante, no radar,
+ * sinais) · 3) Posts sugeridos. Mensagem sem conteúdo não é enviada.
+ * REGRAS INEGOCIÁVEIS: cada mensagem ≤ 1500 chars (hard limit, sempre
+ * validado); formatação WhatsApp (*negrito*); URLs limpas; PT-BR; silêncio
+ * honesto (nunca inflar).
  */
 
 export const WHATSAPP_HARD_LIMIT = 1500;
@@ -28,108 +28,110 @@ function trunc(s: string, max: number): string {
   return s.length <= max ? s : s.slice(0, max - 1).trimEnd() + "…";
 }
 
-interface RenderOptions {
-  tldrChars: number;
-  includeNoRadar: boolean;
-  maxRelevantes: number;
-}
-
-function renderDigest(
-  briefing: DeliveryBriefing,
-  clusters: DeliveryCluster[],
-  opts: RenderOptions,
-): string {
-  const mustRead = clusters.filter((c) => c.categoria === "must_read");
-  let relevantes = clusters.filter((c) => c.categoria === "relevante");
-  const noRadar = clusters.filter((c) => c.categoria === "no_radar");
-  const sinais = clusters.filter((c) => c.categoria === "sinal_sem_fonte");
-
-  if (relevantes.length > opts.maxRelevantes) {
-    relevantes = [...relevantes]
-      .sort((a, b) => (b.relevancia_empresarial ?? 0) - (a.relevancia_empresarial ?? 0))
-      .slice(0, opts.maxRelevantes);
-  }
-
-  const total = mustRead.length + relevantes.length + (opts.includeNoRadar ? noRadar.length : 0);
-  const lines: string[] = [`📰 *Digest ${ddmm(briefing.run_date)}* — ${total} assuntos`];
-  let n = 0;
-
-  const renderItem = (c: DeliveryCluster, withHeat: boolean) => {
-    n++;
-    const marks = `${c.is_curator_pick ? "✨ " : ""}${c.is_update ? "🔁 " : ""}`;
-    const item: string[] = [`${n}. ${marks}${trunc(c.titulo, 70)}`];
-    item.push(
-      `💼 ${c.relevancia_empresarial ?? 0}/3 · 💻 ${c.relevancia_tecnica ?? 0}/3${withHeat ? ` · Heat ${c.heat_score}` : ""}`,
-    );
-    if (c.fonte && c.url) {
-      item.push(`📖 ${c.is_fallback ? "🟡 " : ""}${c.fonte}: ${c.url}`);
-    }
-    if (c.is_update && c.update_resumo) {
-      item.push(`🔁 ${trunc(c.update_resumo, opts.tldrChars)}`);
-    } else if (c.resumo) {
-      item.push(`💡 ${trunc(c.resumo, opts.tldrChars)}`);
-    }
-    return item.join("\n");
-  };
-
-  if (mustRead.length) {
-    lines.push("", "🔥 *Must-read*", "");
-    lines.push(mustRead.map((c) => renderItem(c, true)).join("\n\n"));
-  }
-  if (relevantes.length) {
-    lines.push("", "📌 *Relevante*", "");
-    lines.push(relevantes.map((c) => renderItem(c, false)).join("\n\n"));
-  }
-  if (opts.includeNoRadar && noRadar.length) {
-    lines.push("", "📎 *No radar*");
-    for (const c of noRadar) {
-      lines.push(
-        `• ${trunc(c.titulo, 60)} · 💼 ${c.relevancia_empresarial ?? 0} · 💻 ${c.relevancia_tecnica ?? 0}`,
-      );
-    }
-  }
-  for (const c of sinais) {
-    lines.push(`⚠️ Sinal: ${trunc(c.titulo, 70)} (sem fonte canônica)`);
-  }
-  if (briefing.n_suppressed > 0) {
-    lines.push(
-      "",
-      `🤫 ${briefing.n_suppressed} assunto${briefing.n_suppressed > 1 ? "s" : ""} já tratado${briefing.n_suppressed > 1 ? "s" : ""} sem novidade — suprimido${briefing.n_suppressed > 1 ? "s" : ""}.`,
-    );
-  }
-  if (mustRead.length === 0 && relevantes.length === 0) {
-    lines.push("", "Sem cobertura relevante no universo monitorado hoje.");
-  } else {
-    lines.push("", "➡️ Posts sugeridos na próxima mensagem.");
-  }
-
-  return lines.join("\n");
-}
-
-/** Mensagem 1 — Digest, com corte progressivo até caber em 1500. */
-export function renderDigestMessage(
-  briefing: DeliveryBriefing,
-  clusters: DeliveryCluster[],
-): string {
-  const attempts: RenderOptions[] = [
-    { tldrChars: 100, includeNoRadar: true, maxRelevantes: 99 },
-    { tldrChars: 100, includeNoRadar: false, maxRelevantes: 99 }, // corta No radar
-    { tldrChars: 60, includeNoRadar: false, maxRelevantes: 99 }, //  reduz TL;DRs
-    { tldrChars: 60, includeNoRadar: false, maxRelevantes: 2 }, //   corta Relevantes fracos
-    { tldrChars: 40, includeNoRadar: false, maxRelevantes: 2 },
-  ];
-  for (const opts of attempts) {
-    const msg = renderDigest(briefing, clusters, opts);
+function fit(build: (tldr: number) => string, tldrSteps = [100, 60, 40]): string {
+  for (const tldr of tldrSteps) {
+    const msg = build(tldr);
     if (msg.length <= WHATSAPP_HARD_LIMIT) return msg;
   }
-  // Última linha de defesa: nunca estourar o limite hard.
-  return trunc(
-    renderDigest(briefing, clusters, attempts[attempts.length - 1]!),
-    WHATSAPP_HARD_LIMIT,
-  );
+  return trunc(build(tldrSteps[tldrSteps.length - 1]!), WHATSAPP_HARD_LIMIT);
 }
 
-/** Mensagem 2 — Posts sugeridos. */
+function renderItem(c: DeliveryCluster, n: number, tldrChars: number, withHeat: boolean): string {
+  const marks = `${c.is_curator_pick ? "✨ " : ""}${c.is_update ? "🔁 " : ""}`;
+  const item: string[] = [`${n}. ${marks}${trunc(c.titulo, 70)}`];
+  item.push(
+    `💼 ${c.relevancia_empresarial ?? 0}/3 · 💻 ${c.relevancia_tecnica ?? 0}/3${withHeat ? ` · Heat ${c.heat_score}` : ""}`,
+  );
+  if (c.fonte && c.url) {
+    item.push(`📖 ${c.is_fallback ? "🟡 " : ""}${c.fonte}: ${c.url}`);
+  }
+  if (c.is_update && c.update_resumo) {
+    item.push(`🔁 ${trunc(c.update_resumo, tldrChars)}`);
+  } else if (c.resumo) {
+    item.push(`💡 ${trunc(c.resumo, tldrChars)}`);
+  }
+  return item.join("\n");
+}
+
+/** Mensagem 1 — Must-read: o que realmente merece leitura hoje. */
+function renderMustReadMessage(briefing: DeliveryBriefing, clusters: DeliveryCluster[]): string {
+  const mustRead = clusters.filter((c) => c.categoria === "must_read");
+  const temOutros = clusters.some((c) => c.categoria !== "must_read" && c.categoria !== "descartado");
+
+  return fit((tldr) => {
+    const lines: string[] = [`📰 *Briefing ${ddmm(briefing.run_date)}* — 🔥 *Must-read*`];
+    if (mustRead.length) {
+      lines.push("");
+      lines.push(mustRead.map((c, i) => renderItem(c, i + 1, tldr, true)).join("\n\n"));
+    } else if (temOutros) {
+      lines.push("", "Nenhum must-read hoje — os assuntos do dia vão na próxima mensagem.");
+    } else {
+      lines.push("", "Sem cobertura relevante no universo monitorado hoje.");
+    }
+    if (briefing.n_suppressed > 0) {
+      lines.push(
+        "",
+        `🤫 ${briefing.n_suppressed} assunto${briefing.n_suppressed > 1 ? "s" : ""} já tratado${briefing.n_suppressed > 1 ? "s" : ""} sem novidade — suprimido${briefing.n_suppressed > 1 ? "s" : ""}.`,
+      );
+    }
+    return lines.join("\n");
+  });
+}
+
+/** Mensagem 2 — Outros assuntos: relevantes, no radar e sinais sem fonte. */
+function renderOthersMessage(
+  briefing: DeliveryBriefing,
+  clusters: DeliveryCluster[],
+): string | null {
+  const relevantesAll = clusters.filter((c) => c.categoria === "relevante");
+  const noRadar = clusters.filter((c) => c.categoria === "no_radar");
+  const sinais = clusters.filter((c) => c.categoria === "sinal_sem_fonte");
+  if (relevantesAll.length === 0 && noRadar.length === 0 && sinais.length === 0) return null;
+
+  const build = (tldr: number, includeNoRadar: boolean, maxRelevantes: number): string => {
+    let relevantes = relevantesAll;
+    if (relevantes.length > maxRelevantes) {
+      relevantes = [...relevantes]
+        .sort((a, b) => (b.relevancia_empresarial ?? 0) - (a.relevancia_empresarial ?? 0))
+        .slice(0, maxRelevantes);
+    }
+    const lines: string[] = [`🗞️ *Outros assuntos ${ddmm(briefing.run_date)}*`];
+    let n = 0;
+    if (relevantes.length) {
+      lines.push("", "📌 *Relevante*", "");
+      lines.push(relevantes.map((c) => renderItem(c, ++n, tldr, false)).join("\n\n"));
+    }
+    if (includeNoRadar && noRadar.length) {
+      lines.push("", "📎 *No radar*");
+      for (const c of noRadar) {
+        lines.push(
+          `• ${trunc(c.titulo, 60)} · 💼 ${c.relevancia_empresarial ?? 0} · 💻 ${c.relevancia_tecnica ?? 0}`,
+        );
+      }
+    }
+    for (const c of sinais) {
+      lines.push(`⚠️ Sinal: ${trunc(c.titulo, 70)} (sem fonte canônica)`);
+    }
+    return lines.join("\n");
+  };
+
+  // Corte progressivo (SKILL.md): cortar No radar → reduzir TL;DRs → cortar
+  // Relevantes mais fracos mantendo os 2 de maior 💼.
+  const attempts: [number, boolean, number][] = [
+    [100, true, 99],
+    [100, false, 99],
+    [60, false, 99],
+    [60, false, 2],
+    [40, false, 2],
+  ];
+  for (const [tldr, noRadarOn, maxRel] of attempts) {
+    const msg = build(tldr, noRadarOn, maxRel);
+    if (msg.length <= WHATSAPP_HARD_LIMIT) return msg;
+  }
+  return trunc(build(40, false, 2), WHATSAPP_HARD_LIMIT);
+}
+
+/** Mensagem 3 — Posts sugeridos. */
 export function renderPostsMessage(posts: DeliveryPost[]): string {
   const publicaveis = posts.filter((p) => !p.skip);
   const skips = posts.filter((p) => p.skip);
@@ -169,7 +171,7 @@ export function renderPostsMessage(posts: DeliveryPost[]): string {
     return lines.join("\n");
   };
 
-  // Corte progressivo da Mensagem 2 (SKILL.md): encurtar estruturas → hooks → skips
+  // Corte progressivo (SKILL.md): encurtar estruturas → hooks → skips
   const attempts: [number, number, number][] = [
     [8, 15, skips.length],
     [5, 15, skips.length],
@@ -181,4 +183,20 @@ export function renderPostsMessage(posts: DeliveryPost[]): string {
     if (msg.length <= WHATSAPP_HARD_LIMIT) return msg;
   }
   return trunc(build(3, 8, 0), WHATSAPP_HARD_LIMIT);
+}
+
+/**
+ * O briefing completo em até 3 mensagens, na ordem de envio:
+ * Must-read · Outros assuntos (se houver) · Posts sugeridos.
+ */
+export function renderWhatsappMessages(
+  briefing: DeliveryBriefing,
+  clusters: DeliveryCluster[],
+  posts: DeliveryPost[],
+): string[] {
+  const messages = [renderMustReadMessage(briefing, clusters)];
+  const others = renderOthersMessage(briefing, clusters);
+  if (others) messages.push(others);
+  messages.push(renderPostsMessage(posts));
+  return messages;
 }

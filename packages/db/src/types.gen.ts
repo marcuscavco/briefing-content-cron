@@ -152,6 +152,7 @@ export type Database = {
           run_date: string
           whatsapp_msg_1: string | null
           whatsapp_msg_2: string | null
+          whatsapp_msg_3: string | null
         }
         Insert: {
           account_id: string
@@ -172,6 +173,7 @@ export type Database = {
           run_date: string
           whatsapp_msg_1?: string | null
           whatsapp_msg_2?: string | null
+          whatsapp_msg_3?: string | null
         }
         Update: {
           account_id?: string
@@ -192,6 +194,7 @@ export type Database = {
           run_date?: string
           whatsapp_msg_1?: string | null
           whatsapp_msg_2?: string | null
+          whatsapp_msg_3?: string | null
         }
         Relationships: [
           {
