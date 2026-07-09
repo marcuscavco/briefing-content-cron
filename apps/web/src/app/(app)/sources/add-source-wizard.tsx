@@ -78,6 +78,22 @@ export function AddSourceWizard({ suggestions }: { suggestions: Suggestion[] }) 
     });
   };
 
+  const goBack = () => {
+    if (step === "validate") {
+      setProbe(null);
+      setAdded(false);
+      setConfirmError(null);
+      setStep(payload?.kind === "library" ? "pick" : "input");
+      return;
+    }
+    if (step === "input") {
+      setInputError(null);
+      setStep("type");
+      return;
+    }
+    if (step === "type") setStep("pick");
+  };
+
   const reset = () => {
     setStep("pick");
     setIgProfile(null);
@@ -329,7 +345,7 @@ export function AddSourceWizard({ suggestions }: { suggestions: Suggestion[] }) 
 
               {!added ? (
                 <div className="flex flex-wrap gap-2">
-                  <Button type="button" variant="ghost" onClick={reset} disabled={confirming}>
+                  <Button type="button" variant="ghost" onClick={goBack} disabled={confirming}>
                     Voltar
                   </Button>
                   {probe.ok && (

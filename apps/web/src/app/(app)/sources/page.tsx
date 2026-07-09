@@ -82,50 +82,69 @@ export default async function SourcesPage() {
                   Array.isArray(source.last_preview) ? source.last_preview : []
                 ) as PreviewItem[];
                 return (
-                  <li key={source.id} className="flex flex-col gap-3 py-5">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className={`font-display font-medium ${source.active ? "" : "text-muted-foreground line-through"}`}>
-                        {source.name}
-                      </span>
-                      <TierBadge tier={source.tier} />
-                      <StatusBadge status={source.last_status} label={statusLabel(source.last_status)} />
-                      {source.last_checked_at && (
-                        <span className="text-xs text-muted-foreground">
-                          {t("lastChecked")}:{" "}
-                          {new Date(source.last_checked_at).toLocaleString("pt-BR", {
-                            timeZone: profile.timezone,
-                          })}
+                  <li key={source.id}>
+                    <details className="group py-2">
+                      <summary className="flex cursor-pointer list-none flex-wrap items-center gap-2 py-3 [&::-webkit-details-marker]:hidden">
+                        <span
+                          aria-hidden
+                          className="flex size-6 shrink-0 items-center justify-center rounded-full bg-white/5 text-[10px] text-muted-foreground transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-open:rotate-90"
+                        >
+                          ▶
                         </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground">{source.feed_url ?? source.url}</p>
-                    {source.last_error && (
-                      <p className="text-xs text-destructive">{source.last_error}</p>
-                    )}
+                        <span className={`font-display font-medium ${source.active ? "" : "text-muted-foreground line-through"}`}>
+                          {source.name}
+                        </span>
+                        <TierBadge tier={source.tier} />
+                        <StatusBadge status={source.last_status} label={statusLabel(source.last_status)} />
+                        {preview.length > 0 && (
+                          <span className="text-xs text-muted-foreground">
+                            {preview.length} {source.type === "instagram" ? "posts" : "notícias"}
+                          </span>
+                        )}
+                      </summary>
 
-                    <PreviewCards items={preview} />
+                      <div className="flex flex-col gap-3 pb-3 pl-8">
+                        <p className="break-all text-xs text-muted-foreground">
+                          {source.feed_url ?? source.url}
+                          {source.last_checked_at && (
+                            <>
+                              {" · "}
+                              {t("lastChecked")}:{" "}
+                              {new Date(source.last_checked_at).toLocaleString("pt-BR", {
+                                timeZone: profile.timezone,
+                              })}
+                            </>
+                          )}
+                        </p>
+                        {source.last_error && (
+                          <p className="text-xs text-destructive">{source.last_error}</p>
+                        )}
 
-                    <div className="flex flex-wrap gap-2">
-                      <form action={revalidateSource}>
-                        <input type="hidden" name="id" value={source.id} />
-                        <SubmitButton variant="outline" size="sm" pendingText={t("revalidating")}>
-                          {t("revalidate")}
-                        </SubmitButton>
-                      </form>
-                      <form action={toggleSourceActive}>
-                        <input type="hidden" name="id" value={source.id} />
-                        <input type="hidden" name="active" value={String(!source.active)} />
-                        <SubmitButton variant="ghost" size="sm">
-                          {source.active ? t("deactivate") : t("activate")}
-                        </SubmitButton>
-                      </form>
-                      <form action={deleteSource}>
-                        <input type="hidden" name="id" value={source.id} />
-                        <SubmitButton variant="ghost" size="sm" className="text-destructive">
-                          {t("remove")}
-                        </SubmitButton>
-                      </form>
-                    </div>
+                        <PreviewCards items={preview} />
+
+                        <div className="flex flex-wrap gap-2">
+                          <form action={revalidateSource}>
+                            <input type="hidden" name="id" value={source.id} />
+                            <SubmitButton variant="outline" size="sm" pendingText={t("revalidating")}>
+                              {t("revalidate")}
+                            </SubmitButton>
+                          </form>
+                          <form action={toggleSourceActive}>
+                            <input type="hidden" name="id" value={source.id} />
+                            <input type="hidden" name="active" value={String(!source.active)} />
+                            <SubmitButton variant="ghost" size="sm">
+                              {source.active ? t("deactivate") : t("activate")}
+                            </SubmitButton>
+                          </form>
+                          <form action={deleteSource}>
+                            <input type="hidden" name="id" value={source.id} />
+                            <SubmitButton variant="ghost" size="sm" className="text-destructive">
+                              {t("remove")}
+                            </SubmitButton>
+                          </form>
+                        </div>
+                      </div>
+                    </details>
                   </li>
                 );
               })}

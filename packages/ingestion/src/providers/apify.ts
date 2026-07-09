@@ -14,7 +14,9 @@ type ApifyItem = {
   url?: string;
   caption?: string | null;
   timestamp?: string;
-  displayUrl?: string; // thumb/capa
+  displayUrl?: string; // thumb/capa (presente também em vídeos)
+  images?: string[];
+  error?: string;
   type?: string; // 'Image' | 'Video' | 'Sidecar'
 };
 
@@ -46,13 +48,16 @@ export class ApifyInstagramFetcher implements InstagramFetcher {
       throw new Error(`Apify ${res.status}: ${(await res.text()).slice(0, 200)}`);
     }
     const items = (await res.json()) as ApifyItem[];
+    if (items.length === 1 && items[0]?.error === "not_found") {
+      throw new Error("perfil não encontrado no Instagram");
+    }
     return items
       .filter((i) => i.url && i.timestamp)
       .map((i) => ({
         url: i.url!,
         caption: i.caption ?? null,
         timestamp: i.timestamp!,
-        imageUrl: i.displayUrl ?? null,
+        imageUrl: i.displayUrl ?? i.images?.[0] ?? null,
         isVideo: i.type === "Video",
         transcript: null,
       }));

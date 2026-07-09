@@ -12,6 +12,14 @@ export type PreviewCardItem = {
   relevant?: boolean;
 };
 
+function imgSrc(url: string): string {
+  // CDN do Instagram bloqueia hotlink — passa pelo nosso proxy allowlisted.
+  if (/\.cdninstagram\.com|\.fbcdn\.net/.test(url)) {
+    return `/api/img?u=${encodeURIComponent(url)}`;
+  }
+  return url;
+}
+
 export function PreviewCards({ items }: { items: PreviewCardItem[] }) {
   if (items.length === 0) return null;
   return (
@@ -27,7 +35,7 @@ export function PreviewCards({ items }: { items: PreviewCardItem[] }) {
           {item.image && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={item.image}
+              src={imgSrc(item.image)}
               alt=""
               referrerPolicy="no-referrer"
               loading="lazy"
