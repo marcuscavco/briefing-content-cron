@@ -14,6 +14,9 @@ importers:
       '@briefing/delivery':
         specifier: workspace:*
         version: link:packages/delivery
+      '@briefing/ingestion':
+        specifier: workspace:*
+        version: link:packages/ingestion
       '@supabase/supabase-js':
         specifier: ^2.49.4
         version: 2.110.1

@@ -16,6 +16,7 @@
   "devDependencies": {
     "@briefing/curation": "workspace:*",
     "@briefing/delivery": "workspace:*",
+    "@briefing/ingestion": "workspace:*",
     "@supabase/supabase-js": "^2.49.4",
     "dotenv": "^16.4.7",
     "supabase": "^2.109.1",
