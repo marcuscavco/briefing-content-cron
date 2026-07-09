@@ -52,7 +52,7 @@ export async function BriefingView({
     <>
       <Card>
         <CardHeader>
-          <CardTitle>
+          <CardTitle className="font-display text-xl md:text-2xl">
             {title ?? t("todayBriefing")} —{" "}
             {new Date(`${briefing.run_date}T12:00:00`).toLocaleDateString("pt-BR")}
           </CardTitle>
@@ -62,19 +62,25 @@ export async function BriefingView({
             {briefing.n_updates} {t("updates")}
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          {clusters.length === 0 && (
+        {clusters.length === 0 && (
+          <CardContent>
             <p className="text-sm text-muted-foreground">{t("emptyBriefing")}</p>
-          )}
-          <div className="flex flex-col gap-8">
-            {SECTIONS.map((section) => {
-              const items = clusters.filter((c) => c.categoria === section.key);
-              if (items.length === 0) return null;
-              return (
-                <section key={section.key}>
-                  <h3 className="font-display text-base font-medium">{section.label}</h3>
-                  <p className="mt-0.5 text-xs text-muted-foreground">{section.explain}</p>
-                  <ul className="mt-3 divide-y divide-white/6">
+          </CardContent>
+        )}
+      </Card>
+
+      {/* um card por categoria (decisão do Marcus) */}
+      {SECTIONS.map((section) => {
+        const items = clusters.filter((c) => c.categoria === section.key);
+        if (items.length === 0) return null;
+        return (
+          <Card key={section.key}>
+            <CardHeader>
+              <CardTitle className="font-display text-xl md:text-2xl">{section.label}</CardTitle>
+              <CardDescription>{section.explain}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="divide-y divide-white/6">
                     {items.map((c) => (
                       <li key={c.id} className="flex flex-col gap-1 py-3">
                         <div className="flex flex-wrap items-center gap-2 text-sm empty:hidden">
@@ -120,18 +126,16 @@ export async function BriefingView({
                         )}
                       </li>
                     ))}
-                  </ul>
-                </section>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
+              </ul>
+            </CardContent>
+          </Card>
+        );
+      })}
 
       {posts.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>{t("posts")}</CardTitle>
+            <CardTitle className="font-display text-xl md:text-2xl">{t("posts")}</CardTitle>
             <CardDescription>{t("postsExplain")}</CardDescription>
           </CardHeader>
           <CardContent>
