@@ -143,3 +143,14 @@ describe("renderPostsMessage", () => {
     expect(msg).toContain("🧱 Estrutura:");
   });
 });
+
+describe("link do painel", () => {
+  it("mensagem 1 leva o link inteligente /b/<id> e continua ≤ 1500", () => {
+    const msgs = renderWhatsappMessages(briefing, bigDataset(), [post({})], {
+      briefingUrl: "https://briefing-saas-weld.vercel.app/b/00000000-0000-0000-0000-000000000001",
+    });
+    expect(msgs[0]).toContain("🔗 Ver no painel: https://briefing-saas-weld.vercel.app/b/");
+    expect(msgs[1]).not.toContain("Ver no painel");
+    for (const m of msgs) expect(m.length).toBeLessThanOrEqual(WHATSAPP_HARD_LIMIT);
+  });
+});

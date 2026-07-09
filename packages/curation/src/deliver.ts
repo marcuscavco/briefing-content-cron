@@ -147,7 +147,8 @@ export async function deliverBriefing(
   const whatsappDestinos: Record<string, string> = {};
   if (channels.whatsapp) {
     // Até 3 mensagens por categoria: must-read · outros assuntos · posts.
-    const messages = renderWhatsappMessages(briefing, clusters, posts);
+    const briefingUrl = deps.appBaseUrl ? `${deps.appBaseUrl.replace(/\/$/, "")}/b/${briefingId}` : undefined;
+    const messages = renderWhatsappMessages(briefing, clusters, posts, { briefingUrl });
     await db
       .from("briefings")
       .update({

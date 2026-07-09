@@ -19,10 +19,14 @@ export async function login(formData: FormData) {
     password: String(formData.get("password")),
   });
 
+  // Deep link (ex.: /b/<id> do WhatsApp): só caminhos internos são honrados.
+  const next = String(formData.get("next") ?? "");
+  const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard";
+
   if (error) {
-    redirect("/login?error=invalid_credentials");
+    redirect(`/login?error=invalid_credentials${next ? `&next=${encodeURIComponent(next)}` : ""}`);
   }
-  redirect("/dashboard");
+  redirect(safeNext);
 }
 
 export async function signup(formData: FormData) {

@@ -21,10 +21,10 @@ const NOTICE_KEYS: Record<string, string> = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; notice?: string }>;
+  searchParams: Promise<{ error?: string; notice?: string; next?: string }>;
 }) {
   const t = await getTranslations("auth");
-  const { error, notice } = await searchParams;
+  const { error, notice, next } = await searchParams;
   const errorKey = error ? (ERROR_KEYS[error] ?? "errorGeneric") : null;
   const noticeKey = notice ? NOTICE_KEYS[notice] : null;
 
@@ -39,6 +39,7 @@ export default async function LoginPage({
         {noticeKey && <p className="text-sm text-muted-foreground">{t(noticeKey)}</p>}
 
         <form className="flex flex-col gap-4">
+          {next && <input type="hidden" name="next" value={next} />}
           <div className="grid gap-2">
             <Label htmlFor="email">{t("email")}</Label>
             <Input id="email" name="email" type="email" required autoComplete="email" />

@@ -54,7 +54,11 @@ function renderItem(c: DeliveryCluster, n: number, tldrChars: number, withHeat: 
 }
 
 /** Mensagem 1 — Must-read: o que realmente merece leitura hoje. */
-function renderMustReadMessage(briefing: DeliveryBriefing, clusters: DeliveryCluster[]): string {
+function renderMustReadMessage(
+  briefing: DeliveryBriefing,
+  clusters: DeliveryCluster[],
+  briefingUrl?: string,
+): string {
   const mustRead = clusters.filter((c) => c.categoria === "must_read");
   const temOutros = clusters.some((c) => c.categoria !== "must_read" && c.categoria !== "descartado");
 
@@ -73,6 +77,10 @@ function renderMustReadMessage(briefing: DeliveryBriefing, clusters: DeliveryClu
         "",
         `🤫 ${briefing.n_suppressed} assunto${briefing.n_suppressed > 1 ? "s" : ""} já tratado${briefing.n_suppressed > 1 ? "s" : ""} sem novidade — suprimido${briefing.n_suppressed > 1 ? "s" : ""}.`,
       );
+    }
+    if (briefingUrl) {
+      // Link inteligente: hoje abre o dashboard; antigo abre o arquivo do dia.
+      lines.push("", `🔗 Ver no painel: ${briefingUrl}`);
     }
     return lines.join("\n");
   });
@@ -193,8 +201,9 @@ export function renderWhatsappMessages(
   briefing: DeliveryBriefing,
   clusters: DeliveryCluster[],
   posts: DeliveryPost[],
+  opts?: { briefingUrl?: string },
 ): string[] {
-  const messages = [renderMustReadMessage(briefing, clusters)];
+  const messages = [renderMustReadMessage(briefing, clusters, opts?.briefingUrl)];
   const others = renderOthersMessage(briefing, clusters);
   if (others) messages.push(others);
   messages.push(renderPostsMessage(posts));

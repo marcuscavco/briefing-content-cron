@@ -44,12 +44,17 @@ export async function proxy(request: NextRequest) {
   if (!user && !isAuthPage && !isSelfAuthed && !path.startsWith("/auth")) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
+    url.search = "";
+    // Deep links (ex.: /b/<id> do WhatsApp) continuam após o login.
+    if (path !== "/" && path !== "/dashboard") url.searchParams.set("next", path);
     return NextResponse.redirect(url);
   }
 
   if (user && isAuthPage) {
     const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
+    const next = request.nextUrl.searchParams.get("next");
+    url.pathname = next && next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard";
+    url.search = "";
     return NextResponse.redirect(url);
   }
 
