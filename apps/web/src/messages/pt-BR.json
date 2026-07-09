@@ -69,7 +69,11 @@
     "shortcutSourcesTitle": "Fontes",
     "shortcutSourcesDesc": "Seu universo fechado de portais e perfis, com saúde de cada um.",
     "shortcutSettingsTitle": "Configurações",
-    "shortcutSettingsDesc": "Temas, horário de entrega e destinos de WhatsApp."
+    "shortcutSettingsDesc": "Temas, horário de entrega e destinos de WhatsApp.",
+    "channelConnected": "WhatsApp conectado",
+    "sendingTo": "enviando o briefing diário para",
+    "channelDisconnected": "Nenhum canal conectado",
+    "channelDisconnectedCta": "verifique um número de WhatsApp em Configurações →"
   },
   "nav": {
     "dashboard": "Dashboard",

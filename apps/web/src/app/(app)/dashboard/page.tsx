@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { requireTenant } from "@/lib/tenant";
+import { formatBrPhone } from "@/lib/phone";
 import { ArrowBubble } from "@/components/ui/arrow-bubble";
 import { BriefingView } from "@/components/briefing/briefing-view";
 import { GenerateButton } from "./generate-button";
@@ -39,6 +40,15 @@ export default async function DashboardPage() {
         .eq("last_status", "ok"),
       supabase.from("briefings").select("id", { count: "exact", head: true }).eq("profile_id", profile.id),
     ]);
+
+  const { data: verifiedDests } = await supabase
+    .from("whatsapp_destinations")
+    .select("phone, kind")
+    .eq("profile_id", profile.id)
+    .eq("verified", true)
+    .eq("active", true);
+  const channels = (profile.channels ?? {}) as { email?: boolean; whatsapp?: boolean };
+  const whatsappOn = channels.whatsapp === true && (verifiedDests ?? []).length > 0;
 
   const notas = (briefing?.notas ?? {}) as {
     fontes?: { portal: string; status: string; error?: string }[];
@@ -81,6 +91,32 @@ export default async function DashboardPage() {
               month: "long",
             })}
           </p>
+        )}
+
+        {/* tarja de canais conectados (sinalização, ponta a ponta) */}
+        {whatsappOn ? (
+          <div className="flex w-full flex-wrap items-center gap-x-3 gap-y-1.5 rounded-2xl border border-emerald-400/15 bg-emerald-400/[0.06] px-4 py-3 text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+            <span className="relative flex size-2.5 shrink-0">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+              <span className="relative inline-flex size-2.5 rounded-full bg-emerald-400" />
+            </span>
+            <span className="font-medium text-emerald-200">{t("channelConnected")}</span>
+            <span className="text-muted-foreground">
+              {t("sendingTo")}{" "}
+              <span className="tabular-nums text-foreground">
+                {(verifiedDests ?? []).map((d) => formatBrPhone(d.phone)).join(" · ")}
+              </span>
+            </span>
+          </div>
+        ) : (
+          <Link
+            href="/settings"
+            className="flex w-full flex-wrap items-center gap-x-3 gap-y-1.5 rounded-2xl border border-amber-400/15 bg-amber-400/[0.05] px-4 py-3 text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition-colors hover:border-amber-400/30"
+          >
+            <span className="size-2.5 shrink-0 rounded-full bg-amber-400/80" />
+            <span className="font-medium text-amber-200">{t("channelDisconnected")}</span>
+            <span className="text-muted-foreground">{t("channelDisconnectedCta")}</span>
+          </Link>
         )}
       </section>
 
