@@ -33,10 +33,10 @@ export default async function AdminPage() {
   const subOf = new Map((subs ?? []).map((s) => [s.account_id, s]));
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="rise flex flex-col gap-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
+          <h1 className="font-display text-3xl font-medium tracking-tight md:text-4xl">{t("title")}</h1>
           <p className="mt-1 text-sm text-muted-foreground">{t("subtitle")}</p>
         </div>
         <Link href="/admin/catalog" className="text-sm underline underline-offset-2">
@@ -100,7 +100,7 @@ export default async function AdminPage() {
                       <input type="hidden" name="account_id" value={a.id} />
                       <select
                         name="plan_id"
-                        className="h-9 rounded-md border bg-transparent px-2 text-sm"
+                        className="h-11 rounded-2xl border border-white/10 bg-white/5 px-3 text-sm"
                         defaultValue={sub?.plan_id ?? plans?.[0]?.id}
                       >
                         {(plans ?? []).map((p) => (

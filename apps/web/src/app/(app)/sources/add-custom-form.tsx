@@ -32,7 +32,7 @@ export function AddCustomSourceForm({ labels }: { labels: Record<string, string>
             id="src-tier"
             name="tier"
             defaultValue="2"
-            className="border-input h-9 rounded-md border bg-transparent px-3 text-sm shadow-xs"
+            className="h-11 rounded-2xl border border-white/10 bg-white/5 px-3 text-sm"
           >
             <option value="1">Tier 1 — leitura canônica</option>
             <option value="2">Tier 2 — sinal</option>

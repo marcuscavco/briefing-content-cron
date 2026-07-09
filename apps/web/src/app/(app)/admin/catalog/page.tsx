@@ -18,14 +18,14 @@ export default async function AdminCatalogPage() {
     .order("sort_order");
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="rise flex flex-col gap-8">
       <div>
         <p className="text-sm">
           <Link href="/admin" className="underline underline-offset-2">
             ← {t("backToAdmin")}
           </Link>
         </p>
-        <h1 className="mt-2 text-2xl font-semibold tracking-tight">{t("catalogTitle")}</h1>
+        <h1 className="font-display mt-2 text-3xl font-medium tracking-tight md:text-4xl">{t("catalogTitle")}</h1>
         <p className="mt-1 text-sm text-muted-foreground">{t("catalogSubtitle")}</p>
       </div>
 
@@ -41,7 +41,7 @@ export default async function AdminCatalogPage() {
             <div className="flex gap-2">
               <select
                 name="suggested_tier"
-                className="h-9 flex-1 rounded-md border bg-transparent px-2 text-sm"
+                className="h-11 flex-1 rounded-2xl border border-white/10 bg-white/5 px-3 text-sm"
                 defaultValue="3"
               >
                 <option value="1">Tier 1</option>
@@ -50,7 +50,7 @@ export default async function AdminCatalogPage() {
               </select>
               <select
                 name="category"
-                className="h-9 flex-1 rounded-md border bg-transparent px-2 text-sm"
+                className="h-11 flex-1 rounded-2xl border border-white/10 bg-white/5 px-3 text-sm"
                 defaultValue="tecnologia"
               >
                 <option value="tecnologia">tecnologia</option>
@@ -60,7 +60,7 @@ export default async function AdminCatalogPage() {
               </select>
               <select
                 name="country"
-                className="h-9 flex-1 rounded-md border bg-transparent px-2 text-sm"
+                className="h-11 flex-1 rounded-2xl border border-white/10 bg-white/5 px-3 text-sm"
                 defaultValue="BR"
               >
                 <option value="BR">BR</option>

@@ -37,7 +37,7 @@ export default async function TopicTimelinePage({
   const dateOf = new Map((briefings ?? []).map((b) => [b.id, b.run_date]));
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="rise flex flex-col gap-8">
       <p className="text-sm">
         <Link href="/briefings" className="underline underline-offset-2">
           ← {t("backToArchive")}

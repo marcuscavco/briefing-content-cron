@@ -1,5 +1,32 @@
 # CHANGELOG
 
+## Redesign UI/UX — high-end visual pass (2026-07-09)
+
+**Todos os fluxos revistos com a linguagem "Ethereal Glass" (skill de design
+do usuário): preto OLED com mesh gradients, cartões double-bezel, tipografia
+display e motion com física.**
+
+- **Fundação**: fontes Geist (corpo) + Space Grotesk (display/big numbers) —
+  zero fontes banidas; tokens escuros únicos; mesh gradient e film grain em
+  camadas fixas (pointer-events-none); ease padrão `cubic-bezier(0.32,0.72,0,1)`.
+- **Primitivas**: Card virou **double-bezel** (casca + núcleo de vidro com
+  highlight interno); botões pill com active:scale e sombra de vidro; inputs
+  translúcidos; badges hairline; `ArrowBubble` (button-in-button com desliza
+  diagonal no hover).
+- **Nav "Fluid Island"**: pill de vidro flutuante descolada do topo (único
+  backdrop-blur, em elemento fixo), estado ativo por rota; mobile com hamburger
+  que morfa em X e overlay com reveal escalonado.
+- **Home nova** (/dashboard): hero com eyebrow + saudação display, **bento
+  assimétrico de big numbers** (must-reads, atualizações, suprimidos, fontes
+  ok, arquivo) e **4 shortcuts** com hover kinetics; briefing do dia abaixo;
+  alerta de fontes com problema.
+- **Auth**: editorial split (manifesto à esquerda, formulário de vidro à
+  direita). Demais páginas herdaram tipografia display, entradas `rise` com
+  blur-up e selects/labels no mesmo idioma visual.
+- Acessibilidade/perf: `prefers-reduced-motion` desliga entradas; animações só
+  com transform/opacity; blur restrito a fixed/sticky; mobile 100% single-column.
+
+
 ## Fase 5 — Instagram connector (2026-07-09)
 
 **Handle do IG vira fonte normalizada; kill-switch global funciona (aceite do

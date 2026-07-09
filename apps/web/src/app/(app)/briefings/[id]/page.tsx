@@ -35,7 +35,7 @@ export default async function BriefingDetailPage({
     .order("ordem");
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="rise flex flex-col gap-8">
       <p className="text-sm">
         <Link href="/briefings" className="underline underline-offset-2">
           ← {t("backToArchive")}

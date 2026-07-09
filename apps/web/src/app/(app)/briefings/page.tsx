@@ -29,10 +29,10 @@ export default async function BriefingsPage({
   const hasNext = from + PAGE_SIZE < total;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="rise flex flex-col gap-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
+          <h1 className="font-display text-3xl font-medium tracking-tight md:text-4xl">{t("title")}</h1>
           <p className="mt-1 text-sm text-muted-foreground">{t("subtitle")}</p>
         </div>
         <Link href="/search" className="text-sm underline underline-offset-2">

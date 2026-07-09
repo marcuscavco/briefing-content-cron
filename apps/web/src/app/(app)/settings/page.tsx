@@ -25,9 +25,9 @@ export default async function SettingsPage({
   const channels = (profile.channels ?? {}) as { email?: boolean; whatsapp?: boolean };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="rise flex flex-col gap-8">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
+        <h1 className="font-display text-3xl font-medium tracking-tight md:text-4xl">{t("title")}</h1>
         <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{t("subtitle")}</p>
       </div>
 
