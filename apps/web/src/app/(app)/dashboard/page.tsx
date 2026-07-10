@@ -5,6 +5,7 @@ import { formatBrPhone } from "@/lib/phone";
 import { ArrowBubble } from "@/components/ui/arrow-bubble";
 import { BriefingView } from "@/components/briefing/briefing-view";
 import { GenerateButton } from "./generate-button";
+import { PreparingBriefing } from "./preparing";
 
 export default async function DashboardPage() {
   const t = await getTranslations("dashboard");
@@ -40,6 +41,13 @@ export default async function DashboardPage() {
         .eq("last_status", "ok"),
       supabase.from("briefings").select("id", { count: "exact", head: true }).eq("profile_id", profile.id),
     ]);
+
+  const { count: activeJobs } = await supabase
+    .from("jobs")
+    .select("id", { count: "exact", head: true })
+    .eq("profile_id", profile.id)
+    .in("status", ["queued", "running"]);
+  const preparingFirst = !briefing && (activeJobs ?? 0) > 0;
 
   const { data: verifiedDests } = await supabase
     .from("whatsapp_destinations")
@@ -223,6 +231,8 @@ export default async function DashboardPage() {
         <section className="rise rise-3 flex flex-col gap-6">
           <BriefingView briefing={briefing} clusters={clusters ?? []} posts={posts ?? []} />
         </section>
+      ) : preparingFirst ? (
+        <PreparingBriefing />
       ) : (
         <section className="bezel rise rise-3">
           <div className="bezel-core px-6 py-10 text-center text-sm text-muted-foreground">

@@ -84,6 +84,7 @@ export type Database = {
           id: string
           max_posts_per_day: number
           name: string
+          onboarded_at: string | null
           themes: string[]
           timezone: string
           updated_at: string
@@ -100,6 +101,7 @@ export type Database = {
           id?: string
           max_posts_per_day?: number
           name?: string
+          onboarded_at?: string | null
           themes?: string[]
           timezone?: string
           updated_at?: string
@@ -116,6 +118,7 @@ export type Database = {
           id?: string
           max_posts_per_day?: number
           name?: string
+          onboarded_at?: string | null
           themes?: string[]
           timezone?: string
           updated_at?: string

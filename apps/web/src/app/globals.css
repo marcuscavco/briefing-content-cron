@@ -202,3 +202,18 @@
 .fade-in {
   animation: fade-in 0.4s var(--ease-premium) both;
 }
+
+/* confete da celebração do onboarding */
+@keyframes confetti-fall {
+  0% { transform: translateY(-8vh) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(96vh) rotate(660deg); opacity: 0; }
+}
+.confetti-piece {
+  position: absolute;
+  top: 0;
+  border-radius: 2px;
+  animation: confetti-fall 3s var(--ease-premium) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .confetti-piece { animation: none; opacity: 0; }
+}

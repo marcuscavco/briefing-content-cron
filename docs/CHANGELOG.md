@@ -1,5 +1,31 @@
 # CHANGELOG
 
+## Onboarding guiado — primeira experiência (2026-07-10)
+
+**Cadastro aberto com "7 dias grátis, sem cartão" (messaging; enforcement na
+F6) e um fluxo tela-cheia, uma ação por vez, que qualquer pessoa completa.**
+
+- **/onboarding** (gate: profile sem `onboarded_at` é redirecionado ao logar;
+  contas existentes backfilladas): boas-vindas → nome do briefing → temas em
+  2 fases leves (categorias em cards grandes, depois refino de subtemas
+  pré-marcados) → fontes auto-sugeridas pelos temas (1 clique, pré-marcadas)
+  → WhatsApp OBRIGATÓRIO (máscara BR + código no próprio fluxo, reuso do
+  double opt-in real) → revisão/celebração.
+- **A tela do momento**: confete (CSS puro, respeita reduced-motion),
+  "🎉 Parabéns!", card-resumo (nome · temas · fontes · número mascarado ·
+  07:00), as seções do briefing explicadas com **amostra REAL das últimas 48h
+  das fontes escolhidas** (prefetch em paralelo durante a verificação do
+  número) e botão gigante "Gerar meu primeiro briefing →".
+- **1º briefing na hora** (decisão do Marcus): finishOnboarding enfileira o
+  job (sem corrida com o redirect) e o cliente dispara o worker; o dashboard
+  mostra "seu primeiro briefing está sendo preparado…" com auto-refresh.
+- Retomada: cada passo persiste; quem abandona volta ao primeiro passo
+  incompleto (destino verificado → direto na celebração).
+- Parser: entidades HTML numéricas (&#8220; etc.) decodificadas nos títulos.
+- E2E Playwright: signup novo → fluxo completo → dashboard "preparando";
+  conta antiga não cai no onboarding; concluído não reabre. Suíte 40/40.
+
+
 ## UX pass 2 — fluxos mais intuitivos (2026-07-09)
 
 - **Wizard de adição de fonte** (decisão do Marcus): o modal abre listando a

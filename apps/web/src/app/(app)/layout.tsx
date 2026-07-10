@@ -20,6 +20,17 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     redirect("/login");
   }
 
+  // Onboarding obrigatório: quem nunca concluiu cai no fluxo guiado.
+  const { data: obProfile } = await supabase
+    .from("briefing_profiles")
+    .select("onboarded_at")
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (obProfile && !obProfile.onboarded_at) {
+    redirect("/onboarding");
+  }
+
   const admin = await isPlatformAdmin(user.id);
 
   const items = [
