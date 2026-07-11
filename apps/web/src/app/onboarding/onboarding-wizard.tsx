@@ -45,16 +45,17 @@ const SOURCE_CATEGORY_MAP: Record<string, string[]> = {
   ciencia: ["geral", "tecnologia"],
 };
 
+// O passo 1 é a criação de conta em /signup; o wizard continua do 2.
 const STEP_NUMBER: Partial<Record<Step, number>> = {
-  name: 1,
-  cats: 2,
-  subs: 3,
-  sources: 4,
-  phone: 5,
-  code: 5,
-  review: 6,
+  name: 2,
+  cats: 3,
+  subs: 4,
+  sources: 5,
+  phone: 6,
+  code: 6,
+  review: 7,
 };
-const TOTAL_STEPS = 6;
+const TOTAL_STEPS = 7;
 
 const CATEGORY_EMOJI: Record<string, string> = {
   tecnologia: "💻",
@@ -67,7 +68,7 @@ const CATEGORY_EMOJI: Record<string, string> = {
 };
 
 const SECTIONS_PREVIEW = [
-  { label: "🔥 Must-read", explain: "O que realmente merece sua leitura — leia isto e você está por dentro." },
+  { label: "🔥 Must-read", explain: "O que realmente merece sua leitura: leia isto e você está por dentro." },
   { label: "📌 Relevante", explain: "Vale saber que aconteceu; aprofunde só se tocar o seu negócio." },
   { label: "📎 No radar", explain: "Sinais e movimentos para acompanhar de longe." },
   { label: "📱 Posts sugeridos", explain: "Ideias prontas de conteúdo para suas redes, no seu tom." },
@@ -191,16 +192,18 @@ export function OnboardingWizard({
         <section key="welcome" className="rise flex flex-col gap-8">
           <span className="eyebrow w-max">✓ 7 dias grátis · sem cartão</span>
           <h1 className="font-display text-4xl font-medium leading-[1.05] tracking-tight md:text-6xl">
-            {firstName ? `${firstName}, seu` : "Seu"} briefing diário começa aqui.
+            {firstName ? `${firstName}, sua` : "Sua"} conta está pronta. Agora vem o briefing.
           </h1>
           <p className="max-w-md text-base leading-relaxed text-muted-foreground">
-            Todo dia às 7h, o que importa das suas fontes — direto no seu WhatsApp, sem repetir o
-            que você já viu.
+            Todo dia às 7h, o que importa das suas fontes chega direto no seu WhatsApp, sem
+            repetir o que você já viu.
           </p>
           <ul className="flex flex-col gap-2 text-sm text-muted-foreground">
-            <li>1 · Dê um nome ao seu briefing</li>
-            <li>2 · Escolha os temas que interessam</li>
-            <li>3 · Conecte seu WhatsApp</li>
+            <li className="text-foreground">✓ Conta criada</li>
+            <li>2 · Dê um nome ao seu briefing</li>
+            <li>3 e 4 · Escolha os temas da sua área</li>
+            <li>5 · Monte suas fontes</li>
+            <li>6 · Conecte seu WhatsApp</li>
           </ul>
           <p className="text-xs text-muted-foreground">Leva uns 3 minutos.</p>
           <Button size="lg" className="w-full sm:w-fit sm:px-12" onClick={() => go("name")}>
@@ -216,7 +219,7 @@ export function OnboardingWizard({
             Como vai se chamar o seu briefing?
           </h1>
           <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
-            É só um apelido — aparece no painel e pode mudar quando quiser.
+            É só um apelido. Aparece no painel e pode mudar quando quiser.
           </p>
           <form
             className="flex max-w-md flex-col gap-4"
@@ -253,7 +256,7 @@ export function OnboardingWizard({
             Sobre o que você quer ficar por dentro?
           </h1>
           <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
-            Marque quantas áreas quiser — dá para refinar no próximo passo.
+            Marque quantas áreas quiser. Dá para refinar no próximo passo.
           </p>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {THEME_TAXONOMY.map((cat) => {
@@ -322,7 +325,7 @@ export function OnboardingWizard({
             Quer refinar?
           </h1>
           <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
-            Deixamos tudo marcado — desmarque o que <em>não</em> interessa. Ou siga direto.
+            Deixamos tudo marcado: desmarque o que <em>não</em> interessa. Ou siga direto.
           </p>
           <div className="flex flex-col gap-3">
             {THEME_TAXONOMY.filter((c) => cats.has(c.id)).map((cat) => (
@@ -696,7 +699,7 @@ export function OnboardingWizard({
                     setError(r.error ?? "tente de novo");
                     return;
                   }
-                  // 1º briefing de verdade, agora (fire-and-forget — o dashboard acompanha)
+                  // 1º briefing de verdade, agora (fire-and-forget; o dashboard acompanha)
                   fetch("/api/jobs/run-now", { method: "POST" }).catch(() => {});
                   router.push("/dashboard");
                 })
@@ -707,7 +710,7 @@ export function OnboardingWizard({
               {pending ? "Preparando…" : "Gerar meu primeiro briefing →"}
             </Button>
             <p className="text-xs text-muted-foreground">
-              Fica pronto em poucos minutos — e amanhã às 7h chega sozinho no seu WhatsApp.
+              Fica pronto em poucos minutos, e amanhã às 7h chega sozinho no seu WhatsApp.
             </p>
           </div>
         </section>

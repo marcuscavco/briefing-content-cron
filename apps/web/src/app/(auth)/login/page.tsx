@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { BRAND } from "@briefing/config/brand";
 import { login, sendMagicLink, signInWithGoogle } from "../actions";
 
 const ERROR_KEYS: Record<string, string> = {
@@ -29,7 +30,9 @@ export default async function LoginPage({
   const noticeKey = notice ? NOTICE_KEYS[notice] : null;
 
   return (
-    <Card>
+    <div className="rise mx-auto flex w-full max-w-md flex-col gap-6">
+      <span className="font-display text-lg font-semibold tracking-tight">{BRAND.productName}</span>
+      <Card>
       <CardHeader>
         <CardTitle>{t("loginTitle")}</CardTitle>
         <CardDescription>{t("loginSubtitle")}</CardDescription>
@@ -81,6 +84,7 @@ export default async function LoginPage({
           </Link>
         </p>
       </CardContent>
-    </Card>
+      </Card>
+    </div>
   );
 }
