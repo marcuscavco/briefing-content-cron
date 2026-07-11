@@ -81,12 +81,28 @@ export async function BriefingView({
             </CardHeader>
             <CardContent>
               <ul className="divide-y divide-white/6">
-                    {items.map((c) => (
+                    {items.map((c) => {
+                      // notícias do assunto (jsonb; parse defensivo — briefings
+                      // antigos têm itens vazio e caem no fallback de fonte única)
+                      const noticias = (Array.isArray(c.itens) ? c.itens : []).filter(
+                        (n): n is { title: string; url: string; portal: string } =>
+                          Boolean(
+                            n &&
+                              typeof n === "object" &&
+                              "url" in n &&
+                              "title" in n &&
+                              "portal" in n,
+                          ),
+                      );
+                      // fonte canônica primeiro
+                      noticias.sort((a, b) => Number(b.url === c.url) - Number(a.url === c.url));
+                      return (
                       <li key={c.id} className="flex flex-col gap-1 py-3">
                         <div className="flex flex-wrap items-center gap-2 text-sm empty:hidden">
                           {c.is_curator_pick && (
                             <StatusBadge status="partial" label={`✨ ${t("curatorPick")}`} />
                           )}
+                          {c.em_alta && <StatusBadge status="ok" label={`📈 ${t("trending")}`} />}
                           {c.is_update && <StatusBadge status="ok" label={`🔁 ${t("update")}`} />}
                           {c.is_fallback && (
                             <StatusBadge status="partial" label={`🟡 ${t("fallback")}`} />
@@ -108,7 +124,7 @@ export async function BriefingView({
                         <span className="text-sm text-muted-foreground">
                           💼 {c.relevancia_empresarial}/3 · 💻 {c.relevancia_tecnica}/3 · Heat{" "}
                           {c.heat_score}
-                          {c.fonte && c.url && (
+                          {noticias.length === 0 && c.fonte && c.url && (
                             <>
                               {" · "}
                               <a href={c.url} className="underline underline-offset-2" target="_blank">
@@ -124,8 +140,26 @@ export async function BriefingView({
                             {c.update_resumo}
                           </p>
                         )}
+                        {noticias.length > 0 && (
+                          <ul className="mt-1 flex flex-col gap-1" aria-label={t("coverage")}>
+                            {noticias.map((n, idx) => (
+                              <li key={idx} className="text-sm text-muted-foreground">
+                                {n.url === c.url ? "📖" : "↗"}{" "}
+                                <a
+                                  href={n.url}
+                                  className="underline underline-offset-2"
+                                  target="_blank"
+                                >
+                                  {n.title}
+                                </a>{" "}
+                                · {n.portal}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
                       </li>
-                    ))}
+                      );
+                    })}
               </ul>
             </CardContent>
           </Card>

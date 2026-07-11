@@ -224,8 +224,10 @@ export type Database = {
           created_at: string
           curator_pick_motivo: string | null
           data_publicacao: string | null
+          em_alta: boolean
           fonte: string | null
           fts: unknown
+          heat_boost: number
           heat_score: number
           id: string
           is_curator_pick: boolean
@@ -251,8 +253,10 @@ export type Database = {
           created_at?: string
           curator_pick_motivo?: string | null
           data_publicacao?: string | null
+          em_alta?: boolean
           fonte?: string | null
           fts?: unknown
+          heat_boost?: number
           heat_score?: number
           id?: string
           is_curator_pick?: boolean
@@ -278,8 +282,10 @@ export type Database = {
           created_at?: string
           curator_pick_motivo?: string | null
           data_publicacao?: string | null
+          em_alta?: boolean
           fonte?: string | null
           fts?: unknown
+          heat_boost?: number
           heat_score?: number
           id?: string
           is_curator_pick?: boolean
@@ -908,9 +914,13 @@ export type Database = {
           first_seen_at: string
           id: string
           last_briefing_id: string | null
+          last_novel_at: string
           last_seen_at: string
+          novelty_streak: number
           profile_id: string
+          stale_days: number
           summary: string | null
+          trend_score: number
         }
         Insert: {
           account_id: string
@@ -923,9 +933,13 @@ export type Database = {
           first_seen_at?: string
           id?: string
           last_briefing_id?: string | null
+          last_novel_at?: string
           last_seen_at?: string
+          novelty_streak?: number
           profile_id: string
+          stale_days?: number
           summary?: string | null
+          trend_score?: number
         }
         Update: {
           account_id?: string
@@ -938,9 +952,13 @@ export type Database = {
           first_seen_at?: string
           id?: string
           last_briefing_id?: string | null
+          last_novel_at?: string
           last_seen_at?: string
+          novelty_streak?: number
           profile_id?: string
+          stale_days?: number
           summary?: string | null
+          trend_score?: number
         }
         Relationships: [
           {
@@ -1096,8 +1114,11 @@ export type Database = {
           canonical_title: string
           id: string
           last_briefing_id: string
+          last_novel_at: string
           last_seen_at: string
+          novelty_streak: number
           similarity: number
+          stale_days: number
           summary: string
         }[]
       }

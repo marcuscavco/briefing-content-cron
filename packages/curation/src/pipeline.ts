@@ -7,12 +7,12 @@ import {
 } from "@briefing/ingestion";
 import { deliverBriefing } from "./deliver";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { categorize, computeHeat, DEFAULT_WEIGHTS } from "./heat";
-import { MemoryEngine } from "./memory";
+import { categorize, computeHeat, computeTrendBoost, DEFAULT_TREND, DEFAULT_WEIGHTS } from "./heat";
+import { MemoryEngine, type MemoryMatchResult } from "./memory";
 import type { EmbeddingProvider } from "./providers/embeddings";
 import { parseJson, type LlmProvider } from "./providers/llm";
 import { CLUSTER_SCHEMA, CLUSTER_SYSTEM, POSTS_SCHEMA, POSTS_SYSTEM } from "./prompts";
-import { selectSources } from "./select";
+import { cleanUrl, selectSources } from "./select";
 import type {
   CollectedItem,
   PipelineCheckpoint,
@@ -380,25 +380,54 @@ async function applyMemoryAndSelect(
     return { cluster, heat, categoria: categorize(heat), portais };
   });
 
-  const selected = selectSources(scored, items, sourceRows);
-
   const memory = new MemoryEngine(deps.db, deps.embeddings, deps.llm, profile.id);
-  const processed: ProcessedCluster[] = [];
-  const embeddings: number[][] = [];
 
   // Embeddings em BATCH: uma chamada por briefing (não uma por cluster) —
   // essencial para caber nos rate limits do provedor.
-  const toEmbed = selected.filter((c) => c.categoria !== "descartado");
+  // Descartado (heat base < 2) fica fora da memória (controle de custo) — logo
+  // o boost de recorrência nunca ressuscita um descartado.
+  const toEmbed = scored.filter((s) => s.categoria !== "descartado");
   const batch = toEmbed.length
-    ? await deps.embeddings.embed(toEmbed.map((c) => MemoryEngine.textOf(c)))
+    ? await deps.embeddings.embed(toEmbed.map((s) => MemoryEngine.textOf(s.cluster)))
     : [];
-  const embeddingByCluster = new Map(toEmbed.map((c, i) => [c, batch[i] ?? []]));
+  const embeddingByScored = new Map(toEmbed.map((s, i) => [s, batch[i] ?? []]));
 
-  for (const cluster of selected) {
-    // Descartado (heat < 2) é salvo para análise, mas não passa pela memória
-    if (cluster.categoria === "descartado") {
+  // Memória ANTES da seleção de fonte: o boost de recorrência ("Em alta") pode
+  // promover a categoria, e a seleção de fonte canônica/curator's pick depende
+  // da categoria final. check() só lê a memória — quem escreve é o persist.
+  type Verdict = (MemoryMatchResult & { embedding: number[]; boost: number }) | null;
+  const verdicts: Verdict[] = [];
+  for (const s of scored) {
+    if (s.categoria === "descartado") {
+      verdicts.push(null);
+      continue;
+    }
+    const verdict = await memory.check(s.cluster, embeddingByScored.get(s) ?? [], metrics);
+    const boost =
+      verdict.decision === "atualizacao" && verdict.trend
+        ? computeTrendBoost(verdict.trend, deps.now?.() ?? new Date())
+        : 0;
+    if (boost !== 0) {
+      s.heat += Math.round(boost);
+      s.categoria = categorize(s.heat);
+    }
+    verdicts.push({ ...verdict, boost });
+  }
+
+  const selected = selectSources(scored, items, sourceRows);
+
+  const processed: ProcessedCluster[] = [];
+  const embeddings: number[][] = [];
+  for (let i = 0; i < selected.length; i++) {
+    const sel = selected[i]!;
+    const verdict = verdicts[i];
+
+    if (!verdict) {
+      // descartado: salvo para análise, mas sem memória/boost
       processed.push({
-        ...cluster,
+        ...sel,
+        heatBoost: 0,
+        emAlta: false,
         memoryDecision: "novo",
         updateResumo: null,
         previousBriefingId: null,
@@ -408,10 +437,12 @@ async function applyMemoryAndSelect(
       continue;
     }
 
-    const verdict = await memory.check(cluster, embeddingByCluster.get(cluster) ?? [], metrics);
+    const suprimido = verdict.decision === "suprimir";
     processed.push({
-      ...cluster,
-      categoria: verdict.decision === "suprimir" ? "suprimido" : cluster.categoria,
+      ...sel,
+      heatBoost: verdict.boost,
+      emAlta: !suprimido && verdict.boost >= DEFAULT_TREND.badgeThreshold,
+      categoria: suprimido ? "suprimido" : sel.categoria,
       memoryDecision: verdict.decision,
       updateResumo: verdict.updateResumo,
       previousBriefingId: verdict.previousBriefingId,
@@ -554,11 +585,17 @@ async function persist(
     const c = processed[i]!;
     ordem++;
 
-    // memória: registra novo/atualização (suprimido não re-registra; descartado não entra)
+    // memória: registra novo/atualização; suprimido acumula decaimento
+    // (stale_days) sem tocar o conteúdo canônico; descartado não entra
     let topicId = c.topicMemoryId;
     const emb = embeddings[i];
     if (c.categoria !== "descartado" && c.categoria !== "suprimido" && emb && emb.length > 0) {
-      topicId = await memory.record(c, emb, profile.accountId, briefing.id, c.topicMemoryId);
+      topicId = await memory.record(c, emb, profile.accountId, briefing.id, c.topicMemoryId, {
+        isUpdate: c.memoryDecision === "atualizacao",
+        boost: c.heatBoost,
+      });
+    } else if (c.categoria === "suprimido" && c.topicMemoryId) {
+      await memory.recordSuppression(c.topicMemoryId);
     }
 
     const { data: row, error: clusterError } = await deps.db
@@ -574,6 +611,8 @@ async function persist(
         resumo: c.resumo,
         categoria: c.categoria,
         heat_score: c.heat,
+        heat_boost: c.heatBoost,
+        em_alta: c.emAlta,
         relevancia_tecnica: c.relevanciaTecnica,
         relevancia_empresarial: c.relevanciaEmpresarial,
         tier_fonte: c.tierFonte,
@@ -581,10 +620,12 @@ async function persist(
         is_curator_pick: c.isCuratorPick,
         curator_pick_motivo: c.curatorPickMotivo,
         portais_cobrindo: c.portaisCobrindo,
+        // tier permite ao render filtrar links (Tier 3 nunca vira link); URLs
+        // entregues são sempre limpas (princípio não-negociável)
         itens: c.itemIndices.map((idx) => {
           const item = (checkpoint.items ?? [])[idx];
           return item
-            ? { title: item.title, url: item.url, portal: item.portal, publishedAt: item.publishedAt }
+            ? { title: item.title, url: cleanUrl(item.url), portal: item.portal, publishedAt: item.publishedAt, tier: item.tier }
             : null;
         }).filter(Boolean),
         is_update: c.memoryDecision === "atualizacao",

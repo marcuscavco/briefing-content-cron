@@ -24,7 +24,10 @@ export function selectSources(
   clusters: SelectInput[],
   items: CollectedItem[],
   sources: SourceRow[],
-): Omit<ProcessedCluster, "memoryDecision" | "updateResumo" | "previousBriefingId" | "topicMemoryId">[] {
+): Omit<
+  ProcessedCluster,
+  "memoryDecision" | "updateResumo" | "previousBriefingId" | "topicMemoryId" | "heatBoost" | "emAlta"
+>[] {
   const sourceByName = new Map(sources.map((s) => [s.name, s]));
 
   const withSelection = clusters.map(({ cluster, heat, categoria, portais }) => {

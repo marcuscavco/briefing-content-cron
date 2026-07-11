@@ -32,7 +32,9 @@ export type MemoryDecision = "novo" | "atualizacao" | "suprimir";
 
 /** Cluster totalmente processado, pronto para persistir. */
 export interface ProcessedCluster extends RawCluster {
-  heat: number;
+  heat: number; // heat final (base + boost de recorrência arredondado)
+  heatBoost: number; // boost de recorrência aplicado (0 quando não é atualização)
+  emAlta: boolean; // badge "Em alta" (boost ≥ badgeThreshold e não suprimido)
   categoria: ClusterCategoria;
   portaisCobrindo: string[];
   fonte: string | null;

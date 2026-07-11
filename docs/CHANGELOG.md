@@ -1,5 +1,31 @@
 # CHANGELOG
 
+## Assuntos como entidade central — "Em alta" + decaimento + cobertura (2026-07-11)
+
+**O briefing passa a girar em torno de ASSUNTOS com relevância que evolui no
+tempo (decisão do Marcus): reaparecer com novidade esquenta, arrastar-se sem
+novidade esfria — e cada assunto mostra todas as notícias que o cobrem.**
+
+- **"Em alta" 📈 (boost de recorrência)**: assunto que reaparece COM novidade
+  material ganha bônus determinístico no heat (`computeTrendBoost` em
+  `heat.ts`: base +2, +1 por atualização consecutiva até +3, zero LLM) e pode
+  ser promovido de categoria (no_radar→relevante, relevante→must_read). Badge
+  📈 no dashboard, WhatsApp e email.
+- **Decaimento**: reaparecer SEM novidade continua suprimido, mas agora
+  acumula `stale_days` na memória (−1/dia) + decaimento temporal (−0,5/dia
+  além de 2 dias de carência) — se o assunto voltar com novidade depois,
+  volta mais frio (piso −1). `topic_memory` ganhou `novelty_streak`,
+  `stale_days`, `trend_score` e `last_novel_at` (migration `topic_trend`).
+- **Assunto → notícias**: o dashboard lista TODAS as notícias do dia sob cada
+  assunto (📖 canônica primeiro, ↗ demais portais); no WhatsApp até 3 fontes
+  por assunto — as extras são a PRIMEIRA coisa cortada pelo corte progressivo
+  (limite de 1500 chars intocado). `clusters.itens` agora persiste `tier`
+  (Tier 3 nunca vira link) e URL limpa.
+- Ordem do pipeline corrigida: memória roda ANTES da seleção de fonte — um
+  assunto promovido pelo boost ganha fonte canônica/Curator's Pick.
+- Retrocompat total: briefings antigos (sem `itens`/`em_alta`) renderizam
+  exatamente como antes.
+
 ## Onboarding guiado — primeira experiência (2026-07-10)
 
 **Cadastro aberto com "7 dias grátis, sem cartão" (messaging; enforcement na

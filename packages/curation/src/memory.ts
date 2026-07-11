@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { EmbeddingProvider } from "./providers/embeddings";
 import type { LlmProvider } from "./providers/llm";
 import { parseJson } from "./providers/llm";
+import type { TrendState } from "./heat";
 import { NOVELTY_SCHEMA, NOVELTY_SYSTEM } from "./prompts";
 import type { MemoryDecision, RawCluster, StageMetrics } from "./types";
 
@@ -25,6 +26,10 @@ export interface MemoryMatchResult {
   topicMemoryId: string | null;
   previousBriefingId: string | null;
   similarity: number | null;
+  /** Estado de tendência do assunto na memória (null quando decision === "novo").
+   *  check() só LÊ — o boost é calculado no pipeline e gravado no persist,
+   *  mantendo o estágio de memória re-executável sem efeito colateral. */
+  trend: TrendState | null;
 }
 
 interface TopicMatch {
@@ -34,7 +39,18 @@ interface TopicMatch {
   last_briefing_id: string | null;
   last_seen_at: string;
   appearances: number;
+  novelty_streak: number;
+  stale_days: number;
+  last_novel_at: string;
   similarity: number;
+}
+
+function trendOf(match: TopicMatch): TrendState {
+  return {
+    noveltyStreak: match.novelty_streak,
+    staleDays: match.stale_days,
+    lastNovelAt: match.last_novel_at,
+  };
 }
 
 /**
@@ -90,7 +106,7 @@ export class MemoryEngine {
 
     const top = (matches as TopicMatch[] | null)?.[0];
     if (!top) {
-      return { decision: "novo", updateResumo: null, topicMemoryId: null, previousBriefingId: null, similarity: null, embedding };
+      return { decision: "novo", updateResumo: null, topicMemoryId: null, previousBriefingId: null, similarity: null, trend: null, embedding };
     }
 
     // Hash idêntico = mesmíssimo assunto sem nem precisar de judge
@@ -109,6 +125,7 @@ export class MemoryEngine {
         topicMemoryId: top.id,
         previousBriefingId: top.last_briefing_id,
         similarity: top.similarity,
+        trend: trendOf(top),
         embedding,
       };
     }
@@ -134,6 +151,7 @@ export class MemoryEngine {
         topicMemoryId: top.id,
         previousBriefingId: top.last_briefing_id,
         similarity: top.similarity,
+        trend: trendOf(top),
         embedding,
       };
     }
@@ -144,23 +162,29 @@ export class MemoryEngine {
       topicMemoryId: top.id,
       previousBriefingId: top.last_briefing_id,
       similarity: top.similarity,
+      trend: trendOf(top),
       embedding,
     };
   }
 
-  /** Após persistir o briefing: grava/atualiza a linha do assunto na memória. */
+  /**
+   * Após persistir o briefing: grava/atualiza a linha do assunto na memória.
+   * Em atualização com novidade, avança o estado de tendência (streak++,
+   * zera stale_days, registra o boost aplicado para auditoria/timeline).
+   */
   async record(
     cluster: RawCluster,
     embedding: number[],
     accountId: string,
     briefingId: string,
     existingTopicId: string | null,
+    trend?: { isUpdate: boolean; boost: number },
   ): Promise<string> {
     const now = new Date().toISOString();
     if (existingTopicId) {
       const { data: current } = await this.db
         .from("topic_memory")
-        .select("appearances")
+        .select("appearances, novelty_streak")
         .eq("id", existingTopicId)
         .single();
       await this.db
@@ -174,6 +198,14 @@ export class MemoryEngine {
           appearances: (current?.appearances ?? 1) + 1,
           last_briefing_id: briefingId,
           last_seen_at: now,
+          ...(trend?.isUpdate
+            ? {
+                novelty_streak: (current?.novelty_streak ?? 1) + 1,
+                stale_days: 0,
+                last_novel_at: now,
+                trend_score: trend.boost,
+              }
+            : {}),
         })
         .eq("id", existingTopicId);
       return existingTopicId;
@@ -196,5 +228,27 @@ export class MemoryEngine {
       .single();
     if (error) throw new Error(`topic_memory insert falhou: ${error.message}`);
     return data.id;
+  }
+
+  /**
+   * Assunto reapareceu SEM novidade (suprimido do briefing): acumula decaimento.
+   * Não toca embedding/hash/título — o conteúdo canônico continua o da última
+   * novidade; last_seen_at avança para manter o assunto na janela da memória.
+   */
+  async recordSuppression(topicMemoryId: string): Promise<void> {
+    const { data: current } = await this.db
+      .from("topic_memory")
+      .select("appearances, stale_days")
+      .eq("id", topicMemoryId)
+      .single();
+    if (!current) return;
+    await this.db
+      .from("topic_memory")
+      .update({
+        appearances: current.appearances + 1,
+        stale_days: current.stale_days + 1,
+        last_seen_at: new Date().toISOString(),
+      })
+      .eq("id", topicMemoryId);
   }
 }

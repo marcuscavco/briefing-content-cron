@@ -192,6 +192,13 @@ describe("memória entre briefings (aceite Fase 2)", () => {
     expect(c.is_update).toBe(false);
     expect(c.fonte).toBe("The Information");
     expect(c.tier_fonte).toBe(1);
+    // assunto novo: sem boost de recorrência
+    expect(c.heat_boost).toBe(0);
+    expect(c.em_alta).toBe(false);
+    // notícias do assunto persistidas com tier (para o render filtrar links)
+    const noticias = c.itens as { portal: string; tier: number }[];
+    expect(noticias).toHaveLength(3);
+    expect(noticias[0]!.tier).toBe(1);
 
     const { data: memory } = await admin
       .from("topic_memory")
@@ -199,6 +206,8 @@ describe("memória entre briefings (aceite Fase 2)", () => {
       .eq("profile_id", profileId);
     expect(memory).toHaveLength(1);
     expect(memory![0]!.appearances).toBe(1);
+    expect(memory![0]!.novelty_streak).toBe(1);
+    expect(memory![0]!.stale_days).toBe(0);
 
     const { data: posts } = await admin.from("posts").select("*").eq("briefing_id", briefing1);
     expect(posts!.filter((p) => !p.skip)).toHaveLength(1);
@@ -219,13 +228,16 @@ describe("memória entre briefings (aceite Fase 2)", () => {
     expect(b!.n_relevante).toBe(0);
     expect(b!.n_must_read).toBe(0);
 
-    // memória não re-registra supressão: assunto continua com 1 aparição
+    // supressão acumula decaimento: +1 aparição e +1 stale_day, mas o conteúdo
+    // canônico (e o last_briefing_id) continuam os da última novidade
     const { data: memory } = await admin
       .from("topic_memory")
-      .select("appearances, last_briefing_id")
+      .select("appearances, last_briefing_id, novelty_streak, stale_days")
       .eq("profile_id", profileId)
       .single();
-    expect(memory!.appearances).toBe(1);
+    expect(memory!.appearances).toBe(2);
+    expect(memory!.stale_days).toBe(1);
+    expect(memory!.novelty_streak).toBe(1);
     expect(memory!.last_briefing_id).toBe(briefing1);
   });
 
@@ -243,19 +255,29 @@ describe("memória entre briefings (aceite Fase 2)", () => {
     expect(c.update_resumo).toContain("50% menor");
     // linka o briefing onde o assunto apareceu pela última vez (dia 1)
     expect(c.previous_briefing_id).toBe(briefing1);
+    // Em alta: reapareceu COM novidade → boost = base(+2) − 1 dia requentado = +1
+    // ("volta mais frio" que uma atualização sem supressão no meio)
+    expect(c.heat_boost).toBe(1);
+    expect(c.heat_score).toBe(5); // 4 de convergência + 1 de recorrência
+    expect(c.em_alta).toBe(true);
 
     const { data: b } = await admin.from("briefings").select("*").eq("id", briefing3).single();
     expect(b!.n_updates).toBe(1);
   });
 
-  it("timeline do assunto: 2 aparições registradas na memória", async () => {
+  it("timeline do assunto: 3 aparições e tendência avançada na memória", async () => {
     const { data: memory } = await admin
       .from("topic_memory")
       .select("*")
       .eq("profile_id", profileId);
     expect(memory).toHaveLength(1);
-    expect(memory![0]!.appearances).toBe(2);
-    expect(memory![0]!.first_briefing_id).toBe(briefing1);
-    expect(memory![0]!.last_briefing_id).toBe(briefing3);
+    const m = memory![0]!;
+    expect(m.appearances).toBe(3); // dia 1 novo + dia 2 suprimido + dia 3 atualização
+    expect(m.first_briefing_id).toBe(briefing1);
+    expect(m.last_briefing_id).toBe(briefing3);
+    // a atualização do dia 3 avança o streak, zera o decaimento e audita o boost
+    expect(m.novelty_streak).toBe(2);
+    expect(m.stale_days).toBe(0);
+    expect(m.trend_score).toBe(1);
   });
 });

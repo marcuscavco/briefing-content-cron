@@ -43,6 +43,8 @@
     "posts": "Posts sugeridos",
     "skips": "Skips",
     "curatorPick": "Curator's Pick",
+    "trending": "Em alta",
+    "coverage": "Cobertura do assunto",
     "fallback": "Fallback Tier 2",
     "whatChanged": "O que mudou",
     "signalNoSource": "Sinal sem fonte canônica",

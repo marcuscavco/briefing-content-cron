@@ -10,6 +10,15 @@ export interface DeliveryBriefing {
   n_updates: number;
 }
 
+/** Notícia individual dentro de um assunto (clusters.itens jsonb). */
+export interface DeliveryClusterItem {
+  title: string;
+  url: string;
+  portal: string;
+  publishedAt?: string | null;
+  tier?: number; // ausente em rows antigas; Tier 3 nunca vira link
+}
+
 export interface DeliveryCluster {
   titulo: string;
   resumo: string | null;
@@ -23,6 +32,10 @@ export interface DeliveryCluster {
   is_curator_pick: boolean;
   is_update: boolean;
   update_resumo: string | null;
+  // campos novos — opcionais para retrocompat com briefings antigos
+  em_alta?: boolean;
+  heat_boost?: number;
+  itens?: DeliveryClusterItem[] | null;
 }
 
 export interface DeliveryPost {

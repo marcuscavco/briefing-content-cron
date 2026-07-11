@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { renderPostsMessage, renderWhatsappMessages, WHATSAPP_HARD_LIMIT } from "./render-whatsapp";
-import type { DeliveryBriefing, DeliveryCluster, DeliveryPost } from "./types";
+import type { DeliveryBriefing, DeliveryCluster, DeliveryClusterItem, DeliveryPost } from "./types";
 
 const briefing: DeliveryBriefing = {
   id: "b1",
@@ -26,8 +26,20 @@ function cluster(over: Partial<DeliveryCluster>): DeliveryCluster {
     is_curator_pick: false,
     is_update: false,
     update_resumo: null,
+    em_alta: false,
+    heat_boost: 0,
+    itens: [],
     ...over,
   };
+}
+
+function itens(portais: [string, number][]): DeliveryClusterItem[] {
+  return portais.map(([portal, tier], i) => ({
+    title: `Notícia do ${portal}`,
+    url: `https://${portal.toLowerCase().replace(/\s/g, "")}.com/artigo-${i}`,
+    portal,
+    tier,
+  }));
 }
 
 function bigDataset(): DeliveryCluster[] {
@@ -47,6 +59,7 @@ function post(over: Partial<DeliveryPost>): DeliveryPost {
     estrutura: Array.from({ length: 8 }, (_, i) => ({ slide: i + 1, texto: `Slide ${i + 1} com um texto razoavelmente longo` })),
     angulo_tipo: "traducao_empresario",
     angulo_descricao: "o que muda na prática para o dono de PME",
+    cta: null,
     skip: false,
     skip_motivo: null,
     ...over,
@@ -120,6 +133,81 @@ describe("renderWhatsappMessages (3 mensagens por categoria)", () => {
     for (const m of renderWhatsappMessages(briefing, bigDataset(), [post({})])) {
       expect(m).not.toMatch(/^#/m);
       expect(m).not.toMatch(/^- /m);
+    }
+  });
+
+  it("assunto Em alta mostra 📈", () => {
+    const msgs = renderWhatsappMessages(
+      briefing,
+      [cluster({ categoria: "must_read", em_alta: true, is_update: true, update_resumo: "Novo capítulo." })],
+      [],
+    );
+    expect(msgs[0]).toContain("📈");
+  });
+
+  it("mostra até 3 fontes por assunto quando cabe (só Tier 1/2, portais distintos)", () => {
+    const msgs = renderWhatsappMessages(
+      briefing,
+      [
+        cluster({
+          categoria: "must_read",
+          itens: itens([
+            ["The Information", 1],
+            ["TechCrunch", 1],
+            ["Hacker News", 3], // Tier 3 nunca vira link
+            ["The Verge", 2],
+          ]),
+        }),
+      ],
+      [],
+    );
+    expect(msgs[0]).toContain("📖 The Information:");
+    expect(msgs[0]).toContain("↗ TechCrunch:");
+    expect(msgs[0]).toContain("↗ The Verge:");
+    expect(msgs[0]).not.toContain("Hacker News");
+  });
+
+  it("fontes extras caem ANTES do TL;DR encolher quando estoura o limite", () => {
+    const cheios = Array.from({ length: 5 }, (_, i) =>
+      cluster({
+        categoria: "must_read",
+        titulo: `Must-read número ${i + 1} com título comprido para estressar o limite de caracteres`,
+        itens: itens([
+          ["The Information", 1],
+          ["TechCrunch", 1],
+          ["The Verge", 2],
+        ]),
+      }),
+    );
+    const msgs = renderWhatsappMessages(briefing, cheios, []);
+    expect(msgs[0]!.length).toBeLessThanOrEqual(WHATSAPP_HARD_LIMIT);
+    // com 5 must-reads não cabe 3 fontes cada — as extras somem, a canônica fica
+    expect(msgs[0]).toContain("📖 The Information:");
+    expect(msgs[0]).not.toContain("↗");
+    // e o TL;DR permanece no tamanho cheio (resumo não foi encurtado para 60)
+    expect(msgs[0]).toContain("Resumo do assunto com o fato central e por que importa para quem decide");
+  });
+
+  it("retrocompat: cluster sem itens/em_alta (briefing antigo) renderiza como hoje", () => {
+    const antigo = cluster({ categoria: "must_read" });
+    delete (antigo as Partial<DeliveryCluster>).em_alta;
+    delete (antigo as Partial<DeliveryCluster>).heat_boost;
+    delete (antigo as Partial<DeliveryCluster>).itens;
+    const msgs = renderWhatsappMessages(briefing, [antigo], []);
+    expect(msgs[0]).toContain("📖 The Information:");
+    expect(msgs[0]).not.toContain("↗");
+    expect(msgs[0]).not.toContain("📈");
+    for (const m of msgs) expect(m.length).toBeLessThanOrEqual(WHATSAPP_HARD_LIMIT);
+  });
+
+  it("todas ≤ 1500 mesmo com dataset grande cheio de fontes extras", () => {
+    const dataset = bigDataset().map((c) =>
+      c.fonte
+        ? { ...c, itens: itens([["The Information", 1], ["TechCrunch", 1], ["The Verge", 2]]) }
+        : c,
+    );
+    for (const m of renderWhatsappMessages(briefing, dataset, [post({})])) {
+      expect(m.length).toBeLessThanOrEqual(WHATSAPP_HARD_LIMIT);
     }
   });
 });

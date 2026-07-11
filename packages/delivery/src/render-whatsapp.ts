@@ -28,22 +28,58 @@ function trunc(s: string, max: number): string {
   return s.length <= max ? s : s.slice(0, max - 1).trimEnd() + "…";
 }
 
-function fit(build: (tldr: number) => string, tldrSteps = [100, 60, 40]): string {
-  for (const tldr of tldrSteps) {
-    const msg = build(tldr);
+function fit(
+  build: (tldr: number, maxSources: number) => string,
+  steps: [number, number][] = [
+    [100, 3],
+    [100, 1],
+    [60, 1],
+    [40, 1],
+  ],
+): string {
+  for (const [tldr, maxSources] of steps) {
+    const msg = build(tldr, maxSources);
     if (msg.length <= WHATSAPP_HARD_LIMIT) return msg;
   }
-  return trunc(build(tldrSteps[tldrSteps.length - 1]!), WHATSAPP_HARD_LIMIT);
+  const last = steps[steps.length - 1]!;
+  return trunc(build(last[0], last[1]), WHATSAPP_HARD_LIMIT);
 }
 
-function renderItem(c: DeliveryCluster, n: number, tldrChars: number, withHeat: boolean): string {
-  const marks = `${c.is_curator_pick ? "✨ " : ""}${c.is_update ? "🔁 " : ""}`;
+/**
+ * Fontes extras do assunto (além da canônica): portais distintos, Tier 1/2
+ * apenas (Tier 3 nunca vira link — rows antigas sem tier ficam de fora).
+ */
+function extraSources(c: DeliveryCluster, max: number): { portal: string; url: string }[] {
+  if (max <= 0 || !c.fonte || !c.url || !Array.isArray(c.itens)) return [];
+  const seen = new Set([c.fonte]);
+  const extras: { portal: string; url: string }[] = [];
+  for (const item of c.itens) {
+    if (extras.length >= max) break;
+    if (!item?.portal || !item.url || item.url === c.url || seen.has(item.portal)) continue;
+    if (item.tier !== 1 && item.tier !== 2) continue;
+    seen.add(item.portal);
+    extras.push({ portal: item.portal, url: item.url });
+  }
+  return extras;
+}
+
+function renderItem(
+  c: DeliveryCluster,
+  n: number,
+  tldrChars: number,
+  withHeat: boolean,
+  maxSources = 1,
+): string {
+  const marks = `${c.is_curator_pick ? "✨ " : ""}${c.em_alta ? "📈 " : ""}${c.is_update ? "🔁 " : ""}`;
   const item: string[] = [`${n}. ${marks}${trunc(c.titulo, 70)}`];
   item.push(
     `💼 ${c.relevancia_empresarial ?? 0}/3 · 💻 ${c.relevancia_tecnica ?? 0}/3${withHeat ? ` · Heat ${c.heat_score}` : ""}`,
   );
   if (c.fonte && c.url) {
     item.push(`📖 ${c.is_fallback ? "🟡 " : ""}${c.fonte}: ${c.url}`);
+    for (const extra of extraSources(c, maxSources - 1)) {
+      item.push(`↗ ${extra.portal}: ${extra.url}`);
+    }
   }
   if (c.is_update && c.update_resumo) {
     item.push(`🔁 ${trunc(c.update_resumo, tldrChars)}`);
@@ -62,11 +98,12 @@ function renderMustReadMessage(
   const mustRead = clusters.filter((c) => c.categoria === "must_read");
   const temOutros = clusters.some((c) => c.categoria !== "must_read" && c.categoria !== "descartado");
 
-  return fit((tldr) => {
+  // Corte progressivo: fontes extras caem ANTES de encurtar TL;DRs
+  return fit((tldr, maxSources) => {
     const lines: string[] = [`📰 *Briefing ${ddmm(briefing.run_date)}* — 🔥 *Must-read*`];
     if (mustRead.length) {
       lines.push("");
-      lines.push(mustRead.map((c, i) => renderItem(c, i + 1, tldr, true)).join("\n\n"));
+      lines.push(mustRead.map((c, i) => renderItem(c, i + 1, tldr, true, maxSources)).join("\n\n"));
     } else if (temOutros) {
       lines.push("", "Nenhum must-read hoje — os assuntos do dia vão na próxima mensagem.");
     } else {
@@ -96,7 +133,12 @@ function renderOthersMessage(
   const sinais = clusters.filter((c) => c.categoria === "sinal_sem_fonte");
   if (relevantesAll.length === 0 && noRadar.length === 0 && sinais.length === 0) return null;
 
-  const build = (tldr: number, includeNoRadar: boolean, maxRelevantes: number): string => {
+  const build = (
+    tldr: number,
+    includeNoRadar: boolean,
+    maxRelevantes: number,
+    maxSources: number,
+  ): string => {
     let relevantes = relevantesAll;
     if (relevantes.length > maxRelevantes) {
       relevantes = [...relevantes]
@@ -107,7 +149,7 @@ function renderOthersMessage(
     let n = 0;
     if (relevantes.length) {
       lines.push("", "📌 *Relevante*", "");
-      lines.push(relevantes.map((c) => renderItem(c, ++n, tldr, false)).join("\n\n"));
+      lines.push(relevantes.map((c) => renderItem(c, ++n, tldr, false, maxSources)).join("\n\n"));
     }
     if (includeNoRadar && noRadar.length) {
       lines.push("", "📎 *No radar*");
@@ -123,20 +165,21 @@ function renderOthersMessage(
     return lines.join("\n");
   };
 
-  // Corte progressivo (SKILL.md): cortar No radar → reduzir TL;DRs → cortar
-  // Relevantes mais fracos mantendo os 2 de maior 💼.
-  const attempts: [number, boolean, number][] = [
-    [100, true, 99],
-    [100, false, 99],
-    [60, false, 99],
-    [60, false, 2],
-    [40, false, 2],
+  // Corte progressivo (SKILL.md): cortar fontes extras → No radar → reduzir
+  // TL;DRs → cortar Relevantes mais fracos mantendo os 2 de maior 💼.
+  const attempts: [number, boolean, number, number][] = [
+    [100, true, 99, 3],
+    [100, true, 99, 1],
+    [100, false, 99, 1],
+    [60, false, 99, 1],
+    [60, false, 2, 1],
+    [40, false, 2, 1],
   ];
-  for (const [tldr, noRadarOn, maxRel] of attempts) {
-    const msg = build(tldr, noRadarOn, maxRel);
+  for (const [tldr, noRadarOn, maxRel, maxSources] of attempts) {
+    const msg = build(tldr, noRadarOn, maxRel, maxSources);
     if (msg.length <= WHATSAPP_HARD_LIMIT) return msg;
   }
-  return trunc(build(40, false, 2), WHATSAPP_HARD_LIMIT);
+  return trunc(build(40, false, 2, 1), WHATSAPP_HARD_LIMIT);
 }
 
 /** Mensagem 3 — Posts sugeridos. */

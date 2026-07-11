@@ -65,3 +65,59 @@ export function categorize(heat: number, weights: HeatWeights = DEFAULT_WEIGHTS)
   if (heat >= weights.noRadar) return "no_radar";
   return "descartado";
 }
+
+/**
+ * Boost de recorrência ("Em alta") — assuntos são a entidade central: quando um
+ * assunto já entregue reaparece COM novidade material, ganha bônus no heat
+ * (pode subir de categoria); dias reaparecendo SEM novidade e tempo parado
+ * decaem o bônus ("volta mais frio"). Determinístico — zero LLM.
+ * Só se aplica a decisão "atualização"; supressão e assunto novo não boostam.
+ */
+export interface TrendState {
+  noveltyStreak: number; // topic_memory.novelty_streak — aparições consecutivas COM novidade
+  staleDays: number; // topic_memory.stale_days — reaparições sem novidade desde a última novidade
+  lastNovelAt: string; // topic_memory.last_novel_at (ISO)
+}
+
+export interface TrendWeights {
+  updateBoostBase: number; // reaparecer com novidade material
+  streakStep: number; // por atualização consecutiva anterior
+  streakCap: number; // teto de streak considerado
+  staleDecayPerDay: number; // por reaparição sem novidade acumulada
+  timeDecayPerDay: number; // por dia corrido sem novidade além da carência
+  timeGraceDays: number;
+  minBoost: number; // penalidade máxima ("volta mais frio")
+  maxBoost: number; // nunca mais que ~1 categoria de salto garantido
+  badgeThreshold: number; // boost ≥ isto ⇒ badge "Em alta"
+}
+
+export const DEFAULT_TREND: TrendWeights = {
+  updateBoostBase: 2,
+  streakStep: 1,
+  streakCap: 3,
+  staleDecayPerDay: 1,
+  timeDecayPerDay: 0.5,
+  timeGraceDays: 2,
+  minBoost: -1,
+  maxBoost: 3,
+  badgeThreshold: 1,
+};
+
+const MS_PER_DAY = 86_400_000;
+
+export function computeTrendBoost(
+  state: TrendState,
+  now: Date,
+  weights: TrendWeights = DEFAULT_TREND,
+): number {
+  const lastNovelMs = Date.parse(state.lastNovelAt);
+  const daysSinceNovel = Number.isNaN(lastNovelMs)
+    ? 0
+    : Math.max(0, Math.floor((now.getTime() - lastNovelMs) / MS_PER_DAY));
+  const raw =
+    weights.updateBoostBase +
+    weights.streakStep * Math.min(Math.max(state.noveltyStreak - 1, 0), weights.streakCap - 1) -
+    weights.staleDecayPerDay * state.staleDays -
+    weights.timeDecayPerDay * Math.max(0, daysSinceNovel - weights.timeGraceDays);
+  return Math.min(weights.maxBoost, Math.max(weights.minBoost, raw));
+}

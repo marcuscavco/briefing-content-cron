@@ -64,6 +64,7 @@ function BriefingEmail({ briefing, clusters, posts, dashboardUrl, unsubscribeUrl
               <Text style={{ fontSize: "11px", color: "#888", margin: "0" }}>
                 {CATEGORIA_LABEL[c.categoria]}
                 {c.is_curator_pick && " · ✨ Curator's Pick"}
+                {c.em_alta && " · 📈 Em alta"}
                 {c.is_fallback && " · 🟡 Fallback Tier 2"}
                 {c.is_update && " · 🔁 Atualização"}
               </Text>
