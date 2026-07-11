@@ -59,6 +59,7 @@ A routine clona este repo, lê `PROMPT.md`, e executa o fluxo de curadoria diár
 | `references/pontuacao.md` | Heat Score (regras de pontuação por convergência) + notas dimensionais 💻 Técnica / 💼 Empresarial (0-3 cada) |
 | `references/posts.md` | Decisão postar/skip, formatos (Reels/Carrossel/etc.), tipos de ângulo |
 | `references/voz.md` | Tom da voz Marcus (peer-to-peer, sem hype, PT-BR direto) |
+| `landing/index.html` | Landing page do produto "Briefing Nerd" (arquivo único, CSS/JS inline, fonte embutida). Publicada na Vercel; não é usada pela routine |
 
 ### Na config da routine (precisa UI ou API `RemoteTrigger`)
 
