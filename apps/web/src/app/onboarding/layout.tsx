@@ -23,7 +23,7 @@ export default async function OnboardingLayout({ children }: { children: React.R
   }
 
   return (
-    <main className="mx-auto flex min-h-[100dvh] w-full max-w-3xl flex-col justify-center px-5 py-16 md:px-8">
+    <main className="mx-auto flex min-h-[100dvh] w-full max-w-3xl flex-col justify-start px-5 py-16 md:justify-center md:px-8">
       {children}
     </main>
   );

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { signup } from "@/app/(auth)/actions";
+import { StepActions, SubmitPrimary } from "./step-ui";
 
 /**
  * Trecho pré-auth do fluxo único de onboarding: boas-vindas → conta (passo 1
@@ -70,7 +71,7 @@ export function AccountSteps({
   }
 
   return (
-    <div className="flex flex-col gap-10">
+    <div className="flex flex-col gap-10 pb-28 md:pb-0">
       <Progress />
       <section className="rise flex flex-col gap-8">
         <h1 className="font-display text-3xl font-medium leading-[1.08] tracking-tight md:text-5xl">
@@ -111,12 +112,12 @@ export function AccountSteps({
               autoComplete="new-password"
             />
           </div>
-          <Button type="submit" size="lg" className="mt-2 w-full sm:w-fit sm:px-12">
-            Criar conta e continuar →
-          </Button>
+          <StepActions onBack={() => setStep("welcome")}>
+            <SubmitPrimary>Criar conta e continuar</SubmitPrimary>
+          </StepActions>
         </form>
 
-        <p className="text-sm text-muted-foreground">
+        <p className="hidden text-sm text-muted-foreground md:block">
           {t("hasAccount")}{" "}
           <Link href="/login" className="underline underline-offset-4">
             {t("signIn")}

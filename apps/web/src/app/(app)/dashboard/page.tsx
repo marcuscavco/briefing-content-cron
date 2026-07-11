@@ -103,12 +103,12 @@ export default async function DashboardPage() {
 
         {/* tarja de canais conectados (sinalização, ponta a ponta) */}
         {whatsappOn ? (
-          <div className="flex w-full flex-wrap items-center gap-x-3 gap-y-1.5 rounded-2xl border border-amber-400/15 bg-amber-400/[0.06] px-4 py-3 text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+          <div className="flex w-full flex-wrap items-center gap-x-3 gap-y-1.5 rounded-2xl border border-green-500/25 bg-green-500/[0.08] px-4 py-3 text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
             <span className="relative flex size-2.5 shrink-0">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-60" />
-              <span className="relative inline-flex size-2.5 rounded-full bg-amber-400" />
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-60" />
+              <span className="relative inline-flex size-2.5 rounded-full bg-green-400" />
             </span>
-            <span className="font-medium text-amber-200">{t("channelConnected")}</span>
+            <span className="font-medium text-green-300">{t("channelConnected")}</span>
             <span className="text-muted-foreground">
               {t("sendingTo")}{" "}
               <span className="tabular-nums text-foreground">

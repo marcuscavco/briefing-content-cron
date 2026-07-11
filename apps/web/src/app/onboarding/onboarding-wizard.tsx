@@ -2,12 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { THEME_TAXONOMY } from "@/lib/themes";
 import { maskBrInput } from "@/lib/phone";
 import { cn } from "@/lib/utils";
+import { ActionPrimary, StepActions } from "./step-ui";
 import {
   addDestinationAndSendCode,
   confirmCode,
@@ -73,10 +73,6 @@ const SECTIONS_PREVIEW = [
   { label: "📎 No radar", explain: "Sinais e movimentos para acompanhar de longe." },
   { label: "📱 Posts sugeridos", explain: "Ideias prontas de conteúdo para suas redes, no seu tom." },
 ];
-
-const spinner = (
-  <span className="size-3.5 animate-spin rounded-full border-[1.5px] border-current border-t-transparent" />
-);
 
 export function OnboardingWizard({
   firstName,
@@ -166,7 +162,7 @@ export function OnboardingWizard({
   const progress = STEP_NUMBER[step];
 
   return (
-    <div className="flex flex-col gap-10">
+    <div className="flex flex-col gap-10 pb-28 md:pb-0">
       {/* progresso discreto */}
       {progress && (
         <div className="rise flex items-center gap-3 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
@@ -216,10 +212,11 @@ export function OnboardingWizard({
               placeholder="Ex.: Radar do dia, Meu briefing…"
             />
             {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" size="lg" disabled={pending} className="w-full sm:w-fit sm:px-12">
-              {pending && spinner}
-              Continuar →
-            </Button>
+            <StepActions>
+              <ActionPrimary type="submit" pending={pending}>
+                Continuar
+              </ActionPrimary>
+            </StepActions>
           </form>
         </section>
       )}
@@ -277,19 +274,11 @@ export function OnboardingWizard({
             })}
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
-          <div className="flex flex-wrap gap-3">
-            <Button variant="ghost" onClick={() => go("name")}>
-              Voltar
-            </Button>
-            <Button
-              size="lg"
-              className="px-12"
-              disabled={cats.size === 0}
-              onClick={() => go("subs")}
-            >
-              Continuar →
-            </Button>
-          </div>
+          <StepActions onBack={() => go("name")}>
+            <ActionPrimary disabled={cats.size === 0} onClick={() => go("subs")}>
+              Continuar
+            </ActionPrimary>
+          </StepActions>
         </section>
       )}
 
@@ -343,14 +332,10 @@ export function OnboardingWizard({
             ))}
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
-          <div className="flex flex-wrap gap-3">
-            <Button variant="ghost" onClick={() => go("cats")} disabled={pending}>
-              Voltar
-            </Button>
-            <Button
-              size="lg"
-              className="px-12"
-              disabled={pending || subs.size === 0}
+          <StepActions onBack={() => go("cats")} backDisabled={pending}>
+            <ActionPrimary
+              pending={pending}
+              disabled={subs.size === 0}
               onClick={() =>
                 start(async () => {
                   const r = await saveThemes([...subs]);
@@ -359,12 +344,11 @@ export function OnboardingWizard({
                 })
               }
             >
-              {pending && spinner}
               {subs.size === [...cats].reduce((n, c) => n + (THEME_TAXONOMY.find((x) => x.id === c)?.subs.length ?? 0), 0)
-                ? "Manter tudo e continuar →"
-                : "Continuar →"}
-            </Button>
-          </div>
+                ? "Manter tudo e continuar"
+                : "Continuar"}
+            </ActionPrimary>
+          </StepActions>
         </section>
       )}
 
@@ -425,14 +409,10 @@ export function OnboardingWizard({
             })}
           </ul>
           {error && <p className="text-sm text-destructive">{error}</p>}
-          <div className="flex flex-wrap gap-3">
-            <Button variant="ghost" onClick={() => go("subs")} disabled={pending}>
-              Voltar
-            </Button>
-            <Button
-              size="lg"
-              className="px-12"
-              disabled={pending || pickedSources.size === 0}
+          <StepActions onBack={() => go("subs")} backDisabled={pending}>
+            <ActionPrimary
+              pending={pending}
+              disabled={pickedSources.size === 0}
               onClick={() =>
                 start(async () => {
                   const r = await confirmSources([...pickedSources]);
@@ -444,10 +424,9 @@ export function OnboardingWizard({
                 })
               }
             >
-              {pending && spinner}
-              Usar estas fontes →
-            </Button>
-          </div>
+              Usar estas fontes
+            </ActionPrimary>
+          </StepActions>
         </section>
       )}
 
@@ -492,15 +471,11 @@ export function OnboardingWizard({
               />
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
-            <div className="flex flex-wrap gap-3">
-              <Button type="button" variant="ghost" onClick={() => go("sources")} disabled={pending}>
-                Voltar
-              </Button>
-              <Button type="submit" size="lg" className="px-12" disabled={pending}>
-                {pending && spinner}
-                {pending ? "Enviando código…" : "Enviar código →"}
-              </Button>
-            </div>
+            <StepActions onBack={() => go("sources")} backDisabled={pending}>
+              <ActionPrimary type="submit" pending={pending}>
+                {pending ? "Enviando código…" : "Enviar código"}
+              </ActionPrimary>
+            </StepActions>
           </form>
         </section>
       )}
@@ -543,33 +518,29 @@ export function OnboardingWizard({
             />
             {notice && !error && <p className="text-sm text-amber-300">{notice}</p>}
             {error && <p className="text-sm text-destructive">{error}</p>}
-            <div className="flex flex-wrap items-center gap-3">
-              <Button type="button" variant="ghost" onClick={() => go("phone")} disabled={pending}>
-                Trocar número
-              </Button>
-              <Button type="submit" size="lg" className="px-12" disabled={pending || code.length !== 6}>
-                {pending && spinner}
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() =>
+                destId &&
+                start(async () => {
+                  const r = await resendCode(destId);
+                  if (!r.ok) setError(r.error ?? "não foi possível reenviar");
+                  else {
+                    setError(null);
+                    setNotice("Código reenviado!");
+                  }
+                })
+              }
+              className="w-max text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
+            >
+              reenviar código
+            </button>
+            <StepActions onBack={() => go("phone")} backDisabled={pending}>
+              <ActionPrimary type="submit" pending={pending} disabled={code.length !== 6} showArrow={false}>
                 {pending ? "Confirmando…" : "Confirmar"}
-              </Button>
-              <button
-                type="button"
-                disabled={pending}
-                onClick={() =>
-                  destId &&
-                  start(async () => {
-                    const r = await resendCode(destId);
-                    if (!r.ok) setError(r.error ?? "não foi possível reenviar");
-                    else {
-                      setError(null);
-                      setNotice("Código reenviado!");
-                    }
-                  })
-                }
-                className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
-              >
-                reenviar código
-              </button>
-            </div>
+              </ActionPrimary>
+            </StepActions>
           </form>
         </section>
       )}
@@ -664,9 +635,8 @@ export function OnboardingWizard({
           {/* o momento */}
           <div className="rise rise-3 flex flex-col items-center gap-4 py-4 text-center">
             {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button
-              size="lg"
-              disabled={pending}
+            <ActionPrimary
+              pending={pending}
               onClick={() =>
                 start(async () => {
                   const r = await finishOnboarding();
@@ -679,11 +649,10 @@ export function OnboardingWizard({
                   router.push("/dashboard");
                 })
               }
-              className="h-16 w-full max-w-md rounded-full px-10 text-lg shadow-[0_0_50px_-10px_rgba(52,211,153,0.45),inset_0_1px_0_rgba(255,255,255,0.35)]"
+              className="h-16 max-w-md rounded-full px-10 text-lg md:w-full md:min-w-0 md:px-10 shadow-[0_0_50px_-10px_rgba(245,158,11,0.45),inset_0_1px_0_rgba(255,255,255,0.35)]"
             >
-              {pending && spinner}
-              {pending ? "Preparando…" : "Gerar meu primeiro briefing →"}
-            </Button>
+              {pending ? "Preparando…" : "Gerar meu primeiro briefing"}
+            </ActionPrimary>
             <p className="text-xs text-muted-foreground">
               Fica pronto em poucos minutos, e amanhã às 7h chega sozinho no seu WhatsApp.
             </p>

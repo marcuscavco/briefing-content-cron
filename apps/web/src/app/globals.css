@@ -157,12 +157,18 @@
   }
   to {
     opacity: 1;
-    transform: translateY(0);
-    filter: blur(0);
+    /* 'none' (não translateY(0)/blur(0)) para não deixar containing block
+       residual — senão position:fixed de filhos (barra de ações) gruda na
+       seção em vez do viewport. */
+    transform: none;
+    filter: none;
   }
 }
 .rise {
-  animation: rise-in 0.9s var(--ease-premium) both;
+  /* 'backwards' (não 'both'): segura o estado inicial durante o delay, mas NÃO
+     retém transform/filter ao terminar. Fill 'forwards/both' deixaria uma
+     matrix identidade residual que vira containing block e prende position:fixed. */
+  animation: rise-in 0.9s var(--ease-premium) backwards;
 }
 .rise-1 { animation-delay: 60ms; }
 .rise-2 { animation-delay: 140ms; }
