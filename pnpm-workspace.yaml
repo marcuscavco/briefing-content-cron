@@ -1,0 +1,11 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+onlyBuiltDependencies:
+  - esbuild
+  - sharp
+  - supabase
+  - unrs-resolver
+# workers/ fica fora do workspace de propósito: são Cloudflare Workers legados
+# com lockfile npm próprio, deployados via wrangler — não tocar.
