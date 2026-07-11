@@ -1,15 +1,17 @@
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
+import { isPlatformAdmin } from "@briefing/db/admin";
 import { requireTenant } from "@/lib/tenant";
 import { formatBrPhone } from "@/lib/phone";
 import { ArrowBubble } from "@/components/ui/arrow-bubble";
 import { BriefingView } from "@/components/briefing/briefing-view";
 import { GenerateButton } from "./generate-button";
-import { PreparingBriefing } from "./preparing";
+import { GeneratingStatus } from "./generating-status";
 
 export default async function DashboardPage() {
   const t = await getTranslations("dashboard");
   const { supabase, user, profile } = await requireTenant();
+  const admin = await isPlatformAdmin(user.id);
 
   const { data: briefing } = await supabase
     .from("briefings")
@@ -47,7 +49,7 @@ export default async function DashboardPage() {
     .select("id", { count: "exact", head: true })
     .eq("profile_id", profile.id)
     .in("status", ["queued", "running"]);
-  const preparingFirst = !briefing && (activeJobs ?? 0) > 0;
+  const generating = (activeJobs ?? 0) > 0;
 
   const { data: verifiedDests } = await supabase
     .from("whatsapp_destinations")
@@ -77,18 +79,20 @@ export default async function DashboardPage() {
     <div className="flex flex-col gap-10">
       {/* hero */}
       <section className="rise flex flex-col gap-5 pt-6">
-        <span className="eyebrow w-max">{t("eyebrow")}</span>
+        <span className="eyebrow w-max">{profile.name}</span>
         <div className="flex flex-wrap items-end justify-between gap-6">
           <h1 className="font-display max-w-xl text-4xl font-medium leading-[1.05] tracking-tight md:text-6xl">
             {t("greeting")}, <span className="text-muted-foreground">{firstName}</span>.
           </h1>
-          <GenerateButton
-            labels={{
-              generateNow: t("generateNow"),
-              generating: t("generating"),
-              generateError: t("generateError"),
-            }}
-          />
+          {admin && (
+            <GenerateButton
+              labels={{
+                generateNow: t("generateNow"),
+                generating: t("generating"),
+                generateError: t("generateError"),
+              }}
+            />
+          )}
         </div>
         {briefing && (
           <p className="text-sm text-muted-foreground">
@@ -126,6 +130,9 @@ export default async function DashboardPage() {
             <span className="text-muted-foreground">{t("channelDisconnectedCta")}</span>
           </Link>
         )}
+
+        {/* status de geração — logo abaixo do canal conectado */}
+        {generating && <GeneratingStatus label={t("generatingStatus")} />}
       </section>
 
       {/* bento de big numbers */}
@@ -231,12 +238,10 @@ export default async function DashboardPage() {
         <section className="rise rise-3 flex flex-col gap-6">
           <BriefingView briefing={briefing} clusters={clusters ?? []} posts={posts ?? []} />
         </section>
-      ) : preparingFirst ? (
-        <PreparingBriefing />
       ) : (
         <section className="bezel rise rise-3">
           <div className="bezel-core px-6 py-10 text-center text-sm text-muted-foreground">
-            {t("placeholder")}
+            {generating ? t("generatingStatus") : t("placeholder")}
           </div>
         </section>
       )}
