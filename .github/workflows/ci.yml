@@ -40,5 +40,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       # Sobe Postgres + Auth + PostgREST locais e aplica as migrações.
       - run: supabase start -x studio,imgproxy,edge-runtime
-      - run: supabase status -o env >> "$GITHUB_ENV"
+      # O CLI recente emite valores entre aspas (API_URL="http://…"); sem
+      # remover, as aspas viram parte do valor no $GITHUB_ENV e o client falha
+      # com "Invalid supabaseUrl".
+      - run: supabase status -o env | sed -E 's/^([A-Za-z_]+)="(.*)"$/\1=\2/' >> "$GITHUB_ENV"
       - run: pnpm vitest run --config supabase/tests/vitest.config.ts
