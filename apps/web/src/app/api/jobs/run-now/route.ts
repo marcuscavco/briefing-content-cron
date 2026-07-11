@@ -1,32 +1,21 @@
-import { createAdminClient, isPlatformAdmin } from "@briefing/db/admin";
+import { createAdminClient } from "@briefing/db/admin";
 import { NextResponse } from "next/server";
 import { requireTenant } from "@/lib/tenant";
 import { processQueue } from "@/lib/worker";
 
 /**
- * Geração manual. Usuário normal só pode disparar o PRIMEIRO briefing (no fim
- * do onboarding, quando ainda não tem nenhum); depois disso recebe só pela
- * manhã (cron). Platform admin pode gerar quando quiser (botão do dashboard).
- * Enfileira o job de hoje e processa inline (Fluid Compute); se já existe job
- * do dia, reprocessa a fila. RLS cobre o insert; o processamento usa service role.
+ * Geração manual. Qualquer usuário autenticado pode chamar: enfileira o job de
+ * hoje e SEMPRE processa a fila inteira inline (Fluid Compute) — inclusive jobs
+ * pendentes de outras contas. A restrição "gerar de novo é só pra admin" vive
+ * apenas no frontend (o botão do dashboard some pra usuário comum); aqui não há
+ * gate. RLS cobre o insert; o processamento usa service role.
  */
 export const maxDuration = 300; // Hobby: teto Fluid 300s; Pro destrava 800s
 
 export async function POST() {
-  const { supabase, accountId, profile, user } = await requireTenant();
+  const { supabase, accountId, profile } = await requireTenant();
 
   const admin = createAdminClient();
-  const isAdmin = await isPlatformAdmin(user.id);
-  if (!isAdmin) {
-    // Não-admin: só liberado se ainda não tem briefing (o 1º, do onboarding).
-    const { count } = await supabase
-      .from("briefings")
-      .select("id", { count: "exact", head: true })
-      .eq("profile_id", profile.id);
-    if ((count ?? 0) > 0) {
-      return NextResponse.json({ error: "forbidden" }, { status: 403 });
-    }
-  }
 
   const today = new Intl.DateTimeFormat("en-CA", {
     timeZone: profile.timezone ?? "America/Sao_Paulo",
