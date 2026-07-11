@@ -1,0 +1,25 @@
+{
+  "name": "@briefing/db",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./client": "./src/client.ts",
+    "./server": "./src/server.ts",
+    "./admin": "./src/admin.ts",
+    "./types": "./src/types.ts"
+  },
+  "scripts": {
+    "lint": "echo 'no lint'",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.12.0",
+    "@supabase/supabase-js": "^2.49.4",
+    "server-only": "^0.0.1"
+  },
+  "devDependencies": {
+    "next": "16.2.10",
+    "typescript": "^5.7.3"
+  }
+}
