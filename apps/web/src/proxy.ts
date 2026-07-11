@@ -41,7 +41,9 @@ export async function proxy(request: NextRequest) {
   // do email) — sem sessão por definição, não podem cair no redirect de login.
   const isSelfAuthed = path.startsWith("/api/cron") || path.startsWith("/api/unsubscribe");
 
-  if (!user && !isAuthPage && !isSelfAuthed && !path.startsWith("/auth")) {
+  const isPublic = path === "/"; // landing page
+
+  if (!user && !isPublic && !isAuthPage && !isSelfAuthed && !path.startsWith("/auth")) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.search = "";
