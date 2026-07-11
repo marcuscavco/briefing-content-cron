@@ -34,14 +34,14 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-      - uses: supabase/setup-cli@v1
-        with:
-          version: latest
       - run: pnpm install --frozen-lockfile
-      # Sobe Postgres + Auth + PostgREST locais e aplica as migrações.
-      - run: supabase start -x studio,imgproxy,edge-runtime
+      # Sobe Postgres + Auth + PostgREST locais e aplica as migrações. O CLI
+      # vem da devDependency do workspace (versão pinada pelo lockfile) — a
+      # action setup-cli resolvia "latest" pela API do GitHub e quebrava com
+      # rate limit.
+      - run: pnpm exec supabase start -x studio,imgproxy,edge-runtime
       # O CLI recente emite valores entre aspas (API_URL="http://…"); sem
       # remover, as aspas viram parte do valor no $GITHUB_ENV e o client falha
       # com "Invalid supabaseUrl".
-      - run: supabase status -o env | sed -E 's/^([A-Za-z_]+)="(.*)"$/\1=\2/' >> "$GITHUB_ENV"
+      - run: pnpm exec supabase status -o env | sed -E 's/^([A-Za-z_]+)="(.*)"$/\1=\2/' >> "$GITHUB_ENV"
       - run: pnpm vitest run --config supabase/tests/vitest.config.ts
