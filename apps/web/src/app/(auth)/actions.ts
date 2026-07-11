@@ -33,24 +33,25 @@ export async function signup(formData: FormData) {
   const supabase = await createClient();
   const origin = await siteOrigin();
 
+  const email = String(formData.get("email"));
   const { data, error } = await supabase.auth.signUp({
-    email: String(formData.get("email")),
+    email,
     password: String(formData.get("password")),
     options: {
       data: { full_name: String(formData.get("full_name") ?? "") },
-      emailRedirectTo: `${origin}/auth/confirm`,
+      emailRedirectTo: `${origin}/auth/confirm?next=/onboarding`,
     },
   });
 
   if (error) {
-    redirect("/signup?error=generic");
+    redirect("/onboarding?error=generic");
   }
   // Com confirmação de email desligada (local) já existe sessão; com ela ligada
   // (produção), o usuário precisa clicar no link.
   if (data.session) {
-    redirect("/dashboard");
+    redirect("/onboarding");
   }
-  redirect("/login?notice=signup_success");
+  redirect(`/onboarding?confirm=1&email=${encodeURIComponent(email)}`);
 }
 
 export async function sendMagicLink(formData: FormData) {

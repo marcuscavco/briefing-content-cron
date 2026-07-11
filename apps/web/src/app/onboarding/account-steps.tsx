@@ -7,18 +7,45 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { signup } from "../actions";
+import { signup } from "@/app/(auth)/actions";
 
 /**
- * Início do onboarding: boas-vindas enxutas → conta (passo 1 de 7).
- * O wizard de /onboarding continua do passo 2 depois da confirmação.
+ * Trecho pré-auth do fluxo único de onboarding: boas-vindas → conta (passo 1
+ * de 7) → confirmação de email. Depois do link do email, o mesmo /onboarding
+ * retoma no passo 2 com o usuário logado.
  */
 const TOTAL_STEPS = 7;
 
-export function SignupFlow({ hasError }: { hasError: boolean }) {
+function Progress() {
+  return (
+    <div className="rise flex items-center gap-3 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+      <span>passo 1 de {TOTAL_STEPS}</span>
+      <div className="flex gap-1.5">
+        {Array.from({ length: TOTAL_STEPS }, (_, i) => (
+          <span
+            key={i}
+            className={cn(
+              "h-1 w-6 rounded-full transition-colors duration-500",
+              i < 1 ? "bg-emerald-400/70" : "bg-white/10",
+            )}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function AccountSteps({
+  initial,
+  email,
+  hasError,
+}: {
+  initial: "welcome" | "account" | "confirm";
+  email: string | null;
+  hasError: boolean;
+}) {
   const t = useTranslations("auth");
-  // Se voltou com erro do server action, cai direto no formulário.
-  const [step, setStep] = useState<"welcome" | "account">(hasError ? "account" : "welcome");
+  const [step, setStep] = useState(initial);
 
   if (step === "welcome") {
     return (
@@ -44,23 +71,33 @@ export function SignupFlow({ hasError }: { hasError: boolean }) {
     );
   }
 
+  if (step === "confirm") {
+    return (
+      <div className="flex flex-col gap-10">
+        <Progress />
+        <section className="rise flex flex-col gap-8">
+          <h1 className="font-display text-3xl font-medium leading-[1.08] tracking-tight md:text-5xl">
+            Agora confirme seu email.
+          </h1>
+          <p className="max-w-md text-base leading-relaxed text-muted-foreground">
+            Enviamos um link{email ? ` para ${email}` : " para o seu email"}. Clique nele e o
+            fluxo continua exatamente de onde parou, no passo 2.
+          </p>
+          <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
+            Não chegou em 1 minuto? Confira o spam. Se preferir, dá para{" "}
+            <Link href="/login" className="underline underline-offset-4">
+              entrar com link mágico
+            </Link>{" "}
+            usando o mesmo email.
+          </p>
+        </section>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-10">
-      <div className="rise flex items-center gap-3 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-        <span>passo 1 de {TOTAL_STEPS}</span>
-        <div className="flex gap-1.5">
-          {Array.from({ length: TOTAL_STEPS }, (_, i) => (
-            <span
-              key={i}
-              className={cn(
-                "h-1 w-6 rounded-full transition-colors duration-500",
-                i < 1 ? "bg-emerald-400/70" : "bg-white/10",
-              )}
-            />
-          ))}
-        </div>
-      </div>
-
+      <Progress />
       <section className="rise flex flex-col gap-8">
         <h1 className="font-display text-3xl font-medium leading-[1.08] tracking-tight md:text-5xl">
           Crie sua conta.

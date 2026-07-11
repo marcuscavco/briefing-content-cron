@@ -1,11 +1,6 @@
-import { SignupFlow } from "./signup-flow";
+import { redirect } from "next/navigation";
 
-/** Início do onboarding: boas-vindas → criar conta (passo 1 de 7). */
-export default async function SignupPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string }>;
-}) {
-  const { error } = await searchParams;
-  return <SignupFlow hasError={Boolean(error)} />;
+/** O cadastro vive dentro do fluxo único de onboarding. */
+export default function SignupPage() {
+  redirect("/onboarding");
 }

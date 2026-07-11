@@ -32,7 +32,7 @@ type Suggestion = {
   is_free: boolean;
 };
 
-type Step = "welcome" | "name" | "cats" | "subs" | "sources" | "phone" | "code" | "review";
+type Step = "name" | "cats" | "subs" | "sources" | "phone" | "code" | "review";
 
 /** Mapa tema → categorias do catálogo de fontes. */
 const SOURCE_CATEGORY_MAP: Record<string, string[]> = {
@@ -45,7 +45,7 @@ const SOURCE_CATEGORY_MAP: Record<string, string[]> = {
   ciencia: ["geral", "tecnologia"],
 };
 
-// O passo 1 é a criação de conta em /signup; o wizard continua do 2.
+// O passo 1 é a criação de conta (mesmo fluxo, pré-sessão); o wizard continua do 2.
 const STEP_NUMBER: Partial<Record<Step, number>> = {
   name: 2,
   cats: 3,
@@ -102,7 +102,7 @@ export function OnboardingWizard({
       ? "phone"
       : initialThemes.length > 0
         ? "sources"
-        : "welcome";
+        : "name";
 
   const [step, setStep] = useState<Step>(initialStep);
   const [name, setName] = useState(initialName);
@@ -187,36 +187,11 @@ export function OnboardingWizard({
         </div>
       )}
 
-      {/* ── 0. Boas-vindas ─────────────────────────────────────────────── */}
-      {step === "welcome" && (
-        <section key="welcome" className="rise flex flex-col gap-8">
-          <span className="eyebrow w-max">✓ 7 dias grátis · sem cartão</span>
-          <h1 className="font-display text-4xl font-medium leading-[1.05] tracking-tight md:text-6xl">
-            {firstName ? `${firstName}, sua` : "Sua"} conta está pronta. Agora vem o briefing.
-          </h1>
-          <p className="max-w-md text-base leading-relaxed text-muted-foreground">
-            Todo dia às 7h, o que importa das suas fontes chega direto no seu WhatsApp, sem
-            repetir o que você já viu.
-          </p>
-          <ul className="flex flex-col gap-2 text-sm text-muted-foreground">
-            <li className="text-foreground">✓ Conta criada</li>
-            <li>2 · Dê um nome ao seu briefing</li>
-            <li>3 e 4 · Escolha os temas da sua área</li>
-            <li>5 · Monte suas fontes</li>
-            <li>6 · Conecte seu WhatsApp</li>
-          </ul>
-          <p className="text-xs text-muted-foreground">Leva uns 3 minutos.</p>
-          <Button size="lg" className="w-full sm:w-fit sm:px-12" onClick={() => go("name")}>
-            Começar →
-          </Button>
-        </section>
-      )}
-
       {/* ── 1. Nome ────────────────────────────────────────────────────── */}
       {step === "name" && (
         <section key="name" className="rise flex flex-col gap-8">
           <h1 className="font-display text-3xl font-medium leading-[1.08] tracking-tight md:text-5xl">
-            Como vai se chamar o seu briefing?
+            {firstName ? `${firstName}, como` : "Como"} vai se chamar o seu briefing?
           </h1>
           <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
             É só um apelido. Aparece no painel e pode mudar quando quiser.

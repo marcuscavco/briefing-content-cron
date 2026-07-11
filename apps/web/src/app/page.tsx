@@ -37,7 +37,7 @@ export default async function LandingPage() {
     <div className={`${clash.variable} ${jakarta.variable}`}>
       <Lp
         loggedIn={loggedIn}
-        primaryHref={loggedIn ? "/dashboard" : "/signup"}
+        primaryHref={loggedIn ? "/dashboard" : "/onboarding"}
         primaryLabel={loggedIn ? "Abrir meu painel" : "Começar 7 dias grátis"}
       />
     </div>

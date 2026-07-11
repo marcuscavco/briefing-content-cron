@@ -348,7 +348,7 @@ export function Lp({
           ))}
           {!loggedIn && <Link href="/login">Entrar</Link>}
         </nav>
-        <Link className="btn btn-primary" href={loggedIn ? "/dashboard" : "/signup"}>
+        <Link className="btn btn-primary" href={loggedIn ? "/dashboard" : "/onboarding"}>
           {loggedIn ? "Painel" : "Testar grátis"}
           <ArrowIc />
         </Link>
@@ -377,7 +377,7 @@ export function Lp({
             Entrar
           </Link>
         )}
-        <Link className="mini" href={loggedIn ? "/dashboard" : "/signup"} onClick={() => setMenuOpen(false)}>
+        <Link className="mini" href={loggedIn ? "/dashboard" : "/onboarding"} onClick={() => setMenuOpen(false)}>
           {loggedIn ? "Abrir meu painel ↗" : "Testar grátis ↗"}
         </Link>
       </nav>

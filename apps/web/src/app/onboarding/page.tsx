@@ -1,8 +1,34 @@
+import { createClient } from "@briefing/db/server";
 import { requireTenant } from "@/lib/tenant";
 import { formatBrPhone } from "@/lib/phone";
+import { AccountSteps } from "./account-steps";
 import { OnboardingWizard } from "./onboarding-wizard";
 
-export default async function OnboardingPage() {
+/**
+ * Fluxo único: sem sessão, mostra boas-vindas → criar conta → confirmar
+ * email; com sessão, o wizard retoma do primeiro passo incompleto (2 a 7).
+ */
+export default async function OnboardingPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string; confirm?: string; email?: string }>;
+}) {
+  const authClient = await createClient();
+  const {
+    data: { user: sessionUser },
+  } = await authClient.auth.getUser();
+
+  if (!sessionUser) {
+    const { error, confirm, email } = await searchParams;
+    return (
+      <AccountSteps
+        initial={confirm ? "confirm" : error ? "account" : "welcome"}
+        email={email ?? null}
+        hasError={Boolean(error)}
+      />
+    );
+  }
+
   const { supabase, user, profile } = await requireTenant();
 
   const [{ data: suggestions }, { count: sourcesCount }, { data: verified }] = await Promise.all([

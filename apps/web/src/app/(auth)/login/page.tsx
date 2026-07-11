@@ -79,7 +79,7 @@ export default async function LoginPage({
 
         <p className="text-center text-sm text-muted-foreground">
           {t("noAccount")}{" "}
-          <Link href="/signup" className="underline underline-offset-4">
+          <Link href="/onboarding" className="underline underline-offset-4">
             {t("signUp")}
           </Link>
         </p>
