@@ -47,3 +47,18 @@ Empresário brasileiro de tech falando pra outros empresários brasileiros que q
 - "5 segredos que ninguém te conta sobre IA"
 - "ATENÇÃO empresário: você precisa saber disso!"
 - "A revolução chegou e quem não se adaptar…"
+
+## Escrita sem cara de IA (vale pra TODO texto do projeto)
+
+Regra geral: qualquer texto criado pro projeto (landing, briefing, posts, dashboard, e-mail, FAQ, commit visível pro usuário) tem que parecer escrito por uma pessoa. Antes de entregar, revisar contra esta lista:
+
+- **Sem travessão (—)**. Reescrever com vírgula, dois-pontos, parênteses ou frase nova. Traço é o tique mais reconhecível de texto de IA.
+- **Sem estrutura "Não é X. É Y."** repetida como muleta retórica.
+- **Sem tríades automáticas** ("rápido, prático e eficiente"). Se for lista de três, que seja porque são três coisas mesmo.
+- **Sem abstrações infladas**: "potencializar", "alavancar", "insights valiosos", "experiência única", "solução robusta", "cenário atual".
+- **Sem fechos de redação**: "Em resumo", "Em suma", "Vale ressaltar", "É importante destacar", "Nesse sentido".
+- **Sem espelhar a pergunta antes de responder** (em FAQ: responde direto).
+- **Sem hedging vazio**: "pode variar dependendo do contexto", "de forma geral".
+- **Frases curtas ganham de subordinadas encadeadas.** Se a frase precisa de duas respirações, quebra em duas.
+- **Concreto > genérico**: número, exemplo, nome de fonte. "Heat 9" diz mais que "altamente relevante".
+- Na dúvida, ler em voz alta: se soa como apresentação corporativa, reescrever como se estivesse explicando pra um amigo empresário no WhatsApp.
