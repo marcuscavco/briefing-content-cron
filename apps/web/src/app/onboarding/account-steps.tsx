@@ -11,8 +11,8 @@ import { signup } from "@/app/(auth)/actions";
 
 /**
  * Trecho pré-auth do fluxo único de onboarding: boas-vindas → conta (passo 1
- * de 7) → confirmação de email. Depois do link do email, o mesmo /onboarding
- * retoma no passo 2 com o usuário logado.
+ * de 7). A conta nasce confirmada e logada; o wizard segue no passo 2 sem
+ * confirmação de email.
  */
 const TOTAL_STEPS = 7;
 
@@ -26,7 +26,7 @@ function Progress() {
             key={i}
             className={cn(
               "h-1 w-6 rounded-full transition-colors duration-500",
-              i < 1 ? "bg-emerald-400/70" : "bg-white/10",
+              i < 1 ? "bg-amber-400/70" : "bg-white/10",
             )}
           />
         ))}
@@ -37,12 +37,10 @@ function Progress() {
 
 export function AccountSteps({
   initial,
-  email,
-  hasError,
+  error,
 }: {
-  initial: "welcome" | "account" | "confirm";
-  email: string | null;
-  hasError: boolean;
+  initial: "welcome" | "account";
+  error: "generic" | "exists" | null;
 }) {
   const t = useTranslations("auth");
   const [step, setStep] = useState(initial);
@@ -71,30 +69,6 @@ export function AccountSteps({
     );
   }
 
-  if (step === "confirm") {
-    return (
-      <div className="flex flex-col gap-10">
-        <Progress />
-        <section className="rise flex flex-col gap-8">
-          <h1 className="font-display text-3xl font-medium leading-[1.08] tracking-tight md:text-5xl">
-            Agora confirme seu email.
-          </h1>
-          <p className="max-w-md text-base leading-relaxed text-muted-foreground">
-            Enviamos um link{email ? ` para ${email}` : " para o seu email"}. Clique nele e o
-            fluxo continua exatamente de onde parou, no passo 2.
-          </p>
-          <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
-            Não chegou em 1 minuto? Confira o spam. Se preferir, dá para{" "}
-            <Link href="/login" className="underline underline-offset-4">
-              entrar com link mágico
-            </Link>{" "}
-            usando o mesmo email.
-          </p>
-        </section>
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col gap-10">
       <Progress />
@@ -106,7 +80,16 @@ export function AccountSteps({
           Nome, email e senha. O resto a gente monta junto nos próximos passos.
         </p>
 
-        {hasError && <p className="text-sm text-destructive">{t("errorGeneric")}</p>}
+        {error === "exists" && (
+          <p className="text-sm text-destructive">
+            Esse email já tem conta.{" "}
+            <Link href="/login" className="underline underline-offset-4">
+              Entre por aqui
+            </Link>{" "}
+            e o fluxo continua de onde parou.
+          </p>
+        )}
+        {error === "generic" && <p className="text-sm text-destructive">{t("errorGeneric")}</p>}
 
         <form className="flex w-full max-w-md flex-col gap-4" action={signup}>
           <div className="grid gap-2">

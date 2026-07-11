@@ -51,45 +51,46 @@
 }
 
 /*
- * Ethereal Glass — tema único (produto de IA, uso noturno/matinal).
- * Preto OLED, mesh gradients discretos, vidro com hairlines white/10.
+ * Ethereal Glass, tema amanhecer (mesma paleta da landing).
+ * Preto OLED com neutros levemente quentes, acentos âmbar/laranja de
+ * café da manhã, mesh discreto e vidro com hairlines white/10.
  */
 :root {
-  --background: oklch(0.13 0.005 285);
-  --foreground: oklch(0.96 0.005 285);
-  --card: oklch(0.17 0.008 285 / 72%);
-  --card-foreground: oklch(0.96 0.005 285);
-  --popover: oklch(0.18 0.01 285);
-  --popover-foreground: oklch(0.96 0.005 285);
-  --primary: oklch(0.93 0.02 285);
-  --primary-foreground: oklch(0.15 0.01 285);
+  --background: oklch(0.13 0.004 80);
+  --foreground: oklch(0.96 0.005 85);
+  --card: oklch(0.17 0.007 80 / 72%);
+  --card-foreground: oklch(0.96 0.005 85);
+  --popover: oklch(0.18 0.009 80);
+  --popover-foreground: oklch(0.96 0.005 85);
+  --primary: oklch(0.8 0.15 75);
+  --primary-foreground: oklch(0.22 0.05 75);
   --secondary: oklch(1 0 0 / 7%);
-  --secondary-foreground: oklch(0.96 0.005 285);
+  --secondary-foreground: oklch(0.96 0.005 85);
   --muted: oklch(1 0 0 / 6%);
-  --muted-foreground: oklch(0.68 0.01 285);
+  --muted-foreground: oklch(0.68 0.012 80);
   --accent: oklch(1 0 0 / 8%);
-  --accent-foreground: oklch(0.96 0.005 285);
+  --accent-foreground: oklch(0.96 0.005 85);
   --destructive: oklch(0.72 0.19 22);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.75 0.12 160 / 60%);
-  --chart-1: oklch(0.8 0.14 160);
-  --chart-2: oklch(0.72 0.14 300);
-  --chart-3: oklch(0.68 0.01 285);
-  --chart-4: oklch(0.5 0.01 285);
-  --chart-5: oklch(0.35 0.01 285);
+  --ring: oklch(0.77 0.15 70 / 60%);
+  --chart-1: oklch(0.8 0.15 75);
+  --chart-2: oklch(0.68 0.14 45);
+  --chart-3: oklch(0.68 0.012 80);
+  --chart-4: oklch(0.5 0.01 80);
+  --chart-5: oklch(0.35 0.01 80);
   --radius: 1rem;
-  --sidebar: oklch(0.17 0.008 285);
-  --sidebar-foreground: oklch(0.96 0.005 285);
-  --sidebar-primary: oklch(0.75 0.12 160);
-  --sidebar-primary-foreground: oklch(0.15 0.01 285);
+  --sidebar: oklch(0.17 0.007 80);
+  --sidebar-foreground: oklch(0.96 0.005 85);
+  --sidebar-primary: oklch(0.8 0.15 75);
+  --sidebar-primary-foreground: oklch(0.22 0.05 75);
   --sidebar-accent: oklch(1 0 0 / 8%);
-  --sidebar-accent-foreground: oklch(0.96 0.005 285);
+  --sidebar-accent-foreground: oklch(0.96 0.005 85);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.75 0.12 160 / 60%);
+  --sidebar-ring: oklch(0.77 0.15 70 / 60%);
   /* acentos do mesh */
-  --glow-emerald: oklch(0.7 0.14 165);
-  --glow-violet: oklch(0.55 0.18 300);
+  --glow-sun: oklch(0.77 0.15 70);
+  --glow-ember: oklch(0.65 0.13 45);
 }
 
 @layer base {
@@ -105,7 +106,7 @@
     background-color: #050505;
   }
   ::selection {
-    background: oklch(0.7 0.14 165 / 30%);
+    background: oklch(0.77 0.15 70 / 32%);
   }
 }
 
@@ -116,9 +117,9 @@
   z-index: -2;
   pointer-events: none;
   background:
-    radial-gradient(38rem 30rem at 12% -8%, oklch(0.55 0.18 300 / 14%), transparent 65%),
-    radial-gradient(44rem 34rem at 96% 4%, oklch(0.7 0.14 165 / 10%), transparent 62%),
-    radial-gradient(50rem 44rem at 50% 118%, oklch(0.5 0.14 260 / 12%), transparent 68%),
+    radial-gradient(38rem 30rem at 12% -8%, oklch(0.77 0.15 70 / 12%), transparent 65%),
+    radial-gradient(44rem 34rem at 96% 4%, oklch(0.65 0.13 45 / 10%), transparent 62%),
+    radial-gradient(50rem 44rem at 50% 118%, oklch(0.87 0.09 80 / 9%), transparent 68%),
     #050505;
 }
 .grain-overlay {
@@ -185,7 +186,7 @@
   @apply inline-flex items-center rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.2em] font-medium;
   border: 1px solid oklch(1 0 0 / 12%);
   background: oklch(1 0 0 / 5%);
-  color: oklch(0.78 0.06 165);
+  color: oklch(0.83 0.09 78);
 }
 
 /* números grandes tabulares */

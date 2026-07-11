@@ -96,3 +96,28 @@ Evaluate your code against this matrix before delivering. This is the last filte
 - [ ] All animations use only `transform` and `opacity` — no layout-triggering properties
 - [ ] `backdrop-blur` is only applied to fixed/sticky elements, never to scrolling content
 - [ ] The overall impression reads as "$150k agency build", not "template with nice fonts"
+
+## 9. PROJECT PALETTE — "Amanhecer" (Briefing Nerd)
+
+This project has a LOCKED color scheme. Every frontend surface (landing, app, onboarding, emails, dashboards) uses the same palette: warm sunrise/breakfast ambers over OLED black. Decided by Marcus; do not roll the Vibe dice for colors on this project — only for layout/texture variation.
+
+### Core tokens (hex, used on the landing)
+- **Base**: `#050505` OLED black. Card cores `#0D0C0A → #080807` (warm-tinted, never blue-gray).
+- **Ink**: `#F7F4EE` (warm white) · secondary `rgba(247,244,238,.62)` · tertiary `.40`.
+- **Hairlines**: `rgba(255,255,255,.10)` outer, `.06` inner. Shells `rgba(255,255,255,.04)`.
+- **Sun (primary accent)**: `#F59E0B` (sun-lo) → `#FFD289` (sun-hi). Mid tone for text on dark: `#FFC46B`. Ink on amber: `#221200`.
+- **Ember (secondary glow)**: burnt orange `rgba(232,124,20,.18)` — orbs/mesh only, never text. No reds.
+- **Soft fills**: `rgba(245,158,11,.12)` for tags/active states.
+
+### oklch equivalents (used in the app's globals.css)
+- primary `oklch(0.8 0.15 75)` on `oklch(0.22 0.05 75)` · ring `oklch(0.77 0.15 70 / 60%)`
+- neutrals warmed to hue ~80 with chroma ≤ 0.01 (e.g. background `oklch(0.13 0.004 80)`)
+- mesh glows: sun `oklch(0.77 0.15 70 / 12%)`, ember `oklch(0.65 0.13 45 / 10%)`, dawn `oklch(0.87 0.09 80 / 9%)`
+- Tailwind utilities: use the `amber-*` scale (amber-200/300/400) for accents; never `emerald-*`, `violet-*` or cool accents.
+
+### Rules
+- Gradients on CTAs/badges: `linear-gradient(180deg, #FFD289, #F59E0B)` with `#221200` text and a warm glow shadow (`rgba(245,158,11,.45)`).
+- WhatsApp mockups keep the REAL WhatsApp colors (greens `#00A884`, link blue `#53BDEB`, panel `#0B141A`): realism beats brand there, and it is the only place green may appear.
+- Charts: amber as chart-1, burnt orange as chart-2, then warm grays. Hot/highlight = brighter amber, never red.
+- Typography pairing on this project: Clash Display (500/600) for display, Plus Jakarta Sans for body on the landing; Space Grotesk + Geist inside the app. Fonts are self-hosted (next/font/local or base64), never CDN.
+- All copy follows references/voz.md, including the "Escrita sem cara de IA" section (no em-dashes, etc.).

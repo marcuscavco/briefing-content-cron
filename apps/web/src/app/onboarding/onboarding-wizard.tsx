@@ -179,7 +179,7 @@ export function OnboardingWizard({
                 key={i}
                 className={cn(
                   "h-1 w-6 rounded-full transition-colors duration-500",
-                  i < progress ? "bg-emerald-400/70" : "bg-white/10",
+                  i < progress ? "bg-amber-400/70" : "bg-white/10",
                 )}
               />
             ))}
@@ -261,7 +261,7 @@ export function OnboardingWizard({
                   className={cn(
                     "flex min-h-28 flex-col items-start justify-between gap-2 rounded-3xl border p-5 text-left transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]",
                     on
-                      ? "border-emerald-400/40 bg-emerald-400/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]"
+                      ? "border-amber-400/40 bg-amber-400/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]"
                       : "border-white/8 bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.06]",
                   )}
                 >
@@ -269,7 +269,7 @@ export function OnboardingWizard({
                   <span className="font-display text-sm font-medium leading-tight">
                     {cat.label}
                   </span>
-                  <span className={cn("text-[11px]", on ? "text-emerald-300" : "text-muted-foreground")}>
+                  <span className={cn("text-[11px]", on ? "text-amber-300" : "text-muted-foreground")}>
                     {on ? "✓ selecionado" : `${cat.subs.length} subtemas`}
                   </span>
                 </button>
@@ -330,7 +330,7 @@ export function OnboardingWizard({
                         className={cn(
                           "rounded-full border px-3 py-1.5 text-xs transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.97]",
                           on
-                            ? "border-emerald-400/30 bg-emerald-400/15 text-emerald-200"
+                            ? "border-amber-400/30 bg-amber-400/15 text-amber-200"
                             : "border-white/10 bg-white/[0.04] text-muted-foreground hover:text-foreground",
                         )}
                       >
@@ -397,7 +397,7 @@ export function OnboardingWizard({
                     className={cn(
                       "flex w-full items-center justify-between gap-3 rounded-2xl border px-4 py-3.5 text-left transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
                       on
-                        ? "border-emerald-400/30 bg-emerald-400/[0.07]"
+                        ? "border-amber-400/30 bg-amber-400/[0.07]"
                         : "border-white/8 bg-white/[0.02] opacity-60 hover:opacity-100",
                     )}
                   >
@@ -413,7 +413,7 @@ export function OnboardingWizard({
                       className={cn(
                         "flex size-6 shrink-0 items-center justify-center rounded-full border text-[11px]",
                         on
-                          ? "border-emerald-400/40 bg-emerald-400/20 text-emerald-200"
+                          ? "border-amber-400/40 bg-amber-400/20 text-amber-200"
                           : "border-white/15 text-transparent",
                       )}
                     >
@@ -541,7 +541,7 @@ export function OnboardingWizard({
               value={code}
               onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
             />
-            {notice && !error && <p className="text-sm text-emerald-300">{notice}</p>}
+            {notice && !error && <p className="text-sm text-amber-300">{notice}</p>}
             {error && <p className="text-sm text-destructive">{error}</p>}
             <div className="flex flex-wrap items-center gap-3">
               <Button type="button" variant="ghost" onClick={() => go("phone")} disabled={pending}>
@@ -628,7 +628,7 @@ export function OnboardingWizard({
                   {/* amostra real dentro do Must-read */}
                   {i === 0 && sample && sample.length > 0 && (
                     <div className="mt-3 flex flex-col gap-2 border-t border-white/6 pt-3">
-                      <p className="text-[10px] uppercase tracking-[0.18em] text-emerald-300/80">
+                      <p className="text-[10px] uppercase tracking-[0.18em] text-amber-300/80">
                         amostra real das suas fontes, agora
                       </p>
                       {sample.map((src) =>

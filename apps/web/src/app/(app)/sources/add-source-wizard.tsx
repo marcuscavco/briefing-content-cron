@@ -293,7 +293,7 @@ export function AddSourceWizard({ suggestions }: { suggestions: Suggestion[] }) 
           <p className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             <span className="font-medium text-foreground">{sourceLabel}</span>
             {igProfile?.ok && !igProfile.unverified && (
-              <span className="rounded-full border border-emerald-400/25 bg-emerald-400/10 px-2.5 py-0.5 text-[11px] text-emerald-300">
+              <span className="rounded-full border border-amber-400/25 bg-amber-400/10 px-2.5 py-0.5 text-[11px] text-amber-300">
                 ✓ perfil encontrado{igProfile.fullName ? `: ${igProfile.fullName}` : ""}
                 {typeof igProfile.followers === "number"
                   ? ` · ${new Intl.NumberFormat("pt-BR", { notation: "compact" }).format(igProfile.followers)} seguidores`
@@ -323,7 +323,7 @@ export function AddSourceWizard({ suggestions }: { suggestions: Suggestion[] }) 
                     className={cn(
                       "rounded-full border px-2.5 py-0.5 text-[11px]",
                       probe.relevant.length > 0
-                        ? "border-emerald-400/25 bg-emerald-400/10 text-emerald-300"
+                        ? "border-amber-400/25 bg-amber-400/10 text-amber-300"
                         : "border-amber-400/25 bg-amber-400/10 text-amber-300",
                     )}
                   >
@@ -359,7 +359,7 @@ export function AddSourceWizard({ suggestions }: { suggestions: Suggestion[] }) 
                 </div>
               ) : (
                 <div className="flex flex-wrap items-center gap-3">
-                  <p className="text-sm text-emerald-300">✓ Fonte adicionada ao seu briefing!</p>
+                  <p className="text-sm text-amber-300">✓ Fonte adicionada ao seu briefing!</p>
                   <Button type="button" variant="outline" size="sm" onClick={reset}>
                     Adicionar outra
                   </Button>

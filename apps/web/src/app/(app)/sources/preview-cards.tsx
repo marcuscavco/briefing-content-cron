@@ -44,7 +44,7 @@ export function PreviewCards({ items }: { items: PreviewCardItem[] }) {
           )}
           <div className="flex flex-col gap-1.5 p-3.5">
             {item.relevant && (
-              <span className="w-max rounded-full border border-emerald-400/25 bg-emerald-400/10 px-2 py-0.5 text-[10px] text-emerald-300">
+              <span className="w-max rounded-full border border-amber-400/25 bg-amber-400/10 px-2 py-0.5 text-[10px] text-amber-300">
                 ✦ seu tema
               </span>
             )}

@@ -17,7 +17,7 @@ export function WhatsappMock() {
       <div className="bezel-core overflow-hidden">
         {/* topo do chat */}
         <div className="flex items-center gap-3 border-b border-white/5 bg-[#1f2c34] px-4 py-3">
-          <div className="flex size-9 items-center justify-center rounded-full bg-emerald-400/20 text-sm">📰</div>
+          <div className="flex size-9 items-center justify-center rounded-full bg-amber-400/20 text-sm">📰</div>
           <div>
             <p className="text-[13px] font-semibold text-[#e9edef]">Briefing</p>
             <p className="text-[11px] text-[#8696a0]">online</p>

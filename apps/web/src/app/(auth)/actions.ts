@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@briefing/db/server";
+import { createAdminClient } from "@briefing/db/admin";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -30,28 +31,32 @@ export async function login(formData: FormData) {
 }
 
 export async function signup(formData: FormData) {
-  const supabase = await createClient();
-  const origin = await siteOrigin();
-
   const email = String(formData.get("email"));
-  const { data, error } = await supabase.auth.signUp({
+  const password = String(formData.get("password"));
+
+  // Sem confirmação de email (decisão de produto: fluxo único, sem fricção).
+  // O usuário nasce confirmado via admin API e entra logado na sequência,
+  // independente da configuração de "Confirm email" do projeto Supabase.
+  const admin = createAdminClient();
+  const { error: createError } = await admin.auth.admin.createUser({
     email,
-    password: String(formData.get("password")),
-    options: {
-      data: { full_name: String(formData.get("full_name") ?? "") },
-      emailRedirectTo: `${origin}/auth/confirm?next=/onboarding`,
-    },
+    password,
+    email_confirm: true,
+    user_metadata: { full_name: String(formData.get("full_name") ?? "") },
   });
 
-  if (error) {
+  if (createError) {
+    const exists =
+      createError.code === "email_exists" || /already/i.test(createError.message ?? "");
+    redirect(`/onboarding?error=${exists ? "exists" : "generic"}`);
+  }
+
+  const supabase = await createClient();
+  const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+  if (signInError) {
     redirect("/onboarding?error=generic");
   }
-  // Com confirmação de email desligada (local) já existe sessão; com ela ligada
-  // (produção), o usuário precisa clicar no link.
-  if (data.session) {
-    redirect("/onboarding");
-  }
-  redirect(`/onboarding?confirm=1&email=${encodeURIComponent(email)}`);
+  redirect("/onboarding");
 }
 
 export async function sendMagicLink(formData: FormData) {

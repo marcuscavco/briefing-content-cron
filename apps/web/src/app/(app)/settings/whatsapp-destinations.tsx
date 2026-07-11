@@ -141,7 +141,7 @@ export function WhatsappDestinations({ destinations }: { destinations: Destinati
                   className={cn(
                     "rounded-full border px-2.5 py-0.5 text-[11px]",
                     d.verified
-                      ? "border-emerald-400/25 bg-emerald-400/10 text-emerald-300"
+                      ? "border-amber-400/25 bg-amber-400/10 text-amber-300"
                       : "border-amber-400/25 bg-amber-400/10 text-amber-300",
                   )}
                 >
@@ -289,7 +289,7 @@ export function WhatsappDestinations({ destinations }: { destinations: Destinati
                   onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
                 />
               </div>
-              {notice && !error && <p className="text-sm text-emerald-300">{notice}</p>}
+              {notice && !error && <p className="text-sm text-amber-300">{notice}</p>}
               {error && <p className="text-sm text-destructive">{error}</p>}
               <div className="flex flex-wrap items-center gap-2">
                 <Button type="submit" disabled={pending || code.length !== 6}>
@@ -310,7 +310,7 @@ export function WhatsappDestinations({ destinations }: { destinations: Destinati
 
           {step === "done" && (
             <div className="flex flex-col items-start gap-4 py-2">
-              <p className="text-sm text-emerald-300">
+              <p className="text-sm text-amber-300">
                 ✓ Destino verificado! O próximo briefing chega em{" "}
                 <span className="font-medium tabular-nums">
                   {masked.startsWith("+") ? masked : `+55 ${masked}`}

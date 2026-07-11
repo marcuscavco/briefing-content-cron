@@ -5,13 +5,13 @@ import { AccountSteps } from "./account-steps";
 import { OnboardingWizard } from "./onboarding-wizard";
 
 /**
- * Fluxo único: sem sessão, mostra boas-vindas → criar conta → confirmar
- * email; com sessão, o wizard retoma do primeiro passo incompleto (2 a 7).
+ * Fluxo único: sem sessão, boas-vindas → criar conta (que já entra logado);
+ * com sessão, o wizard retoma do primeiro passo incompleto (2 a 7).
  */
 export default async function OnboardingPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; confirm?: string; email?: string }>;
+  searchParams: Promise<{ error?: string }>;
 }) {
   const authClient = await createClient();
   const {
@@ -19,12 +19,11 @@ export default async function OnboardingPage({
   } = await authClient.auth.getUser();
 
   if (!sessionUser) {
-    const { error, confirm, email } = await searchParams;
+    const { error } = await searchParams;
     return (
       <AccountSteps
-        initial={confirm ? "confirm" : error ? "account" : "welcome"}
-        email={email ?? null}
-        hasError={Boolean(error)}
+        initial={error ? "account" : "welcome"}
+        error={error === "exists" ? "exists" : error ? "generic" : null}
       />
     );
   }

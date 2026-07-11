@@ -14,7 +14,7 @@ export function PreparingBriefing() {
   return (
     <div className="bezel rise rise-3">
       <div className="bezel-core flex flex-col items-center gap-4 px-6 py-14 text-center">
-        <span className="size-6 animate-spin rounded-full border-2 border-emerald-400/70 border-t-transparent" />
+        <span className="size-6 animate-spin rounded-full border-2 border-amber-400/70 border-t-transparent" />
         <p className="font-display text-lg font-medium">Seu primeiro briefing está sendo preparado…</p>
         <p className="max-w-sm text-sm text-muted-foreground">
           Estamos lendo suas fontes, agrupando os assuntos e escrevendo o resumo. Leva uns 3-5

@@ -75,7 +75,7 @@ export function ThemePicker({ initial }: { initial: string[] }) {
                   className={cn(
                     "rounded-full border px-3 py-1 text-[11px] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
                     allOn
-                      ? "border-emerald-400/30 bg-emerald-400/15 text-emerald-300"
+                      ? "border-amber-400/30 bg-amber-400/15 text-amber-300"
                       : "border-white/10 bg-white/5 text-muted-foreground hover:text-foreground",
                   )}
                 >
@@ -94,7 +94,7 @@ export function ThemePicker({ initial }: { initial: string[] }) {
                       className={cn(
                         "rounded-full border px-3 py-1.5 text-xs transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.97]",
                         on
-                          ? "border-emerald-400/30 bg-emerald-400/15 text-emerald-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
+                          ? "border-amber-400/30 bg-amber-400/15 text-amber-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
                           : "border-white/10 bg-white/[0.04] text-muted-foreground hover:border-white/20 hover:text-foreground",
                       )}
                     >

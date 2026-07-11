@@ -32,7 +32,7 @@ export default async function SettingsPage({
         <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{t("subtitle")}</p>
       </div>
 
-      {saved && <p className="text-sm text-emerald-700 dark:text-emerald-400">{t("saved")}</p>}
+      {saved && <p className="text-sm text-amber-700 dark:text-amber-400">{t("saved")}</p>}
 
       <Card>
         <CardHeader>
