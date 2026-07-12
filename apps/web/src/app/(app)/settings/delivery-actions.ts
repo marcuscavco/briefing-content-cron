@@ -95,6 +95,19 @@ export async function addDestinationAndSendCode(
 
   let id = existing?.id;
   if (!id) {
+    // Um número só pode pertencer a uma conta (novos cadastros — o trigger
+    // whatsapp_dest_unique_phone garante no banco; aqui só a mensagem amigável).
+    const admin = createAdminClient();
+    const { data: elsewhere } = await admin
+      .from("whatsapp_destinations")
+      .select("id")
+      .eq("phone", phone)
+      .neq("account_id", accountId)
+      .limit(1);
+    if (elsewhere?.length) {
+      return { ok: false, error: "Este número já está cadastrado em outra conta." };
+    }
+
     const { data, error } = await supabase
       .from("whatsapp_destinations")
       .insert({
@@ -106,7 +119,14 @@ export async function addDestinationAndSendCode(
       })
       .select("id")
       .single();
-    if (error) return { ok: false, error: error.message };
+    if (error) {
+      return {
+        ok: false,
+        error: error.message.includes("phone_already_registered")
+          ? "Este número já está cadastrado em outra conta."
+          : error.message,
+      };
+    }
     id = data.id;
   }
 

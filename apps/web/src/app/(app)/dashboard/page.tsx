@@ -44,12 +44,37 @@ export default async function DashboardPage() {
       supabase.from("briefings").select("id", { count: "exact", head: true }).eq("profile_id", profile.id),
     ]);
 
-  const { count: activeJobs } = await supabase
+  const { data: activeJob } = await supabase
     .from("jobs")
-    .select("id", { count: "exact", head: true })
+    .select("status, run_date")
     .eq("profile_id", profile.id)
-    .in("status", ["queued", "running"]);
-  const generating = (activeJobs ?? 0) > 0;
+    .in("status", ["queued", "running", "failed"])
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  // regra do produto: "atrasado" só existe DEPOIS do delivery_time no fuso do usuário
+  const clockParts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: profile.timezone ?? "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(new Date());
+  const clock = (type: string) => clockParts.find((p) => p.type === type)?.value ?? "00";
+  const localDate = `${clock("year")}-${clock("month")}-${clock("day")}`;
+  const localMinutes = Number(clock("hour")) * 60 + Number(clock("minute"));
+  const [dh = "7", dm = "0"] = String(profile.delivery_time ?? "07:00").split(":");
+  const pastDelivery = localMinutes > Number(dh) * 60 + Number(dm);
+
+  const generating = activeJob?.status === "queued" || activeJob?.status === "running";
+  const failedToday = activeJob?.status === "failed" && activeJob.run_date === localDate;
+  const late =
+    generating &&
+    activeJob != null &&
+    (activeJob.run_date < localDate || (activeJob.run_date === localDate && pastDelivery));
 
   const { data: verifiedDests } = await supabase
     .from("whatsapp_destinations")
@@ -132,7 +157,14 @@ export default async function DashboardPage() {
         )}
 
         {/* status de geração — logo abaixo do canal conectado */}
-        {generating && <GeneratingStatus label={t("generatingStatus")} />}
+        {failedToday ? (
+          <GeneratingStatus variant="failed" label={t("failedStatus")} />
+        ) : generating ? (
+          <GeneratingStatus
+            variant={late ? "late" : "generating"}
+            label={late ? t("lateStatus") : t("generatingStatus")}
+          />
+        ) : null}
       </section>
 
       {/* bento de big numbers */}

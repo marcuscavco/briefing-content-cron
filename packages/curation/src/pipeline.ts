@@ -41,6 +41,7 @@ export interface JobRow {
   stage: string;
   checkpoint: PipelineCheckpoint;
   attempts: number;
+  max_attempts?: number;
 }
 
 export interface PipelineDeps {
@@ -181,9 +182,6 @@ async function collect(deps: PipelineDeps, profile: ProfileConfig) {
     .eq("active", true);
   if (error) throw new Error(`sources: ${error.message}`);
 
-  const items: CollectedItem[] = [];
-  const report: NonNullable<PipelineCheckpoint["sourceReport"]> = [];
-
   // Fase 5: Instagram é gated — kill-switch global + feature do plano.
   const sourceRows = (sources ?? []) as (SourceRow & { account_id: string })[];
   let instagramBlock: string | null = null;
@@ -191,80 +189,103 @@ async function collect(deps: PipelineDeps, profile: ProfileConfig) {
     instagramBlock = await instagramGate(deps, profile);
   }
 
-  for (const source of sourceRows) {
-    if (source.type === "instagram" && instagramBlock) {
-      report.push({
-        sourceId: source.id,
-        portal: source.name,
-        status: "blocked",
-        itemsFound: 0,
-        error: instagramBlock,
-      });
-      const now = (deps.now?.() ?? new Date()).toISOString();
-      await deps.db
-        .from("sources")
-        .update({ last_status: "blocked", last_error: instagramBlock, last_checked_at: now })
-        .eq("id", source.id);
-      await deps.db.from("source_health_events").insert({
-        source_id: source.id,
-        account_id: source.account_id,
-        status: "blocked",
-        method: null,
-        latency_ms: 0,
-        items_found: 0,
-        error: instagramBlock,
-      });
-      continue;
-    }
+  // Fontes são independentes — coletar em série somava a latência de todas
+  // (30 fontes × 2-5s não cabe no orçamento com N jobs concorrentes).
+  const collected = await Promise.all(
+    sourceRows.map(async (source) => {
+      if (source.type === "instagram" && instagramBlock) {
+        return {
+          source,
+          status: "blocked" as const,
+          method: null as string | null,
+          latencyMs: 0,
+          items: [] as Awaited<ReturnType<ReturnType<typeof getConnector>["collect"]>>["items"],
+          error: instagramBlock,
+        };
+      }
+      try {
+        const connector = getConnector(source.type, deps.transport, deps.instagramFetcher);
+        const result = await connector.collect(
+          {
+            type: source.type,
+            url: source.url,
+            feed_url: source.feed_url,
+            handle: source.handle,
+            credential: source.credential_enc
+              ? await decryptCredential(source.credential_enc)
+              : null,
+          },
+          { windowHours: profile.windowHours },
+        );
+        return {
+          source,
+          status: result.status,
+          method: result.method ?? null,
+          latencyMs: result.latencyMs,
+          items: result.items,
+          error: result.error ?? null,
+        };
+      } catch (e) {
+        // connector que estourar exceção não derruba a coleta das demais fontes
+        return {
+          source,
+          status: "error" as const,
+          method: null,
+          latencyMs: 0,
+          items: [],
+          error: e instanceof Error ? e.message : String(e),
+        };
+      }
+    }),
+  );
 
-    const connector = getConnector(source.type, deps.transport, deps.instagramFetcher);
-    const result = await connector.collect(
-      {
-        type: source.type,
-        url: source.url,
-        feed_url: source.feed_url,
-        handle: source.handle,
-        credential: source.credential_enc ? await decryptCredential(source.credential_enc) : null,
-      },
-      { windowHours: profile.windowHours },
-    );
-
-    for (const item of result.items) {
+  const items: CollectedItem[] = [];
+  const report: NonNullable<PipelineCheckpoint["sourceReport"]> = [];
+  for (const c of collected) {
+    for (const item of c.items) {
       items.push({
         ...item,
-        sourceId: source.id,
-        portal: source.name,
-        tier: source.tier as 1 | 2 | 3,
+        sourceId: c.source.id,
+        portal: c.source.name,
+        tier: c.source.tier as 1 | 2 | 3,
       });
     }
-
     report.push({
-      sourceId: source.id,
-      portal: source.name,
-      status: result.status,
-      itemsFound: result.items.length,
-      error: result.error,
+      sourceId: c.source.id,
+      portal: c.source.name,
+      status: c.status,
+      itemsFound: c.items.length,
+      error: c.error ?? undefined,
     });
+  }
 
-    const now = (deps.now?.() ?? new Date()).toISOString();
-    await deps.db
-      .from("sources")
-      .update({
-        last_status: result.status,
-        last_error: result.error ?? null,
-        last_checked_at: now,
-        last_ok_at: result.status === "ok" ? now : undefined,
-      })
-      .eq("id", source.id);
-    await deps.db.from("source_health_events").insert({
-      source_id: source.id,
-      account_id: source.account_id,
-      status: result.status,
-      method: result.method,
-      latency_ms: result.latencyMs,
-      items_found: result.items.length,
-      error: result.error ?? null,
-    });
+  // Health: updates por fonte em paralelo (valores distintos) + eventos em batch
+  const now = (deps.now?.() ?? new Date()).toISOString();
+  await Promise.all(
+    collected.map((c) =>
+      deps.db
+        .from("sources")
+        .update({
+          last_status: c.status,
+          last_error: c.error ?? null,
+          last_checked_at: now,
+          last_ok_at: c.status === "ok" ? now : undefined,
+        })
+        .eq("id", c.source.id),
+    ),
+  );
+  if (collected.length > 0) {
+    await deps.db.from("source_health_events").insert(
+      collected.map((c) => ({
+        source_id: c.source.id,
+        account_id: c.source.account_id,
+        status: c.status,
+        method: c.method,
+        latency_ms: c.latencyMs,
+        items_found: c.items.length,
+        error: c.error ?? null,
+      })),
+    );
   }
 
   return { items: items.slice(0, MAX_ITEMS_FOR_LLM), report };

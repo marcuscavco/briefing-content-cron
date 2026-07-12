@@ -31,7 +31,7 @@
     "todayBriefing": "Briefing de hoje",
     "generateNow": "Gerar briefing agora",
     "generating": "Gerando… (pode levar alguns minutos)",
-  "generatingStatus": "Seu briefing está sendo gerado, chega já já aqui…",
+    "generatingStatus": "Seu briefing está sendo gerado, chega já já aqui…",
     "generateError": "Falha ao gerar",
     "jobQueued": "Job na fila — processado pelo cron a cada 15 min.",
     "mustRead": "Must-read",
@@ -77,7 +77,9 @@
     "sendingTo": "enviando o briefing diário para",
     "channelDisconnected": "Nenhum canal conectado",
     "channelDisconnectedCta": "verifique um número de WhatsApp em Configurações →",
-    "postsExplain": "Sugestões prontas de conteúdo para suas redes, no seu tom — quando um assunto não rende post útil, ele é pulado de propósito."
+    "postsExplain": "Sugestões prontas de conteúdo para suas redes, no seu tom — quando um assunto não rende post útil, ele é pulado de propósito.",
+    "lateStatus": "Seu briefing está demorando um pouco mais que o normal hoje. Já chega!",
+    "failedStatus": "Não conseguimos gerar seu briefing hoje. Vamos tentar novamente automaticamente."
   },
   "nav": {
     "dashboard": "Dashboard",

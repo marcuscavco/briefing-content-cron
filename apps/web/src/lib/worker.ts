@@ -2,6 +2,7 @@ import "server-only";
 import {
   ClaudeLlmProvider,
   HashEmbeddingProvider,
+  isLlmRateLimitError,
   runStage,
   VoyageEmbeddingProvider,
   type JobRow,
@@ -13,15 +14,25 @@ import { createAdminClient } from "@briefing/db/admin";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**
- * Worker do motor de curadoria (ADR: Vercel Cron + Fluid Compute).
- * O tick: 1) devolve à fila jobs stale; 2) enfileira profiles devidos;
- * 3) processa jobs com claim atômico, estágio a estágio, até o orçamento
- * de tempo. O estado vive em `jobs` — o engine é substituível.
+ * Worker do motor de curadoria (ADR: cron por minuto via pg_cron + Fluid Compute).
+ * O tick: 1) devolve à fila jobs stale; 2) enfileira profiles devidos (com
+ * antecedência, para entregar antes do horário); 3) processa até N jobs em
+ * paralelo com claim atômico, estágio a estágio, até o orçamento de tempo;
+ * 4) avisa usuários de atraso e alerta o operador. O estado vive em `jobs`.
  */
 
 // Orçamento por invocação < maxDuration da rota (300s no Hobby). O pipeline é
 // checkpointado por estágio: o que não couber é retomado na próxima invocação.
 const STAGE_TIME_BUDGET_MS = Number(process.env.WORKER_BUDGET_MS ?? 240_000);
+
+// Jobs simultâneos por invocação. O tempo é ~todo I/O-wait (RSS + API Claude),
+// então N jobs custam quase o mesmo wall-clock de 1. Tier intermediário da
+// Anthropic comporta 5 pipelines em paralelo com folga.
+const WORKER_CONCURRENCY = Math.max(1, Number(process.env.WORKER_CONCURRENCY ?? 5));
+
+// Antecedência do enfileiramento: gerar ANTES do delivery_time para o briefing
+// chegar até o horário (ex.: entrega 07:00 → fila às 06:00).
+const DISPATCH_LEAD_MINUTES = Math.max(0, Number(process.env.DISPATCH_LEAD_MINUTES ?? 60));
 
 function buildDeps(db: SupabaseClient): PipelineDeps {
   return {
@@ -59,7 +70,13 @@ function localClock(timezone: string, now = new Date()): { date: string; minutes
   };
 }
 
-/** Enfileira o job diário dos profiles cujo horário de entrega já passou hoje. */
+/** Minutos desde meia-noite do delivery_time ("HH:MM" ou "HH:MM:SS"). */
+function deliveryMinutesOf(deliveryTime: string | null): number {
+  const [h = "7", m = "0"] = String(deliveryTime ?? "07:00").split(":");
+  return Number(h) * 60 + Number(m);
+}
+
+/** Enfileira o job diário dos profiles com DISPATCH_LEAD_MINUTES de antecedência. */
 export async function dispatchDueJobs(db: SupabaseClient): Promise<number> {
   const { data: profiles, error } = await db
     .from("briefing_profiles")
@@ -70,9 +87,9 @@ export async function dispatchDueJobs(db: SupabaseClient): Promise<number> {
   let enqueued = 0;
   for (const profile of profiles ?? []) {
     const { date, minutes } = localClock(profile.timezone ?? "America/Sao_Paulo");
-    const [h = "7", m = "0"] = String(profile.delivery_time ?? "07:00").split(":");
-    const deliveryMinutes = Number(h) * 60 + Number(m);
-    if (minutes < deliveryMinutes) continue; // ainda não é hora no fuso do usuário
+    const deliveryMinutes = deliveryMinutesOf(profile.delivery_time);
+    // entra na fila LEAD minutos antes da entrega, para chegar até o horário
+    if (minutes < deliveryMinutes - DISPATCH_LEAD_MINUTES) continue;
 
     // unique (profile, type, run_date) faz a idempotência; conflito = já enfileirado
     const { error: insertError } = await db.from("jobs").insert({
@@ -94,7 +111,11 @@ interface ProcessSummary {
   failed: string[];
 }
 
-/** Processa jobs da fila (claim → estágios → checkpoint) até o orçamento acabar. */
+/**
+ * Processa jobs da fila até o orçamento acabar, mantendo até WORKER_CONCURRENCY
+ * pipelines simultâneos. O claim (`FOR UPDATE SKIP LOCKED`) é atômico, então N
+ * loops concorrentes nunca pegam o mesmo job.
+ */
 export async function processQueue(
   db: SupabaseClient,
   workerId: string,
@@ -103,17 +124,34 @@ export async function processQueue(
   const deps = buildDeps(db);
   const started = Date.now();
   const summary: ProcessSummary = { processed: [], failed: [] };
+  const inFlight = new Set<Promise<void>>();
+  let queueEmpty = false;
 
-  while (Date.now() - started < budgetMs) {
+  while (!queueEmpty && Date.now() - started < budgetMs) {
+    if (inFlight.size >= WORKER_CONCURRENCY) {
+      await Promise.race(inFlight);
+      continue;
+    }
+
     const { data: claimed, error } = await db.rpc("claim_next_job", { p_worker: workerId });
     if (error) throw new Error(`claim_next_job: ${error.message}`);
     const job = (claimed as JobRow[] | null)?.[0];
-    if (!job) break; // fila vazia
+    if (!job) {
+      queueEmpty = true; // nada devido agora; drena o que está em voo
+      break;
+    }
 
-    const outcome = await runJob(db, deps, job, budgetMs - (Date.now() - started));
-    summary[outcome === "failed" ? "failed" : "processed"].push(job.id);
+    const task: Promise<void> = runJob(db, deps, job, budgetMs - (Date.now() - started))
+      .then((outcome) => {
+        summary[outcome === "failed" ? "failed" : "processed"].push(job.id);
+      })
+      .finally(() => {
+        inFlight.delete(task);
+      });
+    inFlight.add(task);
   }
 
+  await Promise.all(inFlight);
   return summary;
 }
 
@@ -151,8 +189,15 @@ async function runJob(
         .single();
       if (error) throw new Error(`job update: ${error.message}`);
 
-      await appendStageLog(db, job.id, stageLogEntry);
-      await incrementUsage(db, job.id, result.metrics);
+      // um único UPDATE atômico: com workers concorrentes, read-modify-write
+      // de stage_log/tokens perdia entradas
+      await db.rpc("append_job_progress", {
+        p_job_id: job.id,
+        p_entry: stageLogEntry,
+        p_tokens_in: result.metrics.tokensInput,
+        p_tokens_out: result.metrics.tokensOutput,
+        p_cost: result.metrics.costUsd,
+      });
 
       if (done) return "done";
       job = updated as unknown as JobRow;
@@ -167,7 +212,25 @@ async function runJob(
       }
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e);
-      const exhausted = job.attempts >= 3;
+
+      // Rate limit da API não é falha do job: volta pra fila daqui a 2 min sem
+      // queimar tentativa (o claim já incrementou attempts — desfaz).
+      if (isLlmRateLimitError(e)) {
+        await db
+          .from("jobs")
+          .update({
+            status: "queued",
+            error: message,
+            attempts: Math.max(0, job.attempts - 1),
+            locked_at: null,
+            locked_by: null,
+            run_at: new Date(Date.now() + 2 * 60_000).toISOString(),
+          })
+          .eq("id", job.id);
+        return "requeued";
+      }
+
+      const exhausted = job.attempts >= (job.max_attempts ?? 3);
       await db
         .from("jobs")
         .update({
@@ -183,39 +246,140 @@ async function runJob(
   }
 }
 
-async function appendStageLog(db: SupabaseClient, jobId: string, entry: unknown) {
-  const { data } = await db.from("jobs").select("stage_log").eq("id", jobId).single();
-  const log = Array.isArray(data?.stage_log) ? data.stage_log : [];
-  await db.from("jobs").update({ stage_log: [...log, entry] }).eq("id", jobId);
+/**
+ * Aviso de atraso ao usuário (regra: atraso só existe DEPOIS do delivery_time).
+ * Job do dia ainda não concluído após o horário de entrega → 1 mensagem por
+ * job/dia (dedupe em jobs.late_notified_at) para cada destino verificado.
+ */
+async function notifyLateJobs(db: SupabaseClient): Promise<number> {
+  if (!process.env.ZAPI_INSTANCE_ID || !process.env.ZAPI_TOKEN) return 0;
+
+  const { data: jobs, error } = await db
+    .from("jobs")
+    .select("id, profile_id, run_date, status, briefing_profiles(delivery_time, timezone)")
+    .in("status", ["queued", "running", "failed"])
+    .is("late_notified_at", null);
+  if (error || !jobs?.length) return 0;
+
+  const zapi = new ZapiClient();
+  let notified = 0;
+
+  for (const job of jobs) {
+    const profile = job.briefing_profiles as unknown as {
+      delivery_time: string | null;
+      timezone: string | null;
+    } | null;
+    if (!profile) continue;
+
+    const { date, minutes } = localClock(profile.timezone ?? "America/Sao_Paulo");
+    if (job.run_date !== date) continue; // só o job de hoje conta como "atrasado"
+    if (minutes <= deliveryMinutesOf(profile.delivery_time)) continue; // ainda no prazo
+
+    const { data: destinations } = await db
+      .from("whatsapp_destinations")
+      .select("phone")
+      .eq("profile_id", job.profile_id)
+      .eq("verified", true)
+      .eq("active", true);
+
+    for (const dest of destinations ?? []) {
+      try {
+        await zapi.sendText(
+          dest.phone,
+          "Bom dia! Seu briefing de hoje está levando alguns minutos a mais que o normal. Já chega! 🕖",
+        );
+      } catch (e) {
+        console.error(`late notice ${job.id} → ${dest.phone}: ${e}`);
+      }
+    }
+
+    await db
+      .from("jobs")
+      .update({ late_notified_at: new Date().toISOString() })
+      .eq("id", job.id);
+    notified++;
+  }
+
+  return notified;
 }
 
-async function incrementUsage(
-  db: SupabaseClient,
-  jobId: string,
-  metrics: { tokensInput: number; tokensOutput: number; costUsd: number },
-) {
-  if (!metrics.tokensInput && !metrics.tokensOutput) return;
-  const { data } = await db
+// Alerta operacional (WhatsApp do operador): fila represada ou jobs falhando.
+const OPS_ALERT_COOLDOWN_MS = 60 * 60_000;
+const OPS_QUEUE_LAG_ALERT_MS = 30 * 60_000;
+
+async function sendOpsAlert(db: SupabaseClient): Promise<boolean> {
+  const phone = process.env.OPS_ALERT_PHONE;
+  if (!phone || !process.env.ZAPI_INSTANCE_ID || !process.env.ZAPI_TOKEN) return false;
+
+  // cooldown de 1h via app_config (server-only)
+  const { data: cfg } = await db
+    .from("app_config")
+    .select("value")
+    .eq("key", "ops_alert_last_at")
+    .maybeSingle();
+  const lastAt = typeof cfg?.value === "string" ? Date.parse(cfg.value) : 0;
+  if (Number.isFinite(lastAt) && Date.now() - lastAt < OPS_ALERT_COOLDOWN_MS) return false;
+
+  const problems: string[] = [];
+
+  const { data: oldest } = await db
     .from("jobs")
-    .select("tokens_input, tokens_output, cost_usd")
-    .eq("id", jobId)
-    .single();
-  if (!data) return;
-  await db
+    .select("run_at")
+    .eq("status", "queued")
+    .lte("run_at", new Date().toISOString())
+    .order("run_at")
+    .limit(1);
+  const oldestRunAt = oldest?.[0]?.run_at ? Date.parse(oldest[0].run_at) : null;
+  if (oldestRunAt && Date.now() - oldestRunAt > OPS_QUEUE_LAG_ALERT_MS) {
+    problems.push(`fila represada há ${Math.round((Date.now() - oldestRunAt) / 60_000)} min`);
+  }
+
+  const since = new Date(Date.now() - 24 * 60 * 60_000).toISOString();
+  const { data: failures } = await db
     .from("jobs")
-    .update({
-      tokens_input: Number(data.tokens_input) + metrics.tokensInput,
-      tokens_output: Number(data.tokens_output) + metrics.tokensOutput,
-      cost_usd: Number(data.cost_usd) + metrics.costUsd,
-    })
-    .eq("id", jobId);
+    .select("id, error")
+    .eq("status", "failed")
+    .gte("created_at", since)
+    .order("created_at", { ascending: false });
+  if (failures?.length) {
+    const lastError = String(failures[0]?.error ?? "sem detalhe").slice(0, 200);
+    problems.push(`${failures.length} job(s) FAILED nas últimas 24h — último erro: ${lastError}`);
+  }
+
+  if (problems.length === 0) return false;
+
+  try {
+    await new ZapiClient().sendText(phone, `⚠️ Briefing ops:\n- ${problems.join("\n- ")}`);
+    await db
+      .from("app_config")
+      .upsert({ key: "ops_alert_last_at", value: new Date().toISOString() });
+    return true;
+  } catch (e) {
+    console.error(`ops alert: ${e}`);
+    return false;
+  }
 }
 
-/** Tick completo: requeue de stale + dispatch + processamento. */
+/** Tick completo: requeue de stale + dispatch + processamento + avisos. */
 export async function tick(workerId: string) {
   const db = createAdminClient();
   const { data: requeued } = await db.rpc("requeue_stale_jobs");
   const enqueued = await dispatchDueJobs(db);
   const summary = await processQueue(db, workerId);
-  return { requeued: requeued ?? 0, enqueued, ...summary };
+
+  // avisos nunca derrubam o tick
+  let lateNotified = 0;
+  let opsAlerted = false;
+  try {
+    lateNotified = await notifyLateJobs(db);
+  } catch (e) {
+    console.error(`notifyLateJobs: ${e}`);
+  }
+  try {
+    opsAlerted = await sendOpsAlert(db);
+  } catch (e) {
+    console.error(`sendOpsAlert: ${e}`);
+  }
+
+  return { requeued: requeued ?? 0, enqueued, lateNotified, opsAlerted, ...summary };
 }

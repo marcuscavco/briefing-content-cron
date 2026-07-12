@@ -78,3 +78,16 @@ Manter **Sonnet 5 (heavy) + Haiku 4.5 (cheap)** agora — o custo de ~US$ 0,22/b
 3. A abstração `LlmProvider` já permite plugar outro provedor por estágio — a decisão pode ser tomada por dados (A/B), não por fé.
 
 Com (1)+(2), 50 usuários custam ~US$ 2–4/dia de LLM (~US$ 60–120/mês), o que viabiliza preço de assinatura na faixa R$ 29–49/mês com margem confortável.
+
+---
+
+## 5. Roadmap — decisões alinhadas (2026-07-12)
+
+Registro das decisões do Marcus para as próximas fases (nenhuma implementada ainda, exceto a Fase A descrita acima):
+
+1. **Fase A (implementada nesta branch)** — pg_cron por minuto + worker paralelo (`WORKER_CONCURRENCY=5`) + dispatch antecipado (`DISPATCH_LEAD_MINUTES=60`, todos entregues antes das 7h) + UX de atraso/falha (banner + WhatsApp; atraso só conta DEPOIS do delivery_time) + alertas ops (`OPS_ALERT_PHONE`) + unicidade de telefone para novos cadastros (contas de teste existentes preservadas).
+2. **Fontes personalizadas = feature de plano pago.** Plano simples usa só o catálogo existente (`suggested_sources`); plano mais caro (`plans.features.custom_sources`) permite adicionar portal/RSS/Instagram próprios. A fonte privada é utilizável pelo dono imediatamente, sem aprovação; a promoção ao **catálogo global** (disponível para todos) exige validação de um admin da plataforma (`platform_admins`), via backoffice `/admin/catalog`.
+3. **Ingestão + clusterização compartilhadas** entre usuários com fontes em comum — aprovado, desde que a personalização do briefing final se mantenha. Fontes privadas/credenciadas ficam fora do compartilhamento.
+4. **Experimento de modelo (entrega seguinte à Fase A):** A/B da clusterização com Haiku 4.5 e Gemini 3 Flash contra o baseline Sonnet 5 (Sonnet mantido nos posts, onde a voz importa). Hipótese do Marcus a validar: Gemini teria vantagem em relevância de notícias pela base do Google — avaliar **grounding no Google Search** (Gemini) e **Live Search** (Grok) para busca fora do universo fechado com filtro de fontes confiáveis (dor atual: buscas abertas retornam portais pequenos/duvidosos).
+5. **Meta de margem:** custo de processamento por usuário ≤ **30% da receita** — guia para a escolha final de modelo e para o compartilhamento de ingestão.
+6. **Mercado:** usuários só no Brasil por enquanto (fontes internacionais continuam); janela de geração concentrada ~6h BRT.
