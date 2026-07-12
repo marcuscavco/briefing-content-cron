@@ -47,12 +47,17 @@ describe("computeTrendBoost", () => {
   });
 
   it("boost promove categoria via categorize(heat + boost)", () => {
-    const heat = 4; // relevante (3-5)
+    const heat = 3; // relevante (3)
     expect(categorize(heat, DEFAULT_WEIGHTS)).toBe("relevante");
     const boost = computeTrendBoost(state(), NOW); // +2
     expect(categorize(heat + Math.round(boost), DEFAULT_WEIGHTS)).toBe("must_read");
-    // no_radar (2) + 2 → relevante
-    expect(categorize(2 + Math.round(boost), DEFAULT_WEIGHTS)).toBe("relevante");
+    // no_radar (2) + 2 → must_read na régua nova (corte 4)
+    expect(categorize(2 + Math.round(boost), DEFAULT_WEIGHTS)).toBe("must_read");
+  });
+
+  it("corte de must_read é 4 (granularidade por história)", () => {
+    expect(categorize(4, DEFAULT_WEIGHTS)).toBe("must_read");
+    expect(categorize(3, DEFAULT_WEIGHTS)).toBe("relevante");
   });
 
   it("badge Em alta quando boost ≥ badgeThreshold", () => {

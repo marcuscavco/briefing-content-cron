@@ -25,7 +25,10 @@ export const DEFAULT_WEIGHTS: HeatWeights = {
   tier3: 0.5,
   brBonusThreshold: 3,
   brBonus: 1,
-  mustRead: 6,
+  // mustRead era 6, calibrado para clusters guarda-chuva (que somavam portais
+  // de fatos distintos). Com granularidade por história (2026-07-13), a
+  // convergência é honesta e mais rara: 4 ≈ 2 portais Tier 1 no MESMO fato.
+  mustRead: 4,
   relevante: 3,
   noRadar: 2,
 };
