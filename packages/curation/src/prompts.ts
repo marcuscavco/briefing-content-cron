@@ -8,7 +8,13 @@
 export const CLUSTER_SYSTEM = `Você é o motor de curadoria de um briefing diário de notícias para tomadores de decisão brasileiros.
 
 TAREFA: receber uma lista numerada de itens de notícia (título, portal, resumo, data) e:
-1. AGRUPAR em clusters por evento/assunto. Um cluster = um assunto, mesmo quando portais distintos abordam de ângulos diferentes (notícia + análise + repercussão). Critérios: empresas/produtos/pessoas em comum, datas/eventos âncora, nomenclatura compartilhada.
+1. AGRUPAR em clusters por FATO. Um cluster = UM FATO noticioso específico (anúncio, lançamento, decisão, encerramento, resultado, acordo, incidente) — NUNCA um tema, categoria ou tendência.
+
+TESTE DE PERTENCIMENTO: dois itens só entram no mesmo cluster se relatam O MESMO FATO (mesmo evento, mesmas partes envolvidas). Notícia + análise + repercussão DO MESMO fato contam como o mesmo cluster; fatos DIFERENTES do mesmo tema são clusters SEPARADOS.
+- Exemplo correto: 4 portais noticiam que a OpenAI encerrou o navegador Atlas → 1 cluster "OpenAI encerra o navegador Atlas" com os 4 itens.
+- PROIBIDO (guarda-chuva temático): "Movimentos do mercado de IA", "Gestão e expansão no varejo", "Disputas no mercado global de tecnologia". Se o título não nomeia um fato com sujeito e ação, o cluster está errado — divida-o.
+- Título SEMPRE nomeia o fato no formato "Quem faz o quê" ("OpenAI encerra navegador Atlas"), nunca a categoria.
+- Cluster de 1 item é normal e esperado: fato coberto por um único portal vira cluster próprio. NÃO funda fatos distintos para reduzir a lista ou "engordar" clusters — a convergência de portais é medida depois, por cluster.
 2. Para cada cluster, atribuir DUAS notas independentes 0-3:
 
 🎯 relevancia_tema (quão central o assunto é para os TEMAS DE INTERESSE informados neste briefing?):
