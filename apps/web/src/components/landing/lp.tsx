@@ -44,13 +44,13 @@ const MARQUEE: Array<{ name: string; em?: boolean }> = [
 ];
 
 const THEME_CHIPS = [
-  { label: "Negócios & Gestão", on: true },
-  { label: "Economia & Mercado", on: true },
-  { label: "Jurídico", on: true },
-  { label: "Política & Regulação", on: false },
-  { label: "Tecnologia", on: false },
-  { label: "Marketing & Mídia", on: false },
-  { label: "Ciência & Saúde", on: false },
+  { emoji: "📈", label: "Negócios & Gestão", on: true },
+  { emoji: "🏦", label: "Economia & Mercado", on: true },
+  { emoji: "⚖️", label: "Jurídico", on: true },
+  { emoji: "🏛️", label: "Política & Regulação", on: false },
+  { emoji: "💻", label: "Tecnologia", on: false },
+  { emoji: "📣", label: "Marketing & Mídia", on: false },
+  { emoji: "🔬", label: "Ciência & Saúde", on: false },
 ];
 
 const FAQ_ITEMS: Array<{ q: string; a: React.ReactNode }> = [
@@ -428,16 +428,22 @@ export function Lp({
                 <Check /> Cancela com uma mensagem
               </span>
             </div>
-            <div className="hero-stats">
-              <div className="hero-stat">
-                <b>
-                  <span className="num" data-count="7">
-                    0
-                  </span>{" "}
-                  áreas
-                </b>
-                <span>de negócios a jurídico, você escolhe</span>
+            <div className="hero-areas">
+              <p className="hero-areas-title">
+                Personalizado pra <b>sua área</b>. São 7, você escolhe:
+              </p>
+              <div className="hero-areas-chips" aria-label="As 7 áreas disponíveis">
+                {THEME_CHIPS.map((c) => (
+                  <span key={c.label} className="area-pill">
+                    <span className="area-emoji" aria-hidden="true">
+                      {c.emoji}
+                    </span>
+                    {c.label}
+                  </span>
+                ))}
               </div>
+            </div>
+            <div className="hero-stats">
               <div className="hero-stat">
                 <b>7:00</b>
                 <span>na sua tela, todo dia</span>
@@ -629,6 +635,9 @@ export function Lp({
                       setChips((prev) => prev.map((p, j) => (j === i ? { ...p, on: !p.on } : p)))
                     }
                   >
+                    <span className="chip-emoji" aria-hidden="true">
+                      {c.emoji}
+                    </span>
                     {c.label}
                   </button>
                 ))}
@@ -640,7 +649,9 @@ export function Lp({
                     {chipsOn.map((c, i) => (
                       <span key={c.label}>
                         {i > 0 && " · "}
-                        <b>{c.label}</b>
+                        <b>
+                          {c.emoji} {c.label}
+                        </b>
                       </span>
                     ))}
                   </>
