@@ -64,8 +64,8 @@ function main() {
   const out: string[] = [
     "# Granularidade de cluster — antes/depois (Fase D)",
     "",
-    "> **ANTES** = prompt v1 (\"um cluster = um assunto\", que o Gemini interpretava como TEMA).",
-    "> **DEPOIS** = prompt v2 (\"um cluster = UM FATO específico; guarda-chuva proibido; cluster de 1 item é normal\").",
+    "> **ANTES** = prompt v1 (\"um cluster = um assunto\" — instável: ora fatos, ora guarda-chuva como o do WhatsApp de 13/07).",
+    "> **DEPOIS** = prompt v3 (\"um cluster = UMA HISTÓRIA: mesmo ator + mesmo fio narrativo; guarda-chuva multi-ator proibido\").",
     "> Mesmos 4 dias reais de coleta, mesmo modelo de produção (Gemini 3 Flash). Sonnet 5 incluído como referência de contagem.",
     "",
     "**Como validar:** os títulos do DEPOIS devem nomear fatos (\"Quem faz o quê\"); se algum título ainda parecer categoria/tema, reprove.",
@@ -106,7 +106,7 @@ function main() {
     out.push(`## Dia: ${fx}`, "");
     out.push(`### ANTES (prompt v1) — ${before.clusters.length} clusters`, "");
     out.push(...titleList(before), "");
-    out.push(`### DEPOIS (prompt v2) — ${after.clusters.length} clusters`, "");
+    out.push(`### DEPOIS (prompt v3) — ${after.clusters.length} clusters`, "");
     out.push(...titleList(after), "");
     out.push("---", "");
   }

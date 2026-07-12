@@ -1,7 +1,7 @@
 # Granularidade de cluster — antes/depois (Fase D)
 
-> **ANTES** = prompt v1 ("um cluster = um assunto", que o Gemini interpretava como TEMA).
-> **DEPOIS** = prompt v2 ("um cluster = UM FATO específico; guarda-chuva proibido; cluster de 1 item é normal").
+> **ANTES** = prompt v1 ("um cluster = um assunto" — instável: ora fatos, ora guarda-chuva como o do WhatsApp de 13/07).
+> **DEPOIS** = prompt v3 ("um cluster = UMA HISTÓRIA: mesmo ator + mesmo fio narrativo; guarda-chuva multi-ator proibido").
 > Mesmos 4 dias reais de coleta, mesmo modelo de produção (Gemini 3 Flash). Sonnet 5 incluído como referência de contagem.
 
 **Como validar:** os títulos do DEPOIS devem nomear fatos ("Quem faz o quê"); se algum título ainda parecer categoria/tema, reprove.
@@ -12,10 +12,10 @@
 
 | Dia | Gemini ANTES (clusters · digest · média itens) | Gemini DEPOIS | Sonnet DEPOIS (ref.) | Custo Gemini DEPOIS |
 |---|---|---|---|---|
-| marketing-2026-07-12 | 11 · 7 · 1.5 | **13 · 5 · 1.1** | 17 · 7 · 1.0 | $0.0219 · 24s |
-| negocios-2026-07-11 | 6 · 6 · 3.2 | **15 · 4 · 1.1** | 20 · 3 · 1.1 | $0.0203 · 23s |
-| tech-2026-07-10 | 10 · 8 · 3.6 | **15 · 6 · 1.9** | 39 · 15 · 1.4 | $0.0269 · 27s |
-| tech-2026-07-12 | 10 · 5 · 2.4 | **15 · 8 · 1.4** | 37 · 12 · 1.2 | $0.0244 · 25s |
+| marketing-2026-07-12 | 11 · 7 · 1.5 | **18 · 7 · 1.0** | — | $0.0259 · 36s |
+| negocios-2026-07-11 | 6 · 6 · 3.2 | **13 · 3 · 1.2** | — | $0.0166 · 20s |
+| tech-2026-07-10 | 10 · 8 · 3.6 | **12 · 10 · 3.2** | — | $0.0230 · 24s |
+| tech-2026-07-12 | 10 · 5 · 2.4 | **18 · 10 · 1.7** | — | $0.0309 · 37s |
 
 _Leitura esperada: DEPOIS com muito mais clusters (granularidade de fato), média de itens/cluster menor e digest honesto (só o que convergiu)._
 
@@ -37,21 +37,26 @@ _Leitura esperada: DEPOIS com muito mais clusters (granularidade de fato), médi
 - _[descartado]_ Nubank obtém licença bancária no México e projeta investimento de US$ 4,2 bi _(heat 1 · 1 item)_
 - _[descartado]_ Redes sociais reforçam detecção de conteúdo e spam gerado por IA _(heat 1 · 2 items)_
 
-### DEPOIS (prompt v2) — 13 clusters
+### DEPOIS (prompt v3) — 18 clusters
 
-- **[no_radar]** Irã anuncia fechamento do Estreito de Ormuz e eleva tensão global _(heat 2 · 2 items)_
-- **[no_radar]** CEO do Grupo Carrefour Brasil detalha desafios do consumo no varejo alimentar _(heat 2 · 1 item)_
-- **[no_radar]** Insurtech brasileira de viagens capta R$ 35 milhões para expansão internacional _(heat 2 · 1 item)_
-- **[no_radar]** Geração Z impulsiona lucro de marcas através da nostalgia no marketing digital _(heat 2 · 1 item)_
-- **[no_radar]** Split Risk alcança faturamento de R$ 60 milhões com seguros de nicho _(heat 2 · 1 item)_
-- _[descartado]_ Nubank obtém licença bancária no México e planeja aporte de US$ 4,2 bilhões _(heat 1 · 1 item)_
-- _[descartado]_ Pequenos negócios diversificam receita atuando como pontos de retirada logísticos _(heat 1 · 1 item)_
-- _[descartado]_ Rússia suspende exportação de diesel e impacta fornecimento no Brasil _(heat 1 · 1 item)_
-- _[descartado]_ Nokia pivota estratégia para fornecer infraestrutura de data centers de IA _(heat 1 · 1 item)_
-- _[descartado]_ Apple processa OpenAI por suposto roubo de segredos industriais _(heat 1 · 1 item)_
-- _[descartado]_ Cantaloup inicia expansão internacional com inauguração em Lisboa _(heat 1 · 1 item)_
-- _[descartado]_ Credores minoritários da Braskem acionam CVM por assento em reestruturação _(heat 1 · 1 item)_
-- _[descartado]_ TikTok testa novo sistema para identificar spam gerado por inteligência artificial _(heat 1 · 1 item)_
+- **[no_radar]** CEO do Carrefour Brasil analisa queda no poder de compra do consumidor _(heat 2 · 1 item)_
+- **[no_radar]** Insurtech Split Risk fatura R$ 60 milhões ao diversificar atuação em seguros _(heat 2 · 1 item)_
+- **[no_radar]** Insurtech de seguro-viagem levanta R$ 35 milhões para expansão internacional _(heat 2 · 1 item)_
+- **[no_radar]** Escritório brasileiro da WSL transforma o país em potência financeira do surfe _(heat 2 · 1 item)_
+- **[no_radar]** Empresas de tecnologia apostam em memória persistente para assistentes de IA _(heat 2 · 1 item)_
+- **[no_radar]** Geração Z lidera tendência de consumo baseada em nostalgia e sucessos antigos _(heat 2 · 1 item)_
+- **[no_radar]** Valentina Caran detalha estratégia de liderança no mercado imobiliário de luxo _(heat 2 · 1 item)_
+- _[descartado]_ Nubank obtém licença bancária no México e projeta investimento de US$ 4,2 bilhões _(heat 1 · 1 item)_
+- _[descartado]_ Pequenos negócios adotam pontos de retirada como fonte de receita logística _(heat 1 · 1 item)_
+- _[descartado]_ Apple processa OpenAI por suposto uso indevido de segredos comerciais _(heat 1 · 1 item)_
+- _[descartado]_ SK Hynix estreia na Nasdaq com a maior oferta estrangeira do ano nos EUA _(heat 1 · 1 item)_
+- _[descartado]_ Investigação aponta anúncios de abuso infantil no Instagram na Índia _(heat 1 · 1 item)_
+- _[descartado]_ Ferramenta de detecção de IA da Meta apresenta falhas após edições em imagens _(heat 1 · 1 item)_
+- _[descartado]_ Cantaloup inicia expansão internacional com primeira unidade em Lisboa _(heat 1 · 1 item)_
+- _[descartado]_ Nokia se torna fornecedora de infraestrutura para data centers de IA _(heat 1 · 1 item)_
+- _[descartado]_ TikTok testa ferramenta de identificação de spam gerado por inteligência artificial _(heat 1 · 1 item)_
+- _[descartado]_ Dieter Schwarz investe em projeto para criar rival europeia das big techs americanas _(heat 1 · 1 item)_
+- _[descartado]_ Credores minoritários da Braskem articulam entrada em negociação de dívida _(heat 1 · 1 item)_
 
 ---
 
@@ -66,23 +71,21 @@ _Leitura esperada: DEPOIS com muito mais clusters (granularidade de fato), médi
 - **[no_radar]** Crise no diesel russo e disputas tributárias no setor de energia _(heat 2 · 4 items)_
 - **[no_radar]** Segurança e Tecnologia: IA em Blockchain e auditoria de contratos _(heat 2 · 1 item)_
 
-### DEPOIS (prompt v2) — 15 clusters
+### DEPOIS (prompt v3) — 13 clusters
 
-- **[no_radar]** Apple processa OpenAI por roubo de segredos industriais _(heat 2 · 2 items)_
-- **[no_radar]** SK Hynix alerta para crise crítica de oferta de memória em 2027 _(heat 2 · 1 item)_
-- **[no_radar]** Priorização do atendimento ao cliente é essencial para sucesso de CEOs _(heat 2 · 1 item)_
-- **[no_radar]** IA se consolida na auditoria de contratos inteligentes de blockchain _(heat 2 · 1 item)_
-- _[descartado]_ EasyJet aceita oferta de aquisição de US$ 7,6 bilhões da Apollo _(heat 1 · 1 item)_
-- _[descartado]_ Nubank recebe licença bancária no México e prevê investimento bilionário _(heat 1 · 1 item)_
+- **[relevante]** SK Hynix estreia na Nasdaq com oferta bilionária e alerta para escassez _(heat 3 · 2 items)_
+- **[no_radar]** Apple processa OpenAI por roubo de segredos industriais e Musk ironiza _(heat 2 · 2 items)_
+- **[no_radar]** Opinião: Atendimento ao cliente é prioridade estratégica para o CEO _(heat 2 · 1 item)_
 - _[descartado]_ OpenAI lança ChatGPT Work focado em produtividade corporativa _(heat 1 · 1 item)_
-- _[descartado]_ SK Hynix estreia na Nasdaq com maior oferta estrangeira nos EUA _(heat 1 · 1 item)_
-- _[descartado]_ Porto Serviço busca captar R$ 4,5 bilhões após receita recorde _(heat 1 · 1 item)_
-- _[descartado]_ Oi assina venda de unidade de serviços por R$ 60,1 milhões _(heat 1 · 1 item)_
-- _[descartado]_ SLC Agrícola reduz escopo de compra de terras da Radar _(heat 1 · 1 item)_
-- _[descartado]_ Credores minoritários da Braskem tentam participar de reestruturação _(heat 1 · 1 item)_
-- _[descartado]_ Cantaloup inicia expansão internacional com restaurante em Lisboa _(heat 1 · 1 item)_
-- _[descartado]_ Brasil tem janela de 3 anos para ser competitivo em data centers _(heat 1 · 1 item)_
-- _[descartado]_ Setor de biodiesel pressiona governo por aceleração do B25 _(heat 1 · 1 item)_
+- _[descartado]_ EasyJet aceita oferta de US$ 7,6 bilhões da Apollo em reviravolta de M&A _(heat 1 · 1 item)_
+- _[descartado]_ Nubank obtém licença bancária no México e projeta investimento bilionário _(heat 1 · 1 item)_
+- _[descartado]_ Nokia se reposiciona como fornecedora estratégica para data centers de IA _(heat 1 · 1 item)_
+- _[descartado]_ Oi vende unidade de serviços telefônicos por R$ 60,1 milhões para a Método _(heat 1 · 1 item)_
+- _[descartado]_ Porto Serviço planeja expansão de R$ 4,5 bilhões após sucesso inicial _(heat 1 · 1 item)_
+- _[descartado]_ Restaurante Cantaloup inicia expansão internacional com unidade em Lisboa _(heat 1 · 1 item)_
+- _[descartado]_ Credores minoritários da Braskem exigem participar de reestruturação _(heat 1 · 1 item)_
+- _[descartado]_ SLC Agrícola revisa transação com Radar e reduz desembolso financeiro _(heat 1 · 1 item)_
+- _[descartado]_ Brasil tem janela de três anos para liderar setor de data centers _(heat 1 · 1 item)_
 
 ---
 
@@ -101,23 +104,20 @@ _Leitura esperada: DEPOIS com muito mais clusters (granularidade de fato), médi
 - _[descartado]_ Expansão de datacenters de IA eleva emissões de carbono da Microsoft _(heat 1 · 2 items)_
 - _[descartado]_ Startups de IA captam rodadas de US$ 100 milhões e buscam valuations recordes _(heat 1 · 3 items)_
 
-### DEPOIS (prompt v2) — 15 clusters
+### DEPOIS (prompt v3) — 12 clusters
 
-- **[relevante]** OpenAI lança família GPT-5.6 e assistente ChatGPT Work _(heat 3 · 6 items)_
-- **[relevante]** Apple fecha acordo de US$ 30 bilhões para produzir chips nos EUA _(heat 3 · 2 items)_
-- **[relevante]** Meta lança Muse Spark 1.1 para automação de programação com IA _(heat 3 · 2 items)_
-- **[relevante]** OpenAI apresenta GPT-Live para conversas naturais por voz _(heat 3 · 2 items)_
-- **[no_radar]** New York Times acusa OpenAI de ocultar evidências em processo de direitos autorais _(heat 2 · 2 items)_
-- **[no_radar]** Crise de chips de memória causa queda global de 4,9% nas vendas de PCs _(heat 2 · 2 items)_
-- _[descartado]_ Apple perde recurso contra lei da União Europeia que limita Big Techs _(heat 1 · 2 items)_
-- _[descartado]_ China alerta para vulnerabilidades de coleta de dados no Claude Code _(heat 1 · 2 items)_
-- _[descartado]_ Anthropic lança modelo Fable 5 para competir em performance _(heat 1 · 2 items)_
-- _[descartado]_ SK Hynix estreia nos EUA para capturar demanda por chips de IA _(heat 1 · 2 items)_
-- _[descartado]_ Startup Lyzr levanta US$ 100 milhões em rodada operada por agente de IA _(heat 1 · 1 item)_
-- _[descartado]_ Crise de caixa ameaça continuidade das operações da Oi em agosto _(heat 1 · 1 item)_
-- _[descartado]_ OpenAI encerra navegador Atlas para focar em agentes e extensões _(heat 1 · 1 item)_
-- _[descartado]_ Device Code Phishing: especialistas alertam para golpe que ignora senhas _(heat 1 · 1 item)_
-- _[descartado]_ Microsoft expande infraestrutura e vê emissões de carbono saltarem 25% _(heat 0 · 1 item)_
+- **[relevante]** OpenAI lança família de modelos GPT-5.6 e o agente autônomo ChatGPT Work _(heat 4 · 7 items)_
+- **[relevante]** OpenAI lança modelo de voz GPT-Live e encerra o navegador experimental Atlas _(heat 4 · 3 items)_
+- **[relevante]** Meta lança agente de programação Muse Spark 1.1 e integra geração de IA ao Instagram _(heat 4 · 5 items)_
+- **[relevante]** Apple investe US$ 30 bi em chips nos EUA e sofre derrota judicial na União Europeia _(heat 3 · 4 items)_
+- **[relevante]** Google revela o agente pessoal Gemini Spark e anuncia fim do Google Earth Pro _(heat 3 · 2 items)_
+- **[relevante]** Microsoft adota IA para proteção do Windows contra ataques de Device Code Phishing _(heat 3 · 2 items)_
+- **[relevante]** Samsung vaza detalhes do Galaxy Z Fold 8 e estuda fim da linha Z Flip após oitava versão _(heat 3 · 3 items)_
+- **[no_radar]** Anthropic lança o modelo Fable 5 enquanto a China alerta para falhas no Claude Code _(heat 2 · 4 items)_
+- **[no_radar]** Crise global de memórias causa queda nas vendas de PCs e encarece celulares básicos _(heat 2 · 2 items)_
+- **[no_radar]** New York Times acusa OpenAI de ocultar provas em processo sobre direitos autorais _(heat 2 · 2 items)_
+- _[descartado]_ Startups de IA utilizam agentes próprios para captar rodadas milionárias de investimento _(heat 1 · 3 items)_
+- _[descartado]_ Relatório judicial alerta que Oi pode paralisar operações a partir de agosto por falta de caixa _(heat 1 · 1 item)_
 
 ---
 
@@ -136,22 +136,25 @@ _Leitura esperada: DEPOIS com muito mais clusters (granularidade de fato), médi
 - _[descartado]_ Vazamentos indicam avanços em hardware da Apple e NVIDIA _(heat 1 · 2 items)_
 - _[descartado]_ Transição para TV 3.0 no Brasil movimenta fabricantes _(heat 1 · 1 item)_
 
-### DEPOIS (prompt v2) — 15 clusters
+### DEPOIS (prompt v3) — 18 clusters
 
-- **[relevante]** SK Hynix capta US$ 26,5 bilhões em estreia recorde na Nasdaq _(heat 4 · 3 items)_
-- **[relevante]** União Europeia acusa Meta de causar dependência com design viciante _(heat 3 · 2 items)_
-- **[relevante]** Meta cancela ferramenta de IA no Instagram após reação negativa _(heat 3 · 2 items)_
-- **[no_radar]** Apple processa OpenAI por roubo de segredos comerciais _(heat 2 · 2 items)_
-- **[no_radar]** OpenAI descontinua navegador Atlas e integra recursos ao app Work _(heat 2 · 1 item)_
-- **[no_radar]** Anthropic lança painel de controle e produtividade para o Claude _(heat 2 · 1 item)_
-- **[no_radar]** Ferramenta da Meta falha em detectar imagens geradas por sua própria IA _(heat 2 · 2 items)_
-- **[no_radar]** Amazon lança Alexa+ com IA generativa para membros Prime _(heat 2 · 1 item)_
-- _[descartado]_ CISA admite falha operacional durante resposta a incidente de segurança _(heat 1 · 1 item)_
-- _[descartado]_ Hugging Face aponta explosão do uso de IA Open Source em empresas _(heat 1 · 1 item)_
-- _[descartado]_ Oratomic levanta US$ 300 milhões para computação quântica viável _(heat 1 · 1 item)_
-- _[descartado]_ IA eleva vulnerabilidades e força mudança em prioridades de cibersegurança _(heat 1 · 1 item)_
-- _[descartado]_ Startup Fizz acusa VC Maveron de vazar segredos para rival Sidechat _(heat 1 · 1 item)_
-- _[descartado]_ TikTok testa sistema para barrar contas que usam IA para criar spam _(heat 1 · 1 item)_
-- _[descartado]_ OpenAI lança GPT-5.6 com novos modelos Sol, Terra e Luna _(heat 0 · 1 item)_
+- **[relevante]** SK Hynix estreia na Nasdaq com IPO recorde de US$ 26,5 bilhões _(heat 4 · 3 items)_
+- **[relevante]** Meta remove IA do Instagram após críticas e admite erro de abordagem _(heat 3 · 3 items)_
+- **[relevante]** União Europeia acusa Meta de violar regras com design viciante _(heat 3 · 2 items)_
+- **[relevante]** OpenAI lança modelos GPT-5.6 e encerra navegador Atlas _(heat 3 · 3 items)_
+- **[relevante]** Disney+ e Netflix consideram planos gratuitos e canais 'sempre ligados' _(heat 3 · 3 items)_
+- **[no_radar]** Apple processa OpenAI por suposto roubo de segredos comerciais _(heat 2 · 2 items)_
+- **[no_radar]** Samsung Health utilizará dados de saúde para treinamento de modelos de IA _(heat 2 · 1 item)_
+- **[no_radar]** Sunrun planeja distribuir servidores de IA em residências de usuários _(heat 2 · 1 item)_
+- **[no_radar]** Detectores da Meta falham em identificar imagens geradas por sua própria IA _(heat 2 · 2 items)_
+- **[no_radar]** Projeto de lei brasileiro visa garantir preservação e modo offline em jogos _(heat 2 · 1 item)_
+- _[descartado]_ Oratomic capta US$ 300 milhões para viabilizar computador quântico _(heat 1 · 1 item)_
+- _[descartado]_ CISA admite falha em protocolos de resposta a incidentes cibernéticos _(heat 1 · 1 item)_
+- _[descartado]_ Uso de IA dobra volume de vulnerabilidades críticas em empresas _(heat 1 · 1 item)_
+- _[descartado]_ Google lança NotebookLM Short Video e nova IA de imagens _(heat 1 · 3 items)_
+- _[descartado]_ Startup Phia é acusada de fraude 'cookie stuffing' em vendas online _(heat 1 · 1 item)_
+- _[descartado]_ Hugging Face destaca boom de modelos de IA de código aberto em empresas _(heat 1 · 1 item)_
+- _[descartado]_ Vazamento revela bateria de alta capacidade para iPhone dobrável _(heat 1 · 1 item)_
+- _[descartado]_ Startup Fizz expande processo contra fundo de VC Maveron por espionagem _(heat 1 · 1 item)_
 
 ---
