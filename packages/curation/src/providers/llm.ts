@@ -1,13 +1,16 @@
 import Anthropic from "@anthropic-ai/sdk";
 
 /**
- * Camada de LLM da plataforma. Roteamento por tarefa (decisão do brief §4):
- *   heavy = claude-sonnet-5 (clusterização/notas/posts)
- *   cheap = claude-haiku-4-5 (judge "há novidade material?")
- * Instruções fixas entram como bloco system com cache_control (prompt caching).
+ * Camada de LLM da plataforma, multi-provider (Fase B).
+ * Tarefas por estágio do pipeline:
+ *   cluster = clusterização + notas dimensionais (~76% do custo — alvo de otimização)
+ *   posts   = sugestões de post (voz do produto — qualidade > custo)
+ *   cheap   = judges baratos (novidade da memória, relevância de preview)
+ * O mapeamento task → provider:modelo vive no RoutedLlmProvider (router.ts),
+ * configurável por env (LLM_CLUSTER/LLM_POSTS/LLM_CHEAP) sem deploy.
  */
 
-export type LlmTask = "heavy" | "cheap";
+export type LlmTask = "cluster" | "posts" | "cheap";
 
 export interface LlmUsage {
   inputTokens: number;
@@ -22,7 +25,7 @@ export interface LlmResult {
 
 export interface LlmRequest {
   task: LlmTask;
-  system: string; // instruções fixas — cacheadas
+  system: string; // instruções fixas — cacheadas quando o provider suporta
   user: string; // conteúdo variável do dia
   maxTokens?: number;
   /** JSON Schema — quando presente, força saída estruturada validada pela API. */
@@ -50,22 +53,43 @@ export function isLlmRateLimitError(e: unknown): e is LlmRateLimitError {
   return typeof e === "object" && e !== null && (e as LlmRateLimitError).isLlmRateLimit === true;
 }
 
-const MODELS: Record<LlmTask, string> = {
-  heavy: "claude-sonnet-5",
-  cheap: "claude-haiku-4-5",
+/**
+ * USD por 1M tokens, por modelo. cacheRead/cacheWrite só se aplicam a providers
+ * com prompt caching (Anthropic). Modelo fora da tabela → custo 0 + warning
+ * (não derruba o pipeline; corrigir a tabela).
+ */
+export const MODEL_PRICING: Record<
+  string,
+  { input: number; output: number; cacheRead?: number }
+> = {
+  "claude-sonnet-5": { input: 3, output: 15, cacheRead: 0.3 },
+  "claude-haiku-4-5": { input: 1, output: 5, cacheRead: 0.1 },
+  "gemini-3-flash-preview": { input: 0.5, output: 3 },
+  "gemini-3.5-flash": { input: 1.5, output: 9 },
+  "gemini-3.1-flash-lite": { input: 0.25, output: 1.5 },
+  "grok-4.1-fast": { input: 0.2, output: 0.5 },
+  "grok-4.1-fast-non-reasoning": { input: 0.2, output: 0.5 },
 };
 
-// USD por 1M tokens (sonnet-5 preço cheio pós-introdutório; haiku 4.5)
-const PRICING: Record<LlmTask, { input: number; output: number; cacheRead: number }> = {
-  heavy: { input: 3, output: 15, cacheRead: 0.3 },
-  cheap: { input: 1, output: 5, cacheRead: 0.1 },
-};
+export function priceOf(model: string): { input: number; output: number; cacheRead: number } {
+  const p = MODEL_PRICING[model];
+  if (!p) {
+    console.warn(`MODEL_PRICING sem entrada para "${model}" — custo será reportado como 0`);
+    return { input: 0, output: 0, cacheRead: 0 };
+  }
+  return { input: p.input, output: p.output, cacheRead: p.cacheRead ?? p.input * 0.1 };
+}
 
-function computeCost(
-  task: LlmTask,
-  usage: { input_tokens: number; output_tokens: number; cache_read_input_tokens?: number | null; cache_creation_input_tokens?: number | null },
+function computeAnthropicCost(
+  model: string,
+  usage: {
+    input_tokens: number;
+    output_tokens: number;
+    cache_read_input_tokens?: number | null;
+    cache_creation_input_tokens?: number | null;
+  },
 ): number {
-  const p = PRICING[task];
+  const p = priceOf(model);
   const cacheRead = usage.cache_read_input_tokens ?? 0;
   const cacheWrite = usage.cache_creation_input_tokens ?? 0;
   return (
@@ -80,7 +104,10 @@ function computeCost(
 export class ClaudeLlmProvider implements LlmProvider {
   private client: Anthropic;
 
-  constructor(apiKey = process.env.ANTHROPIC_API_KEY) {
+  constructor(
+    private readonly model: string,
+    apiKey = process.env.ANTHROPIC_API_KEY,
+  ) {
     if (!apiKey) throw new Error("ANTHROPIC_API_KEY não configurada");
     this.client = new Anthropic({ apiKey });
   }
@@ -104,7 +131,7 @@ export class ClaudeLlmProvider implements LlmProvider {
     // Streaming sempre: com adaptive thinking o max_tokens cobre pensamento +
     // saída, então tetos altos são normais — e streaming evita timeout HTTP.
     const stream = this.client.messages.stream({
-      model: MODELS[req.task],
+      model: this.model,
       max_tokens: req.maxTokens ?? 8192,
       system: [
         {
@@ -147,7 +174,7 @@ export class ClaudeLlmProvider implements LlmProvider {
           (response.usage.cache_read_input_tokens ?? 0) +
           (response.usage.cache_creation_input_tokens ?? 0),
         outputTokens: response.usage.output_tokens,
-        costUsd: computeCost(req.task, response.usage),
+        costUsd: computeAnthropicCost(this.model, response.usage),
       },
     };
   }

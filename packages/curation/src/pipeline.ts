@@ -342,7 +342,7 @@ async function cluster(
     .join("\n");
 
   const result = await llm.complete({
-    task: "heavy",
+    task: "cluster",
     system: CLUSTER_SYSTEM,
     user: `TEMAS DE INTERESSE: ${profile.themes.join(", ") || "(todos — usuário não restringiu)"}\nTEMAS EXCLUÍDOS: ${profile.excludedThemes.join(", ") || "(nenhum)"}\n\nITENS (${items.length}):\n${itemList}`,
     maxTokens: 40_000, // adaptive thinking + JSON de ~30 clusters cabem folgados
@@ -497,7 +497,7 @@ async function suggestPosts(
     .join("\n\n");
 
   const result = await llm.complete({
-    task: "heavy",
+    task: "posts",
     system: POSTS_SYSTEM,
     user: `LIMITE DE POSTS PUBLICÁVEIS: ${profile.maxPostsPerDay}\n\nCLUSTERS:\n${list}`,
     maxTokens: 12_000,

@@ -8,12 +8,18 @@ export {
   ClaudeLlmProvider,
   FakeLlmProvider,
   LlmRateLimitError,
+  MODEL_PRICING,
   isLlmRateLimitError,
   parseJson,
+  priceOf,
   type LlmProvider,
   type LlmRequest,
   type LlmResult,
+  type LlmTask,
 } from "./providers/llm";
+export { GeminiLlmProvider, toGeminiSchema } from "./providers/gemini";
+export { GrokLlmProvider } from "./providers/grok";
+export { RoutedLlmProvider, buildProvider } from "./providers/router";
 export {
   VoyageEmbeddingProvider,
   HashEmbeddingProvider,

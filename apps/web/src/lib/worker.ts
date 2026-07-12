@@ -1,8 +1,8 @@
 import "server-only";
 import {
-  ClaudeLlmProvider,
   HashEmbeddingProvider,
   isLlmRateLimitError,
+  RoutedLlmProvider,
   runStage,
   VoyageEmbeddingProvider,
   type JobRow,
@@ -37,7 +37,9 @@ const DISPATCH_LEAD_MINUTES = Math.max(0, Number(process.env.DISPATCH_LEAD_MINUT
 function buildDeps(db: SupabaseClient): PipelineDeps {
   return {
     db,
-    llm: new ClaudeLlmProvider(),
+    // task → provider:modelo por env (LLM_CLUSTER/LLM_POSTS/LLM_CHEAP);
+    // defaults = Sonnet 5 (cluster/posts) + Haiku 4.5 (judges)
+    llm: new RoutedLlmProvider(),
     embeddings: process.env.VOYAGE_API_KEY
       ? new VoyageEmbeddingProvider()
       : new HashEmbeddingProvider(), // dev sem key: mecânica funciona, semântica é lexical

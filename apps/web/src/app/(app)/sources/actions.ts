@@ -131,7 +131,7 @@ async function classifyRelevance(
 ): Promise<number[] | null> {
   if (!process.env.ANTHROPIC_API_KEY || themes.length === 0 || preview.length === 0) return null;
   try {
-    const llm = new ClaudeLlmProvider();
+    const llm = new ClaudeLlmProvider("claude-haiku-4-5");
     const lista = preview
       .map((p, i) => `${i}. ${p.title}${p.summary ? ` — ${p.summary}` : ""}`)
       .join("\n");
