@@ -4,6 +4,7 @@ export { computeHeat, categorize, DEFAULT_WEIGHTS, type HeatWeights } from "./he
 export { selectSources, cleanUrl } from "./select";
 export { MemoryEngine, contentHash, type MemoryMatchResult } from "./memory";
 export { deliverBriefing } from "./deliver";
+export { createShortLinks, generateShortCode } from "./shortlinks";
 export {
   ClaudeLlmProvider,
   FakeLlmProvider,

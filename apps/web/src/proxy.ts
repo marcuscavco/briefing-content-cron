@@ -8,6 +8,21 @@ import { NextResponse, type NextRequest } from "next/server";
  * request e getUser() valida o JWT no servidor de auth (nunca confiar em getSession aqui).
  */
 export async function proxy(request: NextRequest) {
+  // Encurtador bnrd.me: host próprio, público, sem sessão. bnrd.me/<code> é
+  // reescrito para /r/<code> (registra clique + 302 para a notícia).
+  const host = (request.headers.get("host") ?? "").toLowerCase();
+  if (host === "bnrd.me" || host === "www.bnrd.me") {
+    const path = request.nextUrl.pathname;
+    if (path === "/" ) {
+      return NextResponse.redirect("https://briefing-saas-weld.vercel.app/", 302);
+    }
+    if (!path.startsWith("/r/")) {
+      const url = request.nextUrl.clone();
+      url.pathname = `/r${path}`;
+      return NextResponse.rewrite(url);
+    }
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -38,8 +53,9 @@ export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const isAuthPage = path.startsWith("/login") || path.startsWith("/signup");
   // Rotas com autenticação própria (Bearer CRON_SECRET / token HMAC no link
-  // do email) — sem sessão por definição, não podem cair no redirect de login.
-  const isSelfAuthed = path.startsWith("/api/cron") || path.startsWith("/api/unsubscribe");
+  // do email) ou públicas por natureza (encurtador) — nunca caem no login.
+  const isSelfAuthed =
+    path.startsWith("/api/cron") || path.startsWith("/api/unsubscribe") || path.startsWith("/r/");
 
   // Landing e onboarding são públicos: o fluxo único de entrada começa sem conta.
   const isPublic = path === "/" || path.startsWith("/onboarding");

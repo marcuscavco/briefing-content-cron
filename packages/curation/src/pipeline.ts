@@ -55,6 +55,8 @@ export interface PipelineDeps {
   whatsapp?: WhatsappSender;
   appBaseUrl?: string;
   unsubscribeSecret?: string;
+  /** Base do encurtador de links do WhatsApp (ex.: https://bnrd.me) */
+  shortlinkBase?: string;
   sleepMs?: (ms: number) => Promise<void>;
   // Fase 5 — Instagram (injetável; ausente = fonte IG reporta erro claro)
   instagramFetcher?: InstagramFetcher;
@@ -139,6 +141,7 @@ export async function runStage(job: JobRow, deps: PipelineDeps): Promise<StageRe
           whatsapp: deps.whatsapp,
           appBaseUrl: deps.appBaseUrl,
           unsubscribeSecret: deps.unsubscribeSecret,
+          shortlinkBase: deps.shortlinkBase,
           sleepMs: deps.sleepMs,
         },
         profile,

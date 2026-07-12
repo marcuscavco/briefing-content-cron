@@ -1074,6 +1074,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      append_job_progress: {
+        Args: {
+          p_job_id: string
+          p_entry: Json
+          p_tokens_in: number
+          p_tokens_out: number
+          p_cost: number
+        }
+        Returns: undefined
+      }
+      resolve_short_link: {
+        Args: {
+          p_code: string
+          p_user_agent: string | null
+          p_referer: string | null
+        }
+        Returns: string | null
+      }
       claim_next_job: {
         Args: { p_worker: string }
         Returns: {

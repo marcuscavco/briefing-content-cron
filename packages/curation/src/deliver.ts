@@ -8,6 +8,7 @@ import {
   type WhatsappSender,
 } from "@briefing/delivery";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { createShortLinks, type ShortLinkInput } from "./shortlinks";
 import type { PipelineCheckpoint, ProfileConfig } from "./types";
 
 /**
@@ -25,6 +26,8 @@ export interface DeliverDeps {
   whatsapp?: WhatsappSender;
   appBaseUrl?: string;
   unsubscribeSecret?: string;
+  /** Base do encurtador (ex.: https://bnrd.me). Ausente = URLs longas. */
+  shortlinkBase?: string;
   sleepMs?: (ms: number) => Promise<void>;
 }
 
@@ -147,8 +150,44 @@ export async function deliverBriefing(
   const whatsappDestinos: Record<string, string> = {};
   if (channels.whatsapp) {
     // Até 3 mensagens por categoria: must-read · outros assuntos · posts.
-    const briefingUrl = deps.appBaseUrl ? `${deps.appBaseUrl.replace(/\/$/, "")}/b/${briefingId}` : undefined;
-    const messages = renderWhatsappMessages(briefing, clusters, posts, { briefingUrl });
+    let briefingUrl = deps.appBaseUrl ? `${deps.appBaseUrl.replace(/\/$/, "")}/b/${briefingId}` : undefined;
+    let waClusters = clusters;
+
+    // Encurtador bnrd.me: só na renderização do WhatsApp (o banco guarda as
+    // URLs originais). Falha no encurtador nunca bloqueia a entrega.
+    const shortBase = deps.shortlinkBase?.replace(/\/$/, "");
+    if (shortBase) {
+      const inputs: ShortLinkInput[] = [];
+      for (const c of clusters) {
+        if (c.url) inputs.push({ url: c.url, kind: "news" });
+        for (const item of c.itens ?? []) {
+          if (item?.url && (item.tier === 1 || item.tier === 2)) {
+            inputs.push({ url: item.url, kind: "news" });
+          }
+        }
+      }
+      if (briefingUrl) inputs.push({ url: briefingUrl, kind: "panel" });
+
+      const shortBy = await createShortLinks(
+        db,
+        shortBase,
+        profile.accountId,
+        briefingId,
+        inputs,
+      );
+      if (shortBy.size > 0) {
+        waClusters = clusters.map((c) => ({
+          ...c,
+          url: c.url ? (shortBy.get(c.url) ?? c.url) : c.url,
+          itens: (c.itens ?? [])?.map((item) =>
+            item?.url ? { ...item, url: shortBy.get(item.url) ?? item.url } : item,
+          ),
+        }));
+        if (briefingUrl) briefingUrl = shortBy.get(briefingUrl) ?? briefingUrl;
+      }
+    }
+
+    const messages = renderWhatsappMessages(briefing, waClusters, posts, { briefingUrl });
     await db
       .from("briefings")
       .update({
