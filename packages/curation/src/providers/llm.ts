@@ -33,6 +33,23 @@ export interface LlmProvider {
   complete(req: LlmRequest): Promise<LlmResult>;
 }
 
+/**
+ * Rate limit persistente do provedor. O worker trata devolvendo o job à fila
+ * (run_at adiado, checkpoint preservado) em vez de dormir dentro do orçamento
+ * do tick — com workers concorrentes, dormir 65s aqui estrangulava a fila.
+ */
+export class LlmRateLimitError extends Error {
+  readonly isLlmRateLimit = true;
+  constructor(message = "rate limit do provedor LLM") {
+    super(message);
+    this.name = "LlmRateLimitError";
+  }
+}
+
+export function isLlmRateLimitError(e: unknown): e is LlmRateLimitError {
+  return typeof e === "object" && e !== null && (e as LlmRateLimitError).isLlmRateLimit === true;
+}
+
 const MODELS: Record<LlmTask, string> = {
   heavy: "claude-sonnet-5",
   cheap: "claude-haiku-4-5",
@@ -69,15 +86,16 @@ export class ClaudeLlmProvider implements LlmProvider {
   }
 
   async complete(req: LlmRequest): Promise<LlmResult> {
-    // Orgs em tier de rate limit baixo (OTPM pequeno) recusam requests cujo
-    // max_tokens excede a janela do minuto — espera e tenta de novo.
+    // 429: uma retentativa curta cobre blips; se persistir, lança erro tipado
+    // para o worker requeuar o job (não dormir a janela inteira do minuto aqui).
     for (let attempt = 1; ; attempt++) {
       try {
         return await this.completeOnce(req);
       } catch (e) {
         const isRateLimit = e instanceof Anthropic.RateLimitError;
-        if (!isRateLimit || attempt >= 4) throw e;
-        await new Promise((r) => setTimeout(r, 65_000));
+        if (!isRateLimit) throw e;
+        if (attempt >= 2) throw new LlmRateLimitError(e.message);
+        await new Promise((r) => setTimeout(r, 5_000));
       }
     }
   }

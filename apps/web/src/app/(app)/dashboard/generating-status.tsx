@@ -4,15 +4,31 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 /**
- * Tarja de status quando há job de briefing na fila/rodando. Fica logo abaixo
- * do canal conectado e recarrega os dados a cada 15s até o briefing chegar.
+ * Tarja de status do job de briefing. Recarrega os dados a cada 15s até o
+ * briefing chegar (mesmo em failed: o worker retenta sozinho).
+ * Variantes: generating (no prazo) · late (passou do delivery_time) · failed.
  */
-export function GeneratingStatus({ label }: { label: string }) {
+export function GeneratingStatus({
+  label,
+  variant = "generating",
+}: {
+  label: string;
+  variant?: "generating" | "late" | "failed";
+}) {
   const router = useRouter();
   useEffect(() => {
     const t = setInterval(() => router.refresh(), 15_000);
     return () => clearInterval(t);
   }, [router]);
+
+  if (variant === "failed") {
+    return (
+      <div className="flex w-full items-center gap-3 rounded-2xl border border-red-400/25 bg-red-400/[0.07] px-4 py-3 text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+        <span className="shrink-0 text-red-300">⚠️</span>
+        <span className="font-medium text-red-200">{label}</span>
+      </div>
+    );
+  }
 
   return (
     <div className="flex w-full items-center gap-3 rounded-2xl border border-amber-400/20 bg-amber-400/[0.06] px-4 py-3 text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">

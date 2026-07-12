@@ -7,6 +7,8 @@ export { deliverBriefing } from "./deliver";
 export {
   ClaudeLlmProvider,
   FakeLlmProvider,
+  LlmRateLimitError,
+  isLlmRateLimitError,
   parseJson,
   type LlmProvider,
   type LlmRequest,
