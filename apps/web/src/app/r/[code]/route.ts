@@ -9,7 +9,7 @@ import { NextResponse } from "next/server";
  */
 export const dynamic = "force-dynamic";
 
-const FALLBACK = process.env.APP_BASE_URL ?? "https://briefing-saas-weld.vercel.app";
+const FALLBACK = process.env.APP_BASE_URL ?? "https://briefingnerd.com";
 
 export async function GET(request: Request, { params }: { params: Promise<{ code: string }> }) {
   const { code } = await params;

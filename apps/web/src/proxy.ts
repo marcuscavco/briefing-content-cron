@@ -14,7 +14,8 @@ export async function proxy(request: NextRequest) {
   if (host === "bnrd.me" || host === "www.bnrd.me") {
     const path = request.nextUrl.pathname;
     if (path === "/" ) {
-      return NextResponse.redirect("https://briefing-saas-weld.vercel.app/", 302);
+      // raiz do encurtador (sem código) → app principal
+      return NextResponse.redirect("https://briefingnerd.com/", 302);
     }
     if (!path.startsWith("/r/")) {
       const url = request.nextUrl.clone();

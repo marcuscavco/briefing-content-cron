@@ -47,7 +47,7 @@ function buildDeps(db: SupabaseClient): PipelineDeps {
     email: process.env.RESEND_API_KEY ? new ResendEmailSender() : undefined,
     whatsapp:
       process.env.ZAPI_INSTANCE_ID && process.env.ZAPI_TOKEN ? new ZapiClient() : undefined,
-    appBaseUrl: process.env.APP_BASE_URL ?? "https://briefing-saas-weld.vercel.app",
+    appBaseUrl: process.env.APP_BASE_URL ?? "https://briefingnerd.com",
     unsubscribeSecret: process.env.CRON_SECRET,
     // Encurtador bnrd.me nas mensagens de WhatsApp (vazio = URLs longas)
     shortlinkBase: process.env.SHORTLINK_BASE,

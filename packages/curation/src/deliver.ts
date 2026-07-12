@@ -119,7 +119,7 @@ export async function deliverBriefing(
       report.push("email: desabilitado (sem provider)");
       entrega.email = "skipped_disabled";
     } else {
-      const base = deps.appBaseUrl ?? "https://briefing-saas-weld.vercel.app";
+      const base = deps.appBaseUrl ?? "https://briefingnerd.com";
       const unsub = deps.unsubscribeSecret
         ? `${base}/api/unsubscribe?token=${unsubscribeToken(profile.id, deps.unsubscribeSecret)}`
         : `${base}/settings`;
