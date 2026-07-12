@@ -63,6 +63,25 @@ function extraSources(c: DeliveryCluster, max: number): { portal: string; url: s
   return extras;
 }
 
+/** Nota 🎯 do cluster, com fallback para 💼 nos briefings antigos (pré-2026-07-13). */
+function temaScore(c: DeliveryCluster): number {
+  return c.relevancia_tema ?? c.relevancia_empresarial ?? 0;
+}
+
+/**
+ * Linha de notas: scoring novo `🎯 Tema x/3 · ⚡ y/3 · 🔥 N portais` (cobertura
+ * substitui o jargão "Heat N"); briefings antigos mantêm o formato 💼/💻.
+ */
+function scoreLine(c: DeliveryCluster, withCoverage: boolean): string {
+  if (c.relevancia_tema == null && c.relevancia_empresarial != null) {
+    return `💼 ${c.relevancia_empresarial}/3 · 💻 ${c.relevancia_tecnica ?? 0}/3`;
+  }
+  const portais = Array.isArray(c.portais_cobrindo) ? c.portais_cobrindo.length : 0;
+  const coverage =
+    withCoverage && portais > 0 ? ` · 🔥 ${portais} ${portais === 1 ? "portal" : "portais"}` : "";
+  return `🎯 Tema ${c.relevancia_tema ?? 0}/3 · ⚡ ${c.impacto_geral ?? 0}/3${coverage}`;
+}
+
 function renderItem(
   c: DeliveryCluster,
   n: number,
@@ -72,9 +91,7 @@ function renderItem(
 ): string {
   const marks = `${c.is_curator_pick ? "✨ " : ""}${c.em_alta ? "📈 " : ""}${c.is_update ? "🔁 " : ""}`;
   const item: string[] = [`${n}. ${marks}${trunc(c.titulo, 70)}`];
-  item.push(
-    `💼 ${c.relevancia_empresarial ?? 0}/3 · 💻 ${c.relevancia_tecnica ?? 0}/3${withHeat ? ` · Heat ${c.heat_score}` : ""}`,
-  );
+  item.push(scoreLine(c, withHeat));
   if (c.fonte && c.url) {
     item.push(`📖 ${c.is_fallback ? "🟡 " : ""}${c.fonte}: ${c.url}`);
     for (const extra of extraSources(c, maxSources - 1)) {
@@ -142,7 +159,7 @@ function renderOthersMessage(
     let relevantes = relevantesAll;
     if (relevantes.length > maxRelevantes) {
       relevantes = [...relevantes]
-        .sort((a, b) => (b.relevancia_empresarial ?? 0) - (a.relevancia_empresarial ?? 0))
+        .sort((a, b) => temaScore(b) - temaScore(a))
         .slice(0, maxRelevantes);
     }
     const lines: string[] = [`🗞️ *Outros assuntos ${ddmm(briefing.run_date)}*`];
@@ -154,9 +171,7 @@ function renderOthersMessage(
     if (includeNoRadar && noRadar.length) {
       lines.push("", "📎 *No radar*");
       for (const c of noRadar) {
-        lines.push(
-          `• ${trunc(c.titulo, 60)} · 💼 ${c.relevancia_empresarial ?? 0} · 💻 ${c.relevancia_tecnica ?? 0}`,
-        );
+        lines.push(`• ${trunc(c.titulo, 60)} · ${scoreLine(c, false)}`);
       }
     }
     for (const c of sinais) {
@@ -188,11 +203,11 @@ export function renderPostsMessage(posts: DeliveryPost[]): string {
   const skips = posts.filter((p) => p.skip);
 
   if (publicaveis.length === 0) {
-    return "📱 *Posts sugeridos*\n\nNenhum cluster passou o filtro empresarial hoje. Ver digest para leitura pessoal.";
+    return "📱 *Posts sugeridos*\n\nNenhum assunto central aos temas do briefing rendeu post hoje. Ver digest para leitura pessoal.";
   }
 
   const build = (estruturaMax: number, hookWords: number, skipCount: number): string => {
-    const lines: string[] = ["📱 *Posts sugeridos* — filtro: relevância empresarial"];
+    const lines: string[] = ["📱 *Posts sugeridos* — filtro: relevância ao tema do briefing"];
     publicaveis.forEach((p, i) => {
       const emoji = FORMATO_EMOJI[p.formato ?? ""] ?? "📱";
       const block: string[] = [`${i + 1}. ${trunc(p.titulo ?? p.gancho ?? "Post", 60)}`];

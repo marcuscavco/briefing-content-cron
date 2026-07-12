@@ -1,5 +1,12 @@
 # Experimento de modelos — clusterização (Fase B)
 
+> **DECISÃO (2026-07-12):** no julgamento cego, Marcus escolheu o **Gemini 3 Flash**
+> (dia marketing). Ativado em produção via `LLM_CLUSTER=google:gemini-3-flash-preview`,
+> junto com o scoring novo 🎯 relevancia_tema / ⚡ impacto_geral (Fase C). Posts
+> permanecem no Sonnet 5. COGS projetado: ~R$ 7,80/usuário/mês (meta ≤ R$ 12 ✅).
+> Ponto de atenção monitorado: compressão em dias densos (cobertura 57–76% no bench);
+> rollback = trocar a env de volta, sem deploy.
+
 > Gerado em 2026-07-12 a partir de 4 dias reais de coleta (bench/fixtures, extraídos de jobs.checkpoint de produção), mesmo prompt/schema de produção (CLUSTER_SYSTEM/CLUSTER_SCHEMA). Câmbio usado: R$ 5.50/US$.
 
 ## Medições por dia × modelo

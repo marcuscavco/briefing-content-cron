@@ -79,7 +79,10 @@
     "channelDisconnectedCta": "verifique um número de WhatsApp em Configurações →",
     "postsExplain": "Sugestões prontas de conteúdo para suas redes, no seu tom — quando um assunto não rende post útil, ele é pulado de propósito.",
     "lateStatus": "Seu briefing está demorando um pouco mais que o normal hoje. Já chega!",
-    "failedStatus": "Não conseguimos gerar seu briefing hoje. Vamos tentar novamente automaticamente."
+    "failedStatus": "Não conseguimos gerar seu briefing hoje. Vamos tentar novamente automaticamente.",
+    "temaScore": "Tema",
+    "portal": "portal",
+    "portais": "portais"
   },
   "nav": {
     "dashboard": "Dashboard",

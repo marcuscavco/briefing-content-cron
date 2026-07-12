@@ -43,7 +43,7 @@ describe("toGeminiSchema", () => {
     const cluster = toGeminiSchema(CLUSTER_SCHEMA as unknown as Record<string, unknown>);
     const clusterItem = (cluster.properties as Record<string, Record<string, unknown>>)
       .clusters!.items as Record<string, unknown>;
-    expect(clusterItem.required).toContain("relevancia_empresarial");
+    expect(clusterItem.required).toContain("relevancia_tema");
     expect(JSON.stringify(cluster)).not.toContain("additionalProperties");
 
     const posts = toGeminiSchema(POSTS_SCHEMA as unknown as Record<string, unknown>);

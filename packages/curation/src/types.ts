@@ -14,8 +14,8 @@ export interface RawCluster {
   resumo: string;
   entidades: string[];
   itemIndices: number[]; // índices em CollectedItem[]
-  relevanciaTecnica: 0 | 1 | 2 | 3;
-  relevanciaEmpresarial: 0 | 1 | 2 | 3;
+  relevanciaTema: 0 | 1 | 2 | 3; // 🎯 central aos temas DESTE briefing
+  impactoGeral: 0 | 1 | 2 | 3; // ⚡ tamanho intrínseco do fato, independente do tema
   anguloPraticoClaro: boolean;
   dataEvento: string | null; // AAAA-MM-DD
 }

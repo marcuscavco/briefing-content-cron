@@ -70,8 +70,11 @@ function BriefingEmail({ briefing, clusters, posts, dashboardUrl, unsubscribeUrl
               </Text>
               <Text style={{ fontSize: "15px", fontWeight: "bold", margin: "2px 0" }}>{c.titulo}</Text>
               <Text style={{ fontSize: "12px", color: "#555", margin: "0" }}>
-                💼 {c.relevancia_empresarial ?? 0}/3 · 💻 {c.relevancia_tecnica ?? 0}/3 · Heat{" "}
-                {c.heat_score}
+                {c.relevancia_tema == null && c.relevancia_empresarial != null
+                  ? `💼 ${c.relevancia_empresarial}/3 · 💻 ${c.relevancia_tecnica ?? 0}/3`
+                  : `🎯 Tema ${c.relevancia_tema ?? 0}/3 · ⚡ ${c.impacto_geral ?? 0}/3 · 🔥 ${
+                      (c.portais_cobrindo ?? []).length || 1
+                    } ${((c.portais_cobrindo ?? []).length || 1) === 1 ? "portal" : "portais"}`}
                 {c.fonte && c.url && (
                   <>
                     {" · "}

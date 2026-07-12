@@ -70,8 +70,8 @@ beforeAll(async () => {
       resumo: "Resumo do assunto de teste.",
       categoria: "must_read",
       heat_score: 6,
-      relevancia_tecnica: 2,
-      relevancia_empresarial: 3,
+      relevancia_tema: 3,
+      impacto_geral: 2,
       fonte: "Tecnoblog",
       url: "https://tecnoblog.net/teste",
     })

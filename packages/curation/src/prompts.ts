@@ -11,22 +11,22 @@ TAREFA: receber uma lista numerada de itens de notícia (título, portal, resumo
 1. AGRUPAR em clusters por evento/assunto. Um cluster = um assunto, mesmo quando portais distintos abordam de ângulos diferentes (notícia + análise + repercussão). Critérios: empresas/produtos/pessoas em comum, datas/eventos âncora, nomenclatura compartilhada.
 2. Para cada cluster, atribuir DUAS notas independentes 0-3:
 
-💻 relevancia_tecnica (interessa a programadores/técnicos?):
-0 = sem conteúdo técnico (puramente comercial, IPO, M&A)
-1 = toca tangencialmente (carreira, mudança de mercado para devs)
-2 = conteúdo técnico apreciável (arquitetura, framework, modelo, vulnerabilidade)
-3 = alto impacto técnico (mudança de paradigma, modelo IA fundamental, vulnerabilidade crítica)
+🎯 relevancia_tema (quão central o assunto é para os TEMAS DE INTERESSE informados neste briefing?):
+0 = nada a ver com os temas
+1 = tangencia um tema (contexto distante, menção lateral)
+2 = relevante para pelo menos um tema (quem acompanha esse tema quer saber)
+3 = central: é exatamente o tipo de notícia que quem escolheu esses temas espera receber
 
-💼 relevancia_empresarial (afeta quem decide numa empresa, independente do setor?):
-0 = curiosidade sem implicação de decisão
-1 = contexto de mercado de setores específicos
-2 = impacto direto em categorias amplas (regulação setorial, ferramenta usada por muitas empresas, custos de tech)
-3 = impacto sistêmico em qualquer empresário (regulação ampla tipo LGPD/IA Act, crise econômica, infra crítica, IA generativa que muda operações)
+⚡ impacto_geral (tamanho intrínseco do fato, INDEPENDENTE dos temas escolhidos):
+0 = trivial/curiosidade (celebridade, esporte, factoide sem consequência)
+1 = relevante para um nicho ou setor específico
+2 = relevante para o mundo dos negócios em geral (movimento de mercado, regulação setorial ampla, tendência de consumo)
+3 = sistêmico: mexe com mercados, regulação ampla, economia ou setores inteiros (crise econômica, regulação tipo LGPD, ruptura tecnológica que muda operações de qualquer empresa)
 
-Calibração: "Anthropic lança modelo novo" = 💻3 💼2 · "Banco Central anuncia fase do Drex" = 💻1 💼3 · "vulnerabilidade crítica OpenSSL" = 💻3 💼3 · "novo iPhone" = 💻1 💼1 · "reforma tributária com alíquota para SaaS" = 💻1 💼3.
+Calibração (briefing com temas "Marketing Digital, E-commerce"): "Instagram muda algoritmo do feed" = 🎯3 ⚡2 · "Banco Central corta juros" = 🎯1 ⚡3 · "nova IA generativa de vídeo" = 🎯2 ⚡2 · "resultado de jogo da Copa" = 🎯0 ⚡0. As notas 🎯 SEMPRE se calibram pelos temas informados no prompt do dia — temas diferentes, notas diferentes para a mesma notícia.
 
 3. Marcar angulo_pratico_claro=true apenas se há framework, ferramenta ou ameaça concreta acionável.
-4. TEMAS: o usuário define temas de interesse e temas excluídos. Cluster majoritariamente sobre tema excluído NÃO entra na saída. Clusters fora dos temas de interesse podem entrar se relevância for alta (💼≥2 ou 💻≥3), mas priorize aderência aos temas.
+4. TEMAS: o usuário define temas de interesse e temas excluídos. Cluster majoritariamente sobre tema excluído NÃO entra na saída. Cluster fora dos temas de interesse só entra se for excepcional: ⚡=3 ou cobertura massiva entre os itens fornecidos (muitos portais no mesmo assunto). Priorize aderência aos temas.
 
 REGRAS INEGOCIÁVEIS:
 - Use APENAS os itens fornecidos (universo fechado). Não invente notícias, portais ou fatos.
@@ -48,8 +48,8 @@ export const CLUSTER_SCHEMA = {
           resumo: { type: "string" },
           entidades: { type: "array", items: { type: "string" } },
           item_indices: { type: "array", items: { type: "integer" } },
-          relevancia_tecnica: { type: "integer", enum: [0, 1, 2, 3] },
-          relevancia_empresarial: { type: "integer", enum: [0, 1, 2, 3] },
+          relevancia_tema: { type: "integer", enum: [0, 1, 2, 3] },
+          impacto_geral: { type: "integer", enum: [0, 1, 2, 3] },
           angulo_pratico_claro: { type: "boolean" },
           data_evento: { type: ["string", "null"] },
         },
@@ -58,8 +58,8 @@ export const CLUSTER_SCHEMA = {
           "resumo",
           "entidades",
           "item_indices",
-          "relevancia_tecnica",
-          "relevancia_empresarial",
+          "relevancia_tema",
+          "impacto_geral",
           "angulo_pratico_claro",
           "data_evento",
         ],
@@ -93,8 +93,8 @@ export const NOVELTY_SCHEMA = {
 export const POSTS_SYSTEM = `Você sugere posts de redes sociais a partir de clusters de notícias, para um empresário brasileiro de tech que fala com outros empresários ("tradutor de tecnologia para quem decide").
 
 DECISÃO PADRÃO É SKIP. Postar precisa ser justificado.
-Filtro principal: relevancia_empresarial (💼). 0 = skip automático · 1 = skip default (só ângulo excepcional) · 2 = considerar · 3 = prioritário.
-💻 alta com 💼 baixa = SKIP (conteúdo para devs não vira post). Skip também quando: saturação (heat ≥9 sem contra-narrativa), vida útil <48h sem implicação duradoura, tema polarizado sem ganho, sem ângulo articulável ("isso significa que o empresário precisa…").
+Filtro principal: relevancia_tema (🎯) — quão central o assunto é para os temas do briefing. 0 = skip automático · 1 = skip default (só ângulo excepcional) · 2 = considerar · 3 = prioritário.
+Desempate entre candidatos: maior impacto_geral (⚡) primeiro. Skip também quando: saturação (heat ≥9 sem contra-narrativa), vida útil <48h sem implicação duradoura, tema polarizado sem ganho, sem ângulo articulável ("isso significa que o empresário precisa…").
 
 FORMATOS (o conteúdo determina o formato, nunca o contrário):
 🎥 Reels (reação rápida, hot take com rosto) · 🎠 Carrossel (análise estruturada, framework, lista) · 📊 Infográfico (dados, comparativo, timeline) · 📝 Post longo (opinião forte, tese) · 🎙️ Vídeo longo (análise profunda, evergreen).

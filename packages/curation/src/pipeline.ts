@@ -358,8 +358,8 @@ async function cluster(
       resumo: string;
       entidades: string[];
       item_indices: number[];
-      relevancia_tecnica: 0 | 1 | 2 | 3;
-      relevancia_empresarial: 0 | 1 | 2 | 3;
+      relevancia_tema: 0 | 1 | 2 | 3;
+      impacto_geral: 0 | 1 | 2 | 3;
       angulo_pratico_claro: boolean;
       data_evento: string | null;
     }[];
@@ -371,8 +371,8 @@ async function cluster(
       resumo: c.resumo,
       entidades: c.entidades,
       itemIndices: c.item_indices.filter((i) => i >= 0 && i < items.length),
-      relevanciaTecnica: c.relevancia_tecnica,
-      relevanciaEmpresarial: c.relevancia_empresarial,
+      relevanciaTema: c.relevancia_tema,
+      impactoGeral: c.impacto_geral,
       anguloPraticoClaro: c.angulo_pratico_claro,
       dataEvento: c.data_evento,
     }))
@@ -484,15 +484,20 @@ async function suggestPosts(
   processed: ProcessedCluster[],
   metrics: StageMetrics,
 ): Promise<PostSuggestion[]> {
+  // regra do produto (decisão 2026-07-12): post só de assunto central aos temas
+  // do briefing — 🎯 ≥ 2. Enforcement em código; o LLM refina dentro disso.
   const eligible = processed
     .map((c, i) => ({ c, i }))
-    .filter(({ c }) => (c.categoria === "must_read" || c.categoria === "relevante"));
+    .filter(
+      ({ c }) =>
+        (c.categoria === "must_read" || c.categoria === "relevante") && c.relevanciaTema >= 2,
+    );
   if (eligible.length === 0) return [];
 
   const list = eligible
     .map(
       ({ c, i }) =>
-        `cluster_index=${i} | 💼${c.relevanciaEmpresarial}/3 💻${c.relevanciaTecnica}/3 heat=${c.heat}${c.memoryDecision === "atualizacao" ? " [ATUALIZAÇÃO]" : ""}\n${c.titulo}\n${c.resumo}`,
+        `cluster_index=${i} | 🎯${c.relevanciaTema}/3 ⚡${c.impactoGeral}/3 heat=${c.heat}${c.memoryDecision === "atualizacao" ? " [ATUALIZAÇÃO]" : ""}\n${c.titulo}\n${c.resumo}`,
     )
     .join("\n\n");
 
@@ -634,8 +639,10 @@ async function persist(
         heat_score: c.heat,
         heat_boost: c.heatBoost,
         em_alta: c.emAlta,
-        relevancia_tecnica: c.relevanciaTecnica,
-        relevancia_empresarial: c.relevanciaEmpresarial,
+        // scoring 🎯/⚡ (2026-07-13); relevancia_tecnica/empresarial ficam null
+        // nos briefings novos (legado preservado nos antigos)
+        relevancia_tema: c.relevanciaTema,
+        impacto_geral: c.impactoGeral,
         tier_fonte: c.tierFonte,
         is_fallback: c.isFallback,
         is_curator_pick: c.isCuratorPick,

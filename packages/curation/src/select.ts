@@ -9,8 +9,8 @@ import type { ClusterCategoria } from "./types";
  * 3. Sem elegível → sinal sem fonte canônica.
  * Tier 3 NUNCA vira link (princípio do brief). Fontes com fallback_eligible=false
  * (ex.: Hacker News — agregador) contam para heat mas nunca são leitura.
- * Curator's Pick: até 2 promoções/dia — 💼≥3 · scoop Tier 1 com 💼≥2 · 💻≥3 com
- * ângulo prático e 💼≥2. Promove categoria; não muda heat/notas.
+ * Curator's Pick: até 2 promoções/dia — ⚡3 (impacto sistêmico) · scoop Tier 1
+ * com 🎯≥2 · 🎯3 com ângulo prático e ⚡≥2. Promove categoria; não muda heat/notas.
  */
 
 interface SelectInput {
@@ -99,17 +99,20 @@ export function selectSources(
       const tier1Portals = c.portaisCobrindo.filter((p) => sourceByName.get(p)?.tier === 1);
       const isScoop = tier1Portals.length === 1 && c.portaisCobrindo.length === 1;
       let motivo: string | null = null;
-      if (c.relevanciaEmpresarial >= 3) motivo = "💼≥3 impacto empresarial sistêmico";
-      else if (isScoop && c.relevanciaEmpresarial >= 2) motivo = "scoop exclusivo Tier 1";
-      else if (c.relevanciaTecnica >= 3 && c.anguloPraticoClaro && c.relevanciaEmpresarial >= 2)
-        motivo = "💻≥3 com ângulo prático claro";
+      if (c.impactoGeral >= 3) motivo = "⚡3 impacto sistêmico";
+      else if (isScoop && c.relevanciaTema >= 2) motivo = "scoop exclusivo Tier 1";
+      else if (c.relevanciaTema >= 3 && c.anguloPraticoClaro && c.impactoGeral >= 2)
+        motivo = "🎯3 com ângulo prático claro";
       return { c, i, motivo };
     })
     .filter((x): x is { c: (typeof withSelection)[0]; i: number; motivo: string } =>
       Boolean(x.motivo),
     )
-    // desempate do SKILL.md: maior 💼 primeiro
-    .sort((a, b) => b.c.relevanciaEmpresarial - a.c.relevanciaEmpresarial)
+    // desempate: maior ⚡ primeiro, depois maior 🎯
+    .sort(
+      (a, b) =>
+        b.c.impactoGeral - a.c.impactoGeral || b.c.relevanciaTema - a.c.relevanciaTema,
+    )
     .slice(0, 2);
 
   for (const { c, motivo } of candidates) {

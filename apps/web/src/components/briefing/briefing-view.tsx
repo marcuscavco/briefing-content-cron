@@ -122,8 +122,12 @@ export async function BriefingView({
                           )}
                         </span>
                         <span className="text-sm text-muted-foreground">
-                          💼 {c.relevancia_empresarial}/3 · 💻 {c.relevancia_tecnica}/3 · Heat{" "}
-                          {c.heat_score}
+                          {c.relevancia_tema == null
+                            ? // briefings antigos (pré-scoring 🎯/⚡)
+                              `💼 ${c.relevancia_empresarial ?? 0}/3 · 💻 ${c.relevancia_tecnica ?? 0}/3`
+                            : `🎯 ${t("temaScore")} ${c.relevancia_tema}/3 · ⚡ ${c.impacto_geral ?? 0}/3 · 🔥 ${
+                                (Array.isArray(c.portais_cobrindo) ? c.portais_cobrindo.length : 0) || 1
+                              } ${((Array.isArray(c.portais_cobrindo) ? c.portais_cobrindo.length : 0) || 1) === 1 ? t("portal") : t("portais")}`}
                           {noticias.length === 0 && c.fonte && c.url && (
                             <>
                               {" · "}

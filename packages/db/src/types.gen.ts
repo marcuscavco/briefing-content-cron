@@ -237,8 +237,10 @@ export type Database = {
           ordem: number
           portais_cobrindo: Json
           previous_briefing_id: string | null
+          impacto_geral: number | null
           relevancia_empresarial: number | null
           relevancia_tecnica: number | null
+          relevancia_tema: number | null
           resumo: string | null
           tier_fonte: number | null
           titulo: string
@@ -266,8 +268,10 @@ export type Database = {
           ordem: number
           portais_cobrindo?: Json
           previous_briefing_id?: string | null
+          impacto_geral?: number | null
           relevancia_empresarial?: number | null
           relevancia_tecnica?: number | null
+          relevancia_tema?: number | null
           resumo?: string | null
           tier_fonte?: number | null
           titulo: string
@@ -295,8 +299,10 @@ export type Database = {
           ordem?: number
           portais_cobrindo?: Json
           previous_briefing_id?: string | null
+          impacto_geral?: number | null
           relevancia_empresarial?: number | null
           relevancia_tecnica?: number | null
+          relevancia_tema?: number | null
           resumo?: string | null
           tier_fonte?: number | null
           titulo?: string

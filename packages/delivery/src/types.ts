@@ -36,6 +36,10 @@ export interface DeliveryCluster {
   em_alta?: boolean;
   heat_boost?: number;
   itens?: DeliveryClusterItem[] | null;
+  // scoring 🎯/⚡ (2026-07-13) — null em briefings antigos (fallback 💼/💻)
+  relevancia_tema?: number | null;
+  impacto_geral?: number | null;
+  portais_cobrindo?: string[] | null;
 }
 
 export interface DeliveryPost {

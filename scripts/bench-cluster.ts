@@ -33,8 +33,8 @@ interface ParsedCluster {
   resumo: string;
   entidades: string[];
   item_indices: number[];
-  relevancia_tecnica: 0 | 1 | 2 | 3;
-  relevancia_empresarial: 0 | 1 | 2 | 3;
+  relevancia_tema: 0 | 1 | 2 | 3;
+  impacto_geral: 0 | 1 | 2 | 3;
   angulo_pratico_claro: boolean;
   data_evento: string | null;
 }
@@ -53,8 +53,8 @@ interface RunResult {
     resumo: string;
     categoria: string;
     heat: number;
-    tec: number;
-    emp: number;
+    tema: number;
+    impacto: number;
     itemIndices: number[];
     portais: string[];
   }[];
@@ -104,8 +104,8 @@ async function runOne(fx: Fixture, modelSpec: string): Promise<RunResult> {
           resumo: c.resumo,
           entidades: c.entidades ?? [],
           itemIndices: c.item_indices.filter((i) => i >= 0 && i < items.length),
-          relevanciaTecnica: c.relevancia_tecnica,
-          relevanciaEmpresarial: c.relevancia_empresarial,
+          relevanciaTema: c.relevancia_tema,
+          impactoGeral: c.impacto_geral,
           anguloPraticoClaro: c.angulo_pratico_claro,
           dataEvento: c.data_evento,
         };
@@ -115,8 +115,8 @@ async function runOne(fx: Fixture, modelSpec: string): Promise<RunResult> {
           resumo: c.resumo,
           categoria: categorize(heat),
           heat,
-          tec: c.relevancia_tecnica,
-          emp: c.relevancia_empresarial,
+          tema: c.relevancia_tema,
+          impacto: c.impacto_geral,
           itemIndices: raw.itemIndices,
           portais,
         };

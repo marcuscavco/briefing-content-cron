@@ -29,8 +29,8 @@ interface RunResult {
     resumo: string;
     categoria: string;
     heat: number;
-    tec: number;
-    emp: number;
+    tema: number;
+    impacto: number;
     itemIndices: number[];
     portais: string[];
   }[];
@@ -236,7 +236,7 @@ function main() {
       blind.push(`_${r.clusters.length} clusters no total · ${catCounts(r)}_`, "");
       for (const c of digest.slice(0, 8)) {
         blind.push(
-          `- **[${c.categoria}]** ${c.titulo} — 💻${c.tec} 💼${c.emp} · heat ${c.heat} · ${c.portais.slice(0, 4).join(", ")}`,
+          `- **[${c.categoria}]** ${c.titulo} — 🎯${c.tema} ⚡${c.impacto} · heat ${c.heat} · ${c.portais.slice(0, 4).join(", ")}`,
         );
         blind.push(`  ${c.resumo}`);
       }

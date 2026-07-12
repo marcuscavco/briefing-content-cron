@@ -101,7 +101,7 @@ describe("renderWhatsappMessages (3 mensagens por categoria)", () => {
     const msgs = renderWhatsappMessages(silent, [], []);
     expect(msgs).toHaveLength(2); // must-read (vazio honesto) + posts (vazio honesto)
     expect(msgs[0]).toContain("Sem cobertura relevante no universo monitorado hoje.");
-    expect(msgs[1]).toContain("Nenhum cluster passou o filtro empresarial hoje.");
+    expect(msgs[1]).toContain("Nenhum assunto central aos temas do briefing rendeu post hoje.");
   });
 
   it("assuntos suprimidos pela memória aparecem no rodapé do must-read", () => {
