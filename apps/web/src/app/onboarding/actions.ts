@@ -129,14 +129,16 @@ export async function finishOnboarding(): Promise<{ ok: boolean; error?: string 
 
   // Enfileira o 1º briefing AQUI (sem corrida com o redirect): o dashboard já
   // encontra o job queued e mostra "preparando"; o POST /api/jobs/run-now do
-  // cliente só processa a fila.
+  // cliente só processa a fila. Mesmo type do cron/run-now: a unique
+  // (profile, type, run_date) é quem deduplica — type diferente geraria DOIS
+  // briefings no mesmo dia.
   const runDate = new Intl.DateTimeFormat("en-CA", {
     timeZone: profile.timezone ?? "America/Sao_Paulo",
   }).format(new Date());
   const { error: jobError } = await supabase.from("jobs").insert({
     account_id: profile.account_id,
     profile_id: profile.id,
-    type: "briefing",
+    type: "daily_briefing",
     run_date: runDate,
   });
   if (jobError && jobError.code !== "23505") {

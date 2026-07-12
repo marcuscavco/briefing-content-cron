@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { THEME_TAXONOMY } from "@/lib/themes";
@@ -128,6 +128,30 @@ export function OnboardingWizard({
         .catch(() => setSample([]));
     }
   }, [step]);
+
+  // Geração automática: ao chegar na tela de parabéns, conclui o onboarding e
+  // dispara o 1º briefing sozinho, sem clique. O botão só leva ao painel.
+  const generationStarted = useRef(false);
+  const [genReady, setGenReady] = useState(false);
+  const [genError, setGenError] = useState<string | null>(null);
+  const beginGeneration = useCallback(() => {
+    setGenError(null);
+    void (async () => {
+      const r = await finishOnboarding();
+      if (!r.ok) {
+        setGenError(r.error ?? "Não deu pra iniciar a geração. Tente de novo.");
+        return;
+      }
+      // fire-and-forget: a rota enfileira e processa a fila inteira inline
+      fetch("/api/jobs/run-now", { method: "POST" }).catch(() => {});
+      setGenReady(true);
+    })();
+  }, []);
+  useEffect(() => {
+    if (step !== "review" || generationStarted.current) return;
+    generationStarted.current = true;
+    beginGeneration();
+  }, [step, beginGeneration]);
 
   const go = (s: Step) => {
     setError(null);
@@ -632,30 +656,40 @@ export function OnboardingWizard({
             </div>
           </div>
 
-          {/* o momento */}
+          {/* o momento: a geração já começou sozinha, aqui é só acompanhar */}
           <div className="rise rise-3 flex flex-col items-center gap-4 py-4 text-center">
-            {error && <p className="text-sm text-destructive">{error}</p>}
-            <ActionPrimary
-              pending={pending}
-              onClick={() =>
-                start(async () => {
-                  const r = await finishOnboarding();
-                  if (!r.ok) {
-                    setError(r.error ?? "tente de novo");
-                    return;
-                  }
-                  // 1º briefing de verdade, agora (fire-and-forget; o dashboard acompanha)
-                  fetch("/api/jobs/run-now", { method: "POST" }).catch(() => {});
-                  router.push("/dashboard");
-                })
-              }
-              className="h-16 max-w-md rounded-full px-10 text-lg md:w-full md:min-w-0 md:px-10 shadow-[0_0_50px_-10px_rgba(245,158,11,0.45),inset_0_1px_0_rgba(255,255,255,0.35)]"
-            >
-              {pending ? "Preparando…" : "Gerar meu primeiro briefing"}
-            </ActionPrimary>
-            <p className="text-xs text-muted-foreground">
-              Fica pronto em poucos minutos, e amanhã às 7h chega sozinho no seu WhatsApp.
-            </p>
+            {genError ? (
+              <>
+                <p className="text-sm text-destructive">{genError}</p>
+                <ActionPrimary
+                  pending={false}
+                  onClick={beginGeneration}
+                  className="h-16 max-w-md rounded-full px-10 text-lg md:w-full md:min-w-0 md:px-10"
+                >
+                  Tentar de novo
+                </ActionPrimary>
+              </>
+            ) : (
+              <>
+                <div className="flex w-full max-w-md items-center justify-center gap-3 rounded-2xl border border-amber-400/20 bg-amber-400/[0.06] px-5 py-3.5 text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+                  <span className="size-4 shrink-0 animate-spin rounded-full border-[1.5px] border-amber-400/80 border-t-transparent" />
+                  <span className="font-medium text-amber-200">
+                    Seu primeiro briefing já está sendo gerado…
+                  </span>
+                </div>
+                <ActionPrimary
+                  pending={!genReady}
+                  onClick={() => router.push("/dashboard")}
+                  className="h-16 max-w-md rounded-full px-10 text-lg md:w-full md:min-w-0 md:px-10 shadow-[0_0_50px_-10px_rgba(245,158,11,0.45),inset_0_1px_0_rgba(255,255,255,0.35)]"
+                >
+                  {genReady ? "Acompanhar no painel" : "Preparando…"}
+                </ActionPrimary>
+                <p className="text-xs text-muted-foreground">
+                  Fica pronto em poucos minutos: aparece no painel e chega no seu WhatsApp.
+                  A partir de amanhã, todo dia às 7h, sem você pedir.
+                </p>
+              </>
+            )}
           </div>
         </section>
       )}

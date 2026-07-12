@@ -37,6 +37,7 @@ export async function POST() {
       .from("jobs")
       .update({ status: "queued", error: null, locked_at: null, locked_by: null })
       .eq("profile_id", profile.id)
+      .eq("type", "daily_briefing")
       .eq("run_date", today)
       .in("status", ["failed"]);
   }
@@ -47,8 +48,9 @@ export async function POST() {
     .from("jobs")
     .select("id, status, stage, error, result, tokens_input, tokens_output, cost_usd")
     .eq("profile_id", profile.id)
+    .eq("type", "daily_briefing")
     .eq("run_date", today)
-    .single();
+    .maybeSingle();
 
   return NextResponse.json({ job, worker: summary });
 }
