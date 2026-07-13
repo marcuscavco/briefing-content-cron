@@ -335,6 +335,9 @@
   to { transform: translateX(-50%); }
 }
 
+/* CTA no fim de cada seção (título próprio por seção) */
+.lp .section-cta { display: flex; justify-content: center; margin-top: 56px; }
+
 /* ---------- Timeline (como funciona) ---------- */
 .lp .timeline { display: flex; flex-direction: column; gap: 0; position: relative; max-width: 780px; }
 .lp .tl-item { display: grid; grid-template-columns: 112px 40px 1fr; gap: 0 20px; position: relative; padding-bottom: 52px; }

@@ -56,7 +56,7 @@ const THEME_CHIPS = [
 const FAQ_ITEMS: Array<{ q: string; a: React.ReactNode }> = [
   {
     q: "Como eu recebo o briefing?",
-    a: "Direto no seu WhatsApp, como uma mensagem normal, todo dia cedo, às 7h (horário de Brasília). Não precisa instalar nada, entrar em grupo nem baixar app: você cadastra seu número, verifica com um código e o briefing chega na conversa.",
+    a: "Direto no seu WhatsApp, como uma mensagem normal, todo dia cedo, até às 7h (horário de Brasília). Não precisa instalar nada, entrar em grupo nem baixar app: você cadastra seu número, verifica com um código e o briefing chega na conversa.",
   },
   {
     q: "Isso é só sobre tecnologia?",
@@ -332,6 +332,15 @@ export function Lp({
   const chipsOn = chips.filter((c) => c.on);
   const marquee = [...MARQUEE, ...MARQUEE];
 
+  // CTA com título próprio por seção. Logado sempre vê o rótulo do painel;
+  // deslogado vê o texto contextual passado em cada ponto da página.
+  const cta = (label: string, className = "btn btn-primary") => (
+    <Link className={className} href={primaryHref}>
+      {loggedIn ? primaryLabel : label}
+      <ArrowIc />
+    </Link>
+  );
+
   return (
     <div ref={rootRef} className={`lp${menuOpen ? " menu-open" : ""}`}>
       {/* ============ NAV (fluid island) ============ */}
@@ -397,11 +406,9 @@ export function Lp({
               Enquanto você dormia, <span className="wa">a gente leu tudo</span>.
             </h1>
             <p className="hero-sub">
-              O Briefing Nerd lê de madrugada as fontes <strong>da sua área</strong>: negócios,
-              jurídico, política, economia, tecnologia, o que você escolher. Corta o ruído e a
-              repetição e entrega um resumo de 2 minutos{" "}
-              <strong>no seu WhatsApp, todo dia às 7h</strong>. Feito pra empresários e executivos
-              que precisam chegar na primeira reunião já sabendo o que aconteceu.
+              A gente lê de madrugada as fontes <strong>da sua área</strong> e entrega um resumo de 2
+              minutos <strong>no seu WhatsApp, todo dia até às 7h</strong>. Você chega na primeira
+              reunião já sabendo o que aconteceu.
             </p>
             <div className="hero-ctas">
               <Link className="btn btn-primary" href={primaryHref}>
@@ -445,8 +452,8 @@ export function Lp({
             </div>
             <div className="hero-stats">
               <div className="hero-stat">
-                <b>7:00</b>
-                <span>na sua tela, todo dia</span>
+                <b>até 7h</b>
+                <span>no seu WhatsApp, todo dia</span>
               </div>
               <div className="hero-stat">
                 <b>~2 min</b>
@@ -470,7 +477,7 @@ export function Lp({
                   <span className="wa-day">HOJE</span>
                   <div className="msg">
                     ☀️ <b>Bom dia!</b> Seu briefing de sexta, 11/07 tá pronto 👇
-                    <span className="meta">07:00</span>
+                    <span className="meta">06:58</span>
                   </div>
                   <div className="msg">
                     {"📰 "}
@@ -480,7 +487,7 @@ export function Lp({
                     {"\n\n1. Reforma tributária: regras do split payment são publicadas\n💼 3/3 · 💻 1/3 · Heat 9\n📖 "}
                     <span className="lnk">valor.globo.com/…</span>
                     {"\n💡 Muda o fluxo de caixa de quem emite nota. Vale mapear o impacto com seu contador ainda este mês."}
-                    <span className="meta">07:00</span>
+                    <span className="meta">06:58</span>
                   </div>
                   <div className="msg">
                     {"📌 "}
@@ -488,7 +495,7 @@ export function Lp({
                     {"\n\n2. Anthropic libera agentes que operam o navegador sozinhos\n💼 2/3 · 💻 3/3 · Heat 7\n📖 "}
                     <span className="lnk">theinformation.com/…</span>
                     {"\n💡 Tarefa repetitiva de back-office vira automação sem depender de API."}
-                    <span className="meta">07:01</span>
+                    <span className="meta">06:59</span>
                   </div>
                   <div className="msg">
                     {"📎 "}
@@ -497,8 +504,8 @@ export function Lp({
                     <span className="dim">
                       {"• Senado pauta marco legal da IA pra agosto · 💼 2\n• BC sinaliza pausa no ciclo de juros · 💼 2"}
                     </span>
-                    {"\n\n➡️ Bom dia de trabalho! Amanhã, 7h, tem mais."}
-                    <span className="meta">07:01</span>
+                    {"\n\n➡️ Bom dia de trabalho! Amanhã, até às 7h, tem mais."}
+                    <span className="meta">06:59</span>
                   </div>
                   <div className="typing" aria-hidden="true">
                     <i></i>
@@ -601,7 +608,7 @@ export function Lp({
             </div>
             <div className="tl-item reveal">
               <div className="tl-time">
-                07:00<small>em ponto</small>
+                7h<small>no máximo</small>
               </div>
               <div className="tl-axis">
                 <span className="tl-dot"></span>
@@ -611,8 +618,8 @@ export function Lp({
                 <h3>Chega no seu WhatsApp</h3>
                 <p>
                   Uma mensagem, uns 2 minutos de leitura, com link da fonte original pra quem quiser
-                  ir fundo. Sem app novo, sem mais um e-mail perdido no inbox. Todo dia, cedo, no
-                  lugar que você já olha primeiro.
+                  ir fundo. Sem app novo, sem mais um e-mail perdido no inbox. Todo dia, cedo, até às
+                  7h, no lugar que você já olha primeiro.
                 </p>
               </div>
             </div>
@@ -661,6 +668,7 @@ export function Lp({
               </p>
             </div>
           </div>
+          <div className="section-cta reveal">{cta("Montar o meu agora")}</div>
         </div>
       </section>
 
@@ -791,6 +799,7 @@ export function Lp({
               </div>
             </div>
           </div>
+          <div className="section-cta reveal">{cta("Quero meu briefing assim")}</div>
         </div>
       </section>
 
@@ -917,6 +926,7 @@ export function Lp({
               </div>
             </div>
           </div>
+          <div className="section-cta reveal">{cta("Testar de graça por 7 dias")}</div>
         </div>
       </section>
 
@@ -979,14 +989,15 @@ export function Lp({
               <div>
                 <h3>Todo dia cedo, no seu WhatsApp, só sobre o que você escolheu.</h3>
                 <p>
-                  Você define área e fontes uma vez e ajusta quando quiser. Às 7h, o briefing chega
-                  pronto na conversa: sem abrir 30 abas, sem newsletter acumulando, sem depender de
-                  algoritmo de feed. A informação da sua profissão vai até você, filtrada, pontuada
-                  e com fonte.
+                  Você define área e fontes uma vez e ajusta quando quiser. Até às 7h, o briefing
+                  chega pronto na conversa: sem abrir 30 abas, sem newsletter acumulando, sem
+                  depender de algoritmo de feed. A informação da sua profissão vai até você,
+                  filtrada, pontuada e com fonte.
                 </p>
               </div>
             </div>
           </div>
+          <div className="section-cta reveal">{cta("Escolher as minhas fontes")}</div>
         </div>
       </section>
 
@@ -1015,7 +1026,7 @@ export function Lp({
                 <ul>
                   <li>
                     <Check />
-                    Briefing todo dia às 7h no WhatsApp
+                    Briefing todo dia até às 7h no WhatsApp
                   </li>
                   <li>
                     <Check />
@@ -1030,10 +1041,7 @@ export function Lp({
                     Biblioteca curada + fontes que você adicionar
                   </li>
                 </ul>
-                <Link className="btn btn-primary" href={primaryHref}>
-                  {primaryLabel}
-                  <ArrowIc />
-                </Link>
+                {cta("Testar 7 dias grátis")}
                 <p className="micro">Sem cartão. O teste não vira cobrança sozinho.</p>
               </div>
             </div>
@@ -1064,10 +1072,7 @@ export function Lp({
                     Garantia de 30 dias com devolução integral
                   </li>
                 </ul>
-                <Link className="btn btn-primary" href={primaryHref}>
-                  {primaryLabel}
-                  <ArrowIc />
-                </Link>
+                {cta("Testar e economizar 20%")}
                 <p className="micro">Sem cartão. O teste não vira cobrança sozinho.</p>
               </div>
             </div>
@@ -1109,16 +1114,13 @@ export function Lp({
         <span className="orb orb-sun orb-1" aria-hidden="true"></span>
         <span className="orb orb-ember orb-2" aria-hidden="true"></span>
         <div className="container final-inner">
-          <span className="clock num reveal">AMANHÃ · 07:00</span>
-          <h2 className="reveal">Amanhã às 7h você pode acordar na frente.</h2>
+          <span className="clock num reveal">AMANHÃ · ATÉ 7H</span>
+          <h2 className="reveal">Amanhã, até às 7h, você acorda na frente.</h2>
           <p className="reveal">
             7 dias grátis pra sentir o que é começar o dia já sabendo o que aconteceu na sua área.
             Sem cartão, sem compromisso. Se não for pra você, é só deixar o teste acabar.
           </p>
-          <Link className="btn btn-primary reveal" href={primaryHref}>
-            {primaryLabel}
-            <ArrowIc />
-          </Link>
+          {cta("Acordar na frente amanhã", "btn btn-primary reveal")}
           <div className="hero-assure reveal">
             <span>
               <Check /> Sem cartão de crédito

@@ -20,9 +20,9 @@ const jakarta = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Briefing Nerd | o essencial da sua área no WhatsApp, todo dia às 7h",
+  title: "Briefing Nerd | o essencial da sua área no WhatsApp, todo dia até às 7h",
   description:
-    "O Briefing Nerd lê de madrugada as fontes da sua área (negócios, jurídico, política, economia, tecnologia, o que você escolher) e entrega no seu WhatsApp, todo dia às 7h, um resumo de 2 minutos só com o que importa. 7 dias grátis, sem cartão.",
+    "O Briefing Nerd lê de madrugada as fontes da sua área (negócios, jurídico, política, economia, tecnologia, o que você escolher) e entrega no seu WhatsApp, todo dia até às 7h, um resumo de 2 minutos só com o que importa. 7 dias grátis, sem cartão.",
 };
 
 export default async function LandingPage() {
