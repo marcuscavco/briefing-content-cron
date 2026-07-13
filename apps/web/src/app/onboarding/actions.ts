@@ -1,5 +1,6 @@
 "use server";
 
+import { createAdminClient } from "@briefing/db/admin";
 import { getConnector } from "@briefing/ingestion";
 import { revalidatePath } from "next/cache";
 import { requireTenant } from "@/lib/tenant";
@@ -131,18 +132,22 @@ export async function finishOnboarding(): Promise<{ ok: boolean; error?: string 
   // encontra o job queued e mostra "preparando"; o POST /api/jobs/run-now do
   // cliente só processa a fila. Mesmo type do cron/run-now: a unique
   // (profile, type, run_date) é quem deduplica — type diferente geraria DOIS
-  // briefings no mesmo dia.
+  // briefings no mesmo dia. Insert com service role e erro logado: em 13/07
+  // dois cadastros perderam o 1º briefing porque este insert (na época via
+  // sessão do usuário) falhou com o erro engolido no bloco vazio.
   const runDate = new Intl.DateTimeFormat("en-CA", {
     timeZone: profile.timezone ?? "America/Sao_Paulo",
   }).format(new Date());
-  const { error: jobError } = await supabase.from("jobs").insert({
+  const admin = createAdminClient();
+  const { error: jobError } = await admin.from("jobs").insert({
     account_id: profile.account_id,
     profile_id: profile.id,
     type: "daily_briefing",
     run_date: runDate,
   });
   if (jobError && jobError.code !== "23505") {
-    // não bloqueia a conclusão — o cron das 7h cobre
+    // não bloqueia a conclusão — com onboarded_at setado, o cron das 7h cobre
+    console.error(`finishOnboarding: 1º job do profile ${profile.id} falhou: ${jobError.message}`);
   }
 
   revalidatePath("/dashboard");

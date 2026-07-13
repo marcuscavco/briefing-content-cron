@@ -82,10 +82,16 @@ function deliveryMinutesOf(deliveryTime: string | null): number {
 
 /** Enfileira o job diário dos profiles com DISPATCH_LEAD_MINUTES de antecedência. */
 export async function dispatchDueJobs(db: SupabaseClient): Promise<number> {
+  // Só perfis que CONCLUÍRAM o onboarding: com o tick por minuto, um perfil
+  // recém-criado (active, mas ainda sem fontes/temas/canais) era enfileirado
+  // ~30s após o cadastro e gerava briefing vazio "done" — que depois bloqueava
+  // o 1º briefing real do dia (unique profile/type/run_date). O 1º job de quem
+  // está no onboarding nasce no finishOnboarding, nunca aqui.
   const { data: profiles, error } = await db
     .from("briefing_profiles")
     .select("id, account_id, delivery_time, timezone, active")
-    .eq("active", true);
+    .eq("active", true)
+    .not("onboarded_at", "is", null);
   if (error) throw new Error(`profiles: ${error.message}`);
 
   let enqueued = 0;
