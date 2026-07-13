@@ -1,12 +1,16 @@
 import type { DeliveryBriefing, DeliveryCluster, DeliveryPost } from "./types";
 
 /**
- * Templates da Etapa 8 do SKILL.md, agora em ATÉ 3 MENSAGENS por categoria
+ * Templates da Etapa 8 do SKILL.md, em ATÉ 3 MENSAGENS por categoria
  * (decisão do Marcus): 1) Must-read · 2) Outros assuntos (relevante, no radar,
  * sinais) · 3) Posts sugeridos. Mensagem sem conteúdo não é enviada.
- * REGRAS INEGOCIÁVEIS: cada mensagem ≤ 1500 chars (hard limit, sempre
- * validado); formatação WhatsApp (*negrito*); URLs limpas; PT-BR; silêncio
- * honesto (nunca inflar).
+ * REGRAS INEGOCIÁVEIS: título e resumo SEMPRE completos — nunca reticências
+ * (decisão do Marcus, 13/07). Para caber no alvo de 1500 chars o corte é
+ * estrutural, nesta ordem: fontes extras → seções opcionais → MENOS ITENS
+ * (com nota honesta "mais N no painel"). Se um único item completo passar do
+ * alvo, a mensagem sai completa mesmo assim (o limite real do WhatsApp é
+ * muito maior). Formatação WhatsApp (*negrito*); URLs limpas; PT-BR;
+ * silêncio honesto (nunca inflar).
  */
 
 export const WHATSAPP_HARD_LIMIT = 1500;
@@ -22,27 +26,6 @@ const FORMATO_EMOJI: Record<string, string> = {
 function ddmm(runDate: string): string {
   const [, m, d] = runDate.split("-");
   return `${d}/${m}`;
-}
-
-function trunc(s: string, max: number): string {
-  return s.length <= max ? s : s.slice(0, max - 1).trimEnd() + "…";
-}
-
-function fit(
-  build: (tldr: number, maxSources: number) => string,
-  steps: [number, number][] = [
-    [100, 3],
-    [100, 1],
-    [60, 1],
-    [40, 1],
-  ],
-): string {
-  for (const [tldr, maxSources] of steps) {
-    const msg = build(tldr, maxSources);
-    if (msg.length <= WHATSAPP_HARD_LIMIT) return msg;
-  }
-  const last = steps[steps.length - 1]!;
-  return trunc(build(last[0], last[1]), WHATSAPP_HARD_LIMIT);
 }
 
 /**
@@ -82,15 +65,10 @@ function scoreLine(c: DeliveryCluster, withCoverage: boolean): string {
   return `🎯 Tema ${c.relevancia_tema ?? 0}/3 · ⚡ ${c.impacto_geral ?? 0}/3${coverage}`;
 }
 
-function renderItem(
-  c: DeliveryCluster,
-  n: number,
-  tldrChars: number,
-  withHeat: boolean,
-  maxSources = 1,
-): string {
+/** Item completo: título e resumo INTEIROS — quem cede espaço são fontes extras/itens. */
+function renderItem(c: DeliveryCluster, n: number, withHeat: boolean, maxSources = 1): string {
   const marks = `${c.is_curator_pick ? "✨ " : ""}${c.em_alta ? "📈 " : ""}${c.is_update ? "🔁 " : ""}`;
-  const item: string[] = [`${n}. ${marks}${trunc(c.titulo, 70)}`];
+  const item: string[] = [`${n}. ${marks}${c.titulo}`];
   item.push(scoreLine(c, withHeat));
   if (c.fonte && c.url) {
     item.push(`📖 ${c.is_fallback ? "🟡 " : ""}${c.fonte}: ${c.url}`);
@@ -99,11 +77,15 @@ function renderItem(
     }
   }
   if (c.is_update && c.update_resumo) {
-    item.push(`🔁 ${trunc(c.update_resumo, tldrChars)}`);
+    item.push(`🔁 ${c.update_resumo}`);
   } else if (c.resumo) {
-    item.push(`💡 ${trunc(c.resumo, tldrChars)}`);
+    item.push(`💡 ${c.resumo}`);
   }
   return item.join("\n");
+}
+
+function maisNoPainel(n: number, oQue: string): string {
+  return `➕ Mais ${n} ${oQue} no painel.`;
 }
 
 /** Mensagem 1 — Must-read: o que realmente merece leitura hoje. */
@@ -115,12 +97,14 @@ function renderMustReadMessage(
   const mustRead = clusters.filter((c) => c.categoria === "must_read");
   const temOutros = clusters.some((c) => c.categoria !== "must_read" && c.categoria !== "descartado");
 
-  // Corte progressivo: fontes extras caem ANTES de encurtar TL;DRs
-  return fit((tldr, maxSources) => {
+  const build = (maxSources: number, maxItems: number): string => {
+    const shown = mustRead.slice(0, maxItems);
+    const omitted = mustRead.length - shown.length;
     const lines: string[] = [`📰 *Briefing ${ddmm(briefing.run_date)}* — 🔥 *Must-read*`];
-    if (mustRead.length) {
+    if (shown.length) {
       lines.push("");
-      lines.push(mustRead.map((c, i) => renderItem(c, i + 1, tldr, true, maxSources)).join("\n\n"));
+      lines.push(shown.map((c, i) => renderItem(c, i + 1, true, maxSources)).join("\n\n"));
+      if (omitted > 0) lines.push("", maisNoPainel(omitted, `must-read${omitted > 1 ? "s" : ""}`));
     } else if (temOutros) {
       lines.push("", "Nenhum must-read hoje — os assuntos do dia vão na próxima mensagem.");
     } else {
@@ -137,7 +121,20 @@ function renderMustReadMessage(
       lines.push("", `🔗 Ver no painel: ${briefingUrl}`);
     }
     return lines.join("\n");
-  });
+  };
+
+  // Corte progressivo: fontes extras caem primeiro; depois saem ITENS inteiros
+  // (nunca o texto de um item). Ordem da lista = ordem de importância do digest.
+  const attempts: [number, number][] = [
+    [3, mustRead.length],
+    [1, mustRead.length],
+  ];
+  for (let k = mustRead.length - 1; k >= 1; k--) attempts.push([1, k]);
+  for (const [maxSources, maxItems] of attempts) {
+    const msg = build(maxSources, maxItems);
+    if (msg.length <= WHATSAPP_HARD_LIMIT) return msg;
+  }
+  return build(1, 1); // 1 item completo, mesmo que passe do alvo — nunca "…"
 }
 
 /** Mensagem 2 — Outros assuntos: relevantes, no radar e sinais sem fonte. */
@@ -150,51 +147,54 @@ function renderOthersMessage(
   const sinais = clusters.filter((c) => c.categoria === "sinal_sem_fonte");
   if (relevantesAll.length === 0 && noRadar.length === 0 && sinais.length === 0) return null;
 
-  const build = (
-    tldr: number,
-    includeNoRadar: boolean,
-    maxRelevantes: number,
-    maxSources: number,
-  ): string => {
+  const build = (includeNoRadar: boolean, maxRelevantes: number, maxSources: number): string => {
     let relevantes = relevantesAll;
     if (relevantes.length > maxRelevantes) {
       relevantes = [...relevantes]
         .sort((a, b) => temaScore(b) - temaScore(a))
         .slice(0, maxRelevantes);
     }
+    const omitted = relevantesAll.length - relevantes.length;
     const lines: string[] = [`🗞️ *Outros assuntos ${ddmm(briefing.run_date)}*`];
     let n = 0;
     if (relevantes.length) {
       lines.push("", "📌 *Relevante*", "");
-      lines.push(relevantes.map((c) => renderItem(c, ++n, tldr, false, maxSources)).join("\n\n"));
+      lines.push(relevantes.map((c) => renderItem(c, ++n, false, maxSources)).join("\n\n"));
+      if (omitted > 0) lines.push("", maisNoPainel(omitted, `relevante${omitted > 1 ? "s" : ""}`));
     }
-    if (includeNoRadar && noRadar.length) {
-      lines.push("", "📎 *No radar*");
-      for (const c of noRadar) {
-        lines.push(`• ${trunc(c.titulo, 60)} · ${scoreLine(c, false)}`);
+    if (noRadar.length) {
+      if (includeNoRadar) {
+        lines.push("", "📎 *No radar*");
+        for (const c of noRadar) {
+          lines.push(`• ${c.titulo} · ${scoreLine(c, false)}`);
+        }
+      } else {
+        lines.push(
+          "",
+          `📎 No radar: ${noRadar.length} assunto${noRadar.length > 1 ? "s" : ""} no painel.`,
+        );
       }
     }
     for (const c of sinais) {
-      lines.push(`⚠️ Sinal: ${trunc(c.titulo, 70)} (sem fonte canônica)`);
+      lines.push(`⚠️ Sinal: ${c.titulo} (sem fonte canônica)`);
     }
     return lines.join("\n");
   };
 
-  // Corte progressivo (SKILL.md): cortar fontes extras → No radar → reduzir
-  // TL;DRs → cortar Relevantes mais fracos mantendo os 2 de maior 💼.
-  const attempts: [number, boolean, number, number][] = [
-    [100, true, 99, 3],
-    [100, true, 99, 1],
-    [100, false, 99, 1],
-    [60, false, 99, 1],
-    [60, false, 2, 1],
-    [40, false, 2, 1],
+  // Corte progressivo (SKILL.md): fontes extras → lista do No radar vira
+  // contador → sai RELEVANTE inteiro por RELEVANTE inteiro, dos mais fracos
+  // para os mais fortes (🎯) — o texto de quem fica nunca encolhe.
+  const attempts: [boolean, number, number][] = [
+    [true, relevantesAll.length, 3],
+    [true, relevantesAll.length, 1],
+    [false, relevantesAll.length, 1],
   ];
-  for (const [tldr, noRadarOn, maxRel, maxSources] of attempts) {
-    const msg = build(tldr, noRadarOn, maxRel, maxSources);
+  for (let k = relevantesAll.length - 1; k >= 1; k--) attempts.push([false, k, 1]);
+  for (const [noRadarOn, maxRel, maxSources] of attempts) {
+    const msg = build(noRadarOn, maxRel, maxSources);
     if (msg.length <= WHATSAPP_HARD_LIMIT) return msg;
   }
-  return trunc(build(40, false, 2, 1), WHATSAPP_HARD_LIMIT);
+  return build(false, 1, 1); // 1 relevante completo — nunca "…"
 }
 
 /** Mensagem 3 — Posts sugeridos. */
@@ -206,49 +206,54 @@ export function renderPostsMessage(posts: DeliveryPost[]): string {
     return "📱 *Posts sugeridos*\n\nNenhum assunto central aos temas do briefing rendeu post hoje. Ver digest para leitura pessoal.";
   }
 
-  const build = (estruturaMax: number, hookWords: number, skipCount: number): string => {
+  const build = (maxPosts: number, slidesMax: number, skipCount: number): string => {
+    const shown = publicaveis.slice(0, maxPosts);
+    const omitted = publicaveis.length - shown.length;
     const lines: string[] = ["📱 *Posts sugeridos* — filtro: relevância ao tema do briefing"];
-    publicaveis.forEach((p, i) => {
+    shown.forEach((p, i) => {
       const emoji = FORMATO_EMOJI[p.formato ?? ""] ?? "📱";
-      const block: string[] = [`${i + 1}. ${trunc(p.titulo ?? p.gancho ?? "Post", 60)}`];
+      const block: string[] = [`${i + 1}. ${p.titulo ?? p.gancho ?? "Post"}`];
       block.push(`${emoji} ${p.formato ?? ""}`);
       if (p.angulo_tipo) {
-        block.push(`🎯 Ângulo: ${p.angulo_tipo} — ${trunc(p.angulo_descricao ?? "", 80)}`);
+        block.push(`🎯 Ângulo: ${p.angulo_tipo} — ${p.angulo_descricao ?? ""}`);
       }
       if (p.gancho) {
-        const words = p.gancho.split(/\s+/).slice(0, hookWords).join(" ");
-        block.push(`📣 Hook: "${words}"`);
+        block.push(`📣 Hook: "${p.gancho}"`);
       }
-      if (p.estrutura?.length) {
-        const parts = p.estrutura
-          .slice(0, estruturaMax)
-          .map((s) => `${s.slide}.${trunc(s.texto, 24)}`);
-        block.push(`🧱 Estrutura: ${parts.join(" · ")}`);
+      if (p.estrutura?.length && slidesMax > 0) {
+        const shownSlides = p.estrutura.slice(0, slidesMax);
+        const rest = p.estrutura.length - shownSlides.length;
+        const parts = shownSlides.map((s) => `${s.slide}. ${s.texto}`);
+        const cont = rest > 0 ? ` (+${rest} slide${rest > 1 ? "s" : ""} no painel)` : "";
+        block.push(`🧱 Estrutura: ${parts.join(" · ")}${cont}`);
       }
       lines.push("", block.join("\n"));
     });
+    if (omitted > 0) lines.push("", maisNoPainel(omitted, `post${omitted > 1 ? "s" : ""}`));
     const shownSkips = skips.slice(0, skipCount);
     if (shownSkips.length) {
       lines.push("", "⏭️ *Skip hoje:*");
       for (const s of shownSkips) {
-        lines.push(`• ${trunc(s.titulo ?? "cluster", 40)}: ${trunc(s.skip_motivo ?? "skip", 50)}`);
+        lines.push(`• ${s.titulo ?? "cluster"}: ${s.skip_motivo ?? "skip"}`);
       }
     }
     return lines.join("\n");
   };
 
-  // Corte progressivo (SKILL.md): encurtar estruturas → hooks → skips
+  // Corte progressivo: menos slides na prévia (cada slide mostrado é completo,
+  // o resto vira "+N no painel") → menos skips → menos POSTS inteiros.
   const attempts: [number, number, number][] = [
-    [8, 15, skips.length],
-    [5, 15, skips.length],
-    [4, 10, 2],
-    [3, 8, 0],
+    [publicaveis.length, 8, skips.length],
+    [publicaveis.length, 4, 2],
+    [publicaveis.length, 2, 0],
+    [publicaveis.length, 0, 0],
   ];
-  for (const [estrutura, hook, skipCount] of attempts) {
-    const msg = build(estrutura, hook, skipCount);
+  for (let k = publicaveis.length - 1; k >= 1; k--) attempts.push([k, 2, 0]);
+  for (const [maxPosts, slides, skipCount] of attempts) {
+    const msg = build(maxPosts, slides, skipCount);
     if (msg.length <= WHATSAPP_HARD_LIMIT) return msg;
   }
-  return trunc(build(3, 8, 0), WHATSAPP_HARD_LIMIT);
+  return build(1, 0, 0); // 1 post completo — nunca "…"
 }
 
 /**

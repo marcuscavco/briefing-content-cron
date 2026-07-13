@@ -167,7 +167,7 @@ describe("renderWhatsappMessages (3 mensagens por categoria)", () => {
     expect(msgs[0]).not.toContain("Hacker News");
   });
 
-  it("fontes extras caem ANTES do TL;DR encolher quando estoura o limite", () => {
+  it("fontes extras caem ANTES de qualquer item sair quando estoura o limite", () => {
     const cheios = Array.from({ length: 5 }, (_, i) =>
       cluster({
         categoria: "must_read",
@@ -184,8 +184,38 @@ describe("renderWhatsappMessages (3 mensagens por categoria)", () => {
     // com 5 must-reads não cabe 3 fontes cada — as extras somem, a canônica fica
     expect(msgs[0]).toContain("📖 The Information:");
     expect(msgs[0]).not.toContain("↗");
-    // e o TL;DR permanece no tamanho cheio (resumo não foi encurtado para 60)
-    expect(msgs[0]).toContain("Resumo do assunto com o fato central e por que importa para quem decide");
+    // e o resumo dos itens mostrados permanece COMPLETO
+    expect(msgs[0]).toContain(
+      "Resumo do assunto com o fato central e por que importa para quem decide numa empresa brasileira de tecnologia.",
+    );
+  });
+
+  it("NUNCA reticências: resumos longos saem completos; quem cede são itens", () => {
+    const resumao =
+      "Resumo propositalmente muito longo para o teste, cobrindo o fato central, o contexto da disputa, os números divulgados pelos portais e a leitura prática para quem decide em uma empresa brasileira de tecnologia que acompanha o mercado global de perto todos os dias.";
+    const cheios = Array.from({ length: 8 }, (_, i) =>
+      cluster({
+        categoria: "must_read",
+        titulo: `Must-read número ${i + 1} com título completo e bem descritivo sobre o fato do dia`,
+        resumo: resumao,
+      }),
+    );
+    const msgs = renderWhatsappMessages(briefing, cheios, [post({})]);
+    for (const m of msgs) {
+      expect(m).not.toContain("…");
+      expect(m.length).toBeLessThanOrEqual(WHATSAPP_HARD_LIMIT);
+    }
+    // itens omitidos são anunciados com honestidade, não fatiados
+    expect(msgs[0]).toContain("➕ Mais");
+    expect(msgs[0]).toContain("no painel");
+    // e o que aparece, aparece inteiro
+    expect(msgs[0]).toContain(resumao);
+  });
+
+  it("posts: hook e slides completos, sem reticências (resto vira +N no painel)", () => {
+    const msg = renderPostsMessage([post({}), post({}), post({})]);
+    expect(msg).not.toContain("…");
+    expect(msg.length).toBeLessThanOrEqual(WHATSAPP_HARD_LIMIT);
   });
 
   it("retrocompat: cluster sem itens/em_alta (briefing antigo) renderiza como hoje", () => {
