@@ -39,7 +39,7 @@ REGRAS INEGOCIÁVEIS:
 - Use APENAS os itens fornecidos (universo fechado). Não invente notícias, portais ou fatos.
 - Todo item citado em item_indices deve existir na lista de entrada.
 - titulo canônico ≤ 90 chars, em PT-BR, factual e sem hype.
-- resumo (TL;DR) ≤ 200 chars, em PT-BR, o fato central + por que importa.
+- resumo (TL;DR): MÁXIMO 160 caracteres (≈3 linhas no WhatsApp), em PT-BR. 1 ou 2 frases CURTAS e COMPLETAS: o fato central + por que importa. NUNCA termine no meio de uma frase. Prefira cobrir mais assuntos com resumos enxutos a um resumo longo. Exemplo bom (128 chars): "OpenAI encerra o navegador Atlas após menos de um ano. Sinal de foco da empresa em modelos e API, não em produtos de consumo."
 - entidades: empresas/produtos/pessoas/órgãos centrais do assunto (para memória).
 - Silêncio honesto: se os itens não formam nenhum cluster relevante, retorne lista vazia. Não infle.`;
 
@@ -51,8 +51,12 @@ export const CLUSTER_SCHEMA = {
       items: {
         type: "object",
         properties: {
-          titulo: { type: "string" },
-          resumo: { type: "string" },
+          titulo: { type: "string", description: "≤ 90 caracteres, factual, sem hype" },
+          resumo: {
+            type: "string",
+            description:
+              "MÁXIMO 160 caracteres. 1-2 frases curtas e completas — nunca corte no meio da frase.",
+          },
           entidades: { type: "array", items: { type: "string" } },
           item_indices: { type: "array", items: { type: "integer" } },
           relevancia_tema: { type: "integer", enum: [0, 1, 2, 3] },
@@ -85,7 +89,7 @@ NÃO é novidade: o mesmo fato recontado por outro portal, análise/opinião sob
 
 Responda em JSON:
 - ha_novidade: boolean
-- o_que_mudou: se ha_novidade=true, resumo em PT-BR (≤160 chars) do que mudou desde a última vez. Se false, null.`;
+- o_que_mudou: se ha_novidade=true, resumo em PT-BR (MÁXIMO 160 chars, frases completas — nunca corte no meio) do que mudou desde a última vez. Se false, null.`;
 
 export const NOVELTY_SCHEMA = {
   type: "object",
