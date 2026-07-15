@@ -94,8 +94,19 @@ export async function dispatchDueJobs(db: SupabaseClient): Promise<number> {
     .not("onboarded_at", "is", null);
   if (error) throw new Error(`profiles: ${error.message}`);
 
+  // Paywall (Fase 6): briefing diário é só para assinante vigente. O único
+  // briefing gratuito é o do onboarding, que nasce no finishOnboarding e não
+  // passa por aqui.
+  const { data: subs, error: subsError } = await db
+    .from("subscriptions")
+    .select("account_id")
+    .in("status", ["active", "trialing"]);
+  if (subsError) throw new Error(`subscriptions: ${subsError.message}`);
+  const subscribed = new Set((subs ?? []).map((s) => s.account_id));
+
   let enqueued = 0;
   for (const profile of profiles ?? []) {
+    if (!subscribed.has(profile.account_id)) continue;
     const { date, minutes } = localClock(profile.timezone ?? "America/Sao_Paulo");
     const deliveryMinutes = deliveryMinutesOf(profile.delivery_time);
     // entra na fila LEAD minutos antes da entrega, para chegar até o horário

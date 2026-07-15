@@ -83,7 +83,10 @@ afterAll(async () => {
 describe("plans e subscriptions", () => {
   it("planos ativos são visíveis para qualquer autenticado; escrita é negada", async () => {
     const { data: plansB } = await clientB.from("plans").select("id");
-    expect((plansB ?? []).map((p) => p.id)).toEqual(expect.arrayContaining(["free", "pro"]));
+    // Fase 6: 'free' foi desativado (policy só expõe planos ativos)
+    const ids = (plansB ?? []).map((p) => p.id);
+    expect(ids).toEqual(expect.arrayContaining(["essencial", "pro"]));
+    expect(ids).not.toContain("free");
 
     const { error: writeError } = await clientB
       .from("plans")

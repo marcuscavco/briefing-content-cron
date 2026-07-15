@@ -194,8 +194,14 @@ async function resolveWizardInput(payload: WizardPayload): Promise<SourceInput> 
   };
 }
 
-/** Gate da Fase 5: Instagram só em plano com social (roda de novo na coleta). */
-async function assertInstagramAllowed(): Promise<string | null> {
+/**
+ * Gate de entitlement por plano (Fase 6). Fontes do catálogo (library) são
+ * livres — sem elas o briefing gratuito do onboarding seria impossível.
+ * Portal personalizado (site) exige features.custom_sources; Instagram exige
+ * features.instagram (este roda de novo na coleta, via instagramGate).
+ */
+async function assertSourceKindAllowed(kind: WizardPayload["kind"]): Promise<string | null> {
+  if (kind === "library") return null;
   const { supabase } = await requireTenant();
   const { data: sub } = await supabase
     .from("subscriptions")
@@ -205,18 +211,21 @@ async function assertInstagramAllowed(): Promise<string | null> {
   const { data: plan } = sub
     ? await supabase.from("plans").select("features").eq("id", sub.plan_id).maybeSingle()
     : { data: null };
-  const features = (plan?.features ?? {}) as { instagram?: boolean };
-  return features.instagram === true ? null : "Fontes de Instagram não estão inclusas no seu plano.";
+  const features = (plan?.features ?? {}) as { instagram?: boolean; custom_sources?: boolean };
+  if (kind === "instagram") {
+    return features.instagram === true ? null : "Fontes de Instagram não estão inclusas no seu plano.";
+  }
+  return features.custom_sources === true
+    ? null
+    : "Portais personalizados não estão inclusos no seu plano.";
 }
 
 /** Passo de validação do wizard: coleta 48h + relevância aos temas, sem inserir. */
 export async function probeWizardSource(payload: WizardPayload): Promise<ProbeResult> {
   try {
     const { profile } = await requireTenant();
-    if (payload.kind === "instagram") {
-      const blocked = await assertInstagramAllowed();
-      if (blocked) return failProbe(blocked);
-    }
+    const blocked = await assertSourceKindAllowed(payload.kind);
+    if (blocked) return failProbe(blocked);
     const input = await resolveWizardInput(payload);
     const probe = await probeSource(input);
     probe.relevant = await classifyRelevance(probe.preview, profile.themes ?? []);
@@ -232,10 +241,8 @@ export async function confirmWizardSource(
   probe: ProbeResult,
 ): Promise<AddSourceResult> {
   try {
-    if (payload.kind === "instagram") {
-      const blocked = await assertInstagramAllowed();
-      if (blocked) return { ok: false, error: blocked };
-    }
+    const blocked = await assertSourceKindAllowed(payload.kind);
+    if (blocked) return { ok: false, error: blocked };
     const input = await resolveWizardInput(payload);
     const { supabase, accountId, profile } = await requireTenant();
     const now = new Date().toISOString();
@@ -377,7 +384,7 @@ export async function verifyInstagramProfile(raw: string): Promise<InstagramChec
   if (!handle) {
     return { ok: false, error: "Perfil inválido — cole o link do perfil, @usuario ou o nome do usuário." };
   }
-  const blocked = await assertInstagramAllowed();
+  const blocked = await assertSourceKindAllowed("instagram");
   if (blocked) return { ok: false, error: blocked };
 
   let info = await checkInstagramProfile(handle);

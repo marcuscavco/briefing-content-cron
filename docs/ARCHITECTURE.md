@@ -183,7 +183,20 @@ PT-BR na entrega · ≤ 1500 chars por mensagem WhatsApp · URLs limpas.
    (backoffice) + feature por plano `plans.features.instagram` — ambos checados
    no pipeline ANTES de chamar o provedor. Transcrição de vídeo é extension
    point (campo `transcript` no shape).
-6. **Billing**: Stripe Checkout/Portal/Webhooks; `plans`, `subscriptions`,
-   `usage_counters`; enforcement de quota server-side antes de cada execução.
+6. **Billing (implementado — Fase 6)**: Stripe Checkout/Portal hospedados +
+   webhook `/api/stripe/webhook` (único escritor de `subscriptions` com
+   `source='stripe'`, via service role; idempotência em `stripe_events`).
+   Dois planos mensais BRL: `essencial` R$37,90 (só catálogo) e `pro` R$57,90
+   (portais personalizados + Instagram) — sem plano gratuito: o único briefing
+   grátis é o do onboarding (`finishOnboarding`); `dispatchDueJobs` e
+   `/api/jobs/run-now` exigem assinatura `active|trialing`. Customer do Stripe
+   vive em `accounts.stripe_customer_id`. Precedência: assinatura Stripe
+   substitui `admin_grant` (webhook cancela a vigente antes de inserir), e o
+   backoffice recusa grant sobre assinatura Stripe vigente. Os
+   `plans.stripe_price_id` são por ambiente (test/live): após criar os prices,
+   rodar `update plans set stripe_price_id='price_...' where id in
+   ('essencial','pro')`. Pendências: página de billing no app (hoje só server
+   actions em `settings/billing/actions.ts`) e `usage_counters`/quota de
+   `max_sources`/`max_posts_per_day`.
 7. **Migração**: seed do account do Marcus (fontes de `fontes.md`, destinos
    WhatsApp atuais), paralelo com o cron legado, validação de paridade, sunset.
