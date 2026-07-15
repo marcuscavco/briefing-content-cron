@@ -54,9 +54,13 @@ export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const isAuthPage = path.startsWith("/login") || path.startsWith("/signup");
   // Rotas com autenticação própria (Bearer CRON_SECRET / token HMAC no link
-  // do email) ou públicas por natureza (encurtador) — nunca caem no login.
+  // do email / assinatura stripe-signature) ou públicas por natureza
+  // (encurtador) — nunca caem no login.
   const isSelfAuthed =
-    path.startsWith("/api/cron") || path.startsWith("/api/unsubscribe") || path.startsWith("/r/");
+    path.startsWith("/api/cron") ||
+    path.startsWith("/api/unsubscribe") ||
+    path.startsWith("/api/stripe/webhook") ||
+    path.startsWith("/r/");
 
   // Landing e onboarding são públicos: o fluxo único de entrada começa sem conta.
   const isPublic = path === "/" || path.startsWith("/onboarding");

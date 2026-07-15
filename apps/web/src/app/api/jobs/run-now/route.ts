@@ -15,6 +15,21 @@ export const maxDuration = 300; // Hobby: teto Fluid 300s; Pro destrava 800s
 export async function POST() {
   const { supabase, accountId, profile } = await requireTenant();
 
+  // Paywall (Fase 6): geração manual segue a mesma regra do dispatch diário —
+  // só assinante vigente. O briefing gratuito do onboarding não passa por aqui.
+  const { data: sub } = await supabase
+    .from("subscriptions")
+    .select("id")
+    .eq("account_id", accountId)
+    .in("status", ["active", "trialing"])
+    .maybeSingle();
+  if (!sub) {
+    return NextResponse.json(
+      { error: "Assine um plano para gerar novos briefings." },
+      { status: 402 },
+    );
+  }
+
   const admin = createAdminClient();
 
   const today = new Intl.DateTimeFormat("en-CA", {

@@ -26,6 +26,18 @@ export async function grantSubscription(formData: FormData) {
   const notes = String(formData.get("notes") ?? "").trim() || null;
   if (!accountId || !planId) throw new Error("account_id e plan_id são obrigatórios");
 
+  // Assinatura Stripe vigente não pode ser sobrescrita por grant: cancelar a
+  // linha local não cancela a cobrança no Stripe — o cliente seguiria pagando.
+  const { data: current } = await admin
+    .from("subscriptions")
+    .select("source")
+    .eq("account_id", accountId)
+    .in("status", ["active", "trialing"])
+    .maybeSingle();
+  if (current?.source === "stripe") {
+    throw new Error("conta tem assinatura Stripe vigente — cancele no Stripe primeiro");
+  }
+
   await admin
     .from("subscriptions")
     .update({ status: "canceled", canceled_at: new Date().toISOString() })

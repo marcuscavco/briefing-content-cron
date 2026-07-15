@@ -39,18 +39,21 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          stripe_customer_id: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
           id?: string
           name: string
+          stripe_customer_id?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
           id?: string
           name?: string
+          stripe_customer_id?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -781,6 +784,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      stripe_events: {
+        Row: {
+          id: string
+          received_at: string
+          type: string
+        }
+        Insert: {
+          id: string
+          received_at?: string
+          type: string
+        }
+        Update: {
+          id?: string
+          received_at?: string
+          type?: string
+        }
+        Relationships: []
       }
       subscriptions: {
         Row: {
